@@ -22,3 +22,4 @@ Markdown = "==3.3.4"
 environs = {extras = ["django"], version = "==8.0.0"}
 psycopg2-binary = "==2.8.5"
 django-heroku = "*"
+whitenoise = "*"
