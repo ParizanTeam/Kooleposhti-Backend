@@ -1,7 +1,9 @@
 asgiref==3.4.1
+dj-database-url==0.5.0
 Django==3.2.8
 django-filter==21.1
 djangorestframework==3.12.4
+gunicorn==20.1.0
 importlib-metadata==4.8.1
 Markdown==3.3.4
 pytz==2021.3
