@@ -1,1 +1,2 @@
-web: cd Kooleposhti && gunicorn Kooleposhti.wsgi --log-file -
+web: gunicorn --pythonpath Kooleposhti Kooleposhti.wsgi
+
