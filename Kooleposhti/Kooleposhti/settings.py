@@ -130,8 +130,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
+print(BASE_DIR)
 STATICFILES_DIRS = [str(BASE_DIR.joinpath('static'))]
+print(STATICFILES_DIRS)
 STATIC_ROOT = str(BASE_DIR.joinpath('staticfiles'))
+print(STATIC_ROOT)
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
