@@ -1,2 +1,2 @@
-web: gunicorn --pythonpath Kooleposhti Kooleposhti.wsgi
+web: gunicorn --chdir /app/Kooleposhti Kooleposhti.wsgi:application
 
