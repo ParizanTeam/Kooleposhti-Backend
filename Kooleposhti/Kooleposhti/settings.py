@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 from pathlib import Path
 import dj_database_url
 from environs import Env
+import django_heroku
 
 # Environment Variables
 env = Env()  # new
@@ -130,14 +131,15 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
-print(BASE_DIR)
 STATICFILES_DIRS = [str(BASE_DIR.joinpath('static'))]
-print(STATICFILES_DIRS)
 STATIC_ROOT = str(BASE_DIR.joinpath('staticfiles'))
-print(STATIC_ROOT)
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Activate Django-Heroku.
+django_heroku.settings(locals())
