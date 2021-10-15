@@ -1,1 +1,1 @@
-web: gunicorn Kooleposhti.wsgi
+web: gunicorn myproject.wsgi
