@@ -15,11 +15,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from .views import StudentViewSet, InstructorList
+from .views import course_list
 
 urlpatterns = [
-    # path('students/', StudentViewSet.as_view),
-    path('instructors/<int:pk>/', InstructorList.as_view(),
-         name='instructor-detail'),
-    path('instructors/', InstructorList.as_view(), name='all_instructors'),
+    path('', course_list),
 ]
