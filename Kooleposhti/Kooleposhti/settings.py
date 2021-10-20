@@ -46,7 +46,9 @@ INSTALLED_APPS = [
     'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
     'rest_framework',
-    'accounts'
+    'djoser',
+    'accounts',
+    'courses',
 ]
 
 MIDDLEWARE = [
@@ -86,10 +88,10 @@ WSGI_APPLICATION = 'Kooleposhti.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'd8tv0gnvk4m99c',
-        'USER': 'hpsfduflhvguzh',
+        'NAME': 'd7k7236cg45ugo',
+        'USER': 'bovzxigiqgyaby',
         'PASSWORD': env.str('DB_PASSWORD'),
-        'HOST': 'ec2-34-197-182-7.compute-1.amazonaws.com',
+        'HOST': 'ec2-44-199-19-76.compute-1.amazonaws.com',
         'PORT': '5432',
     }
 }
@@ -144,3 +146,27 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Activate Django-Heroku
 django_heroku.settings(locals())
+
+
+# Rest Framework Settings
+REST_FRAMEWORK = {
+    'COERCE_DECIMAL_TO_STRING': False,
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+
+SIMPLE_JWT = {
+    'AUTH_HEADER_TYPES': ('JWT',),
+}
+
+# User Model For AUTH
+AUTH_USER_MODEL = 'accounts.User'
+
+# DJOSER
+DJOSER = {
+    "SERIALIZERS": {
+        'user_create': 'accounts.serlizers.UserCreateSerializer'
+    }
+}

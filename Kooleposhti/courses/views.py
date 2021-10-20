@@ -12,7 +12,7 @@ from rest_framework.generics import ListCreateAPIView
 from rest_framework.viewsets import ModelViewSet
 
 
-class CourseList(ListCreateAPIView):
+class CourseList(ModelViewSet):
     queryset = Course.objects.select_related('instructor').all()
     serializer_class = CourseSerializer
 
