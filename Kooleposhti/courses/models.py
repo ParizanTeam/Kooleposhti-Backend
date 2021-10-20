@@ -1,5 +1,5 @@
 from django.db import models
-from accounts.models import Student
+from accounts.models import Instructor, Student
 
 
 class Promotion(models.Model):
@@ -9,6 +9,9 @@ class Promotion(models.Model):
 
 
 class Course(models.Model):
+    '''
+    ('title', 'description', 'price', 'last_update', 'instructor')
+    '''
     title = models.CharField(max_length=255)
     description = models.TextField()
     price = models.DecimalField(max_digits=6, decimal_places=2)  # 9999.99
@@ -16,6 +19,7 @@ class Course(models.Model):
     last_update = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
     promotions = models.ManyToManyField(Promotion)
+    instructor = models.OneToOneField(Instructor, on_delete=models.CASCADE)
 
 
 class Order (models.Model):

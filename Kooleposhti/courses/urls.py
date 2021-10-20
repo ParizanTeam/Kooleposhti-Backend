@@ -15,8 +15,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from .views import course_list
+from .views import CourseList
 
 urlpatterns = [
-    path('', course_list),
+    path('', CourseList.as_view()),
+    # path('<int:pk>/', course_detail),
 ]
