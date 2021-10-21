@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
+    'django_filters',
     'rest_framework',
     'djoser',
     'accounts',
@@ -151,6 +152,8 @@ django_heroku.settings(locals())
 # Rest Framework Settings
 REST_FRAMEWORK = {
     'COERCE_DECIMAL_TO_STRING': False,
+    # 'PAGE_SIZE': 10,
+    # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),

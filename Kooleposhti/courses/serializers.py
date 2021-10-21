@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Course
+from .models import Course, Review
 from decimal import Decimal
 from accounts.models import Instructor
 
@@ -16,3 +16,16 @@ class CourseSerializer(serializers.ModelSerializer):
 
     def calculate_new_price(self, course: Course):
         return course.price * Decimal(1.1)
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ('id', 'date', 'name', 'description')
+
+    def create(self, validated_data):
+        course_id = self.context['course_id']
+        return Review.objects.create(
+            course_id=course_id,
+            **validated_data
+        )

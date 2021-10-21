@@ -50,3 +50,14 @@ class CartItem(models.Model):
     cart = models.ForeignKey(ShoppingCart, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     quantity = models.PositiveSmallIntegerField()
+
+
+class Review(models.Model):
+    '''
+    fields = ('id', 'date', 'name', 'description', 'course')
+    '''
+    course = models.ForeignKey(
+        Instructor, on_delete=models.CASCADE, related_name='reviews')
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    date = models.DateField(auto_now_add=True)

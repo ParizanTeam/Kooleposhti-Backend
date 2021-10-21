@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, UpdateModelMixin
-from rest_framework.viewsets import GenericViewSet
+from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from accounts.models import Instructor, Student
 from .serializers import InstructorSerializer, StudentSerializer
 from rest_framework.generics import ListAPIView
@@ -13,7 +13,7 @@ class StudentViewSet(CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, Gen
     serializer_class = StudentSerializer
 
 
-class InstructorList(ListAPIView):
+class InstructorList(ModelViewSet):
     queryset = Instructor.objects.all()
     serializer_class = InstructorSerializer
 

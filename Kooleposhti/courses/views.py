@@ -3,22 +3,41 @@ from django.http import HttpResponse
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from accounts.models import Instructor, Student
-from .models import Course
-from .serializers import CourseSerializer
+from courses.filters import CourseFilter
+from courses.pagination import DefaultPagination
+from .models import Course, Review
+from .serializers import CourseSerializer, ReviewSerializer
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.mixins import ListModelMixin, CreateModelMixin
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.viewsets import ModelViewSet
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
 
 
 class CourseList(ModelViewSet):
     queryset = Course.objects.select_related('instructor').all()
     serializer_class = CourseSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['instructor_id']
+    filterset_class = CourseFilter
+    search_fields = ['title', 'description']  # space comma seprator
+    ordering_fields = ['price', 'last_update']  # -prince, last_update
+    pagination_class = DefaultPagination  # can be moved to settings
 
 
-class CourseDetail(APIView):
-    pass
+class ReviewViweSet(ModelViewSet):
+    serializer_class = ReviewSerializer
+
+    def get_queryset(self):
+        return Review.objects.filter(course_id=self.kwargs['course_pk'])
+
+    def get_serializer_context(self):
+        return {
+            'course_id': self.kwargs['course_pk']
+        }
 
 
 # @api_view(['GET', 'POST'])

@@ -15,9 +15,21 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from .views import CourseList
+from django.urls.conf import include
+from .views import CourseList, ReviewViweSet
+from rest_framework.routers import SimpleRouter, DefaultRouter
+from rest_framework_nested import routers
+
+router = routers.DefaultRouter()
+router.register('', CourseList, basename=None)
+courses_router = routers.NestedDefaultRouter(
+    parent_router=router, parent_prefix='', lookup='course')  # course_pk
+courses_router.register('reviews', ReviewViweSet, basename='course-reviews')
+# urlpatterns = router.urls
 
 urlpatterns = [
-    path('', CourseList.as_view()),
+    path('', include(router.urls)),
+    path('', include(courses_router.urls)),
+    # path('', CourseList.as_view()),
     # path('<int:pk>/', course_detail),
 ]
