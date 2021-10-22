@@ -1,5 +1,6 @@
 from django.db import models
 from accounts.models import Instructor, Student
+from uuid import uuid4
 
 
 class Promotion(models.Model):
@@ -42,11 +43,29 @@ class OrderItem (models.Model):
     course = models.ForeignKey(Course, on_delete=models.PROTECT)
 
 
-class ShoppingCart(models.Model):
+class ShoppingCart(models.Model):  # Cart
+    id = models.UUIDField(primary_key=True, default=uuid4)
     created_at = models.DateTimeField(auto_now_add=True)
 
 
 class CartItem(models.Model):
-    cart = models.ForeignKey(ShoppingCart, on_delete=models.CASCADE)
+    cart = models.ForeignKey(
+        ShoppingCart, on_delete=models.CASCADE, related_name='items')  # ShoppingCart.items
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     quantity = models.PositiveSmallIntegerField()
+
+    class Meta:
+        unique_together = [
+            ['cart', 'course'],
+        ]
+
+
+class Review(models.Model):
+    '''
+    fields = ('id', 'date', 'name', 'description', 'course')
+    '''
+    course = models.ForeignKey(
+        Instructor, on_delete=models.CASCADE, related_name='reviews')
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    date = models.DateField(auto_now_add=True)
