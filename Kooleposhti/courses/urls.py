@@ -16,14 +16,18 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.urls.conf import include
-from .views import CourseList, ReviewViweSet
+from .views import CourseList, ReviewViweSet, ShoppingCartViewSet
 from rest_framework.routers import SimpleRouter, DefaultRouter
 from rest_framework_nested import routers
+from pprint import pprint
 
 router = routers.DefaultRouter()
-router.register('', CourseList, basename=None)
+router.register('courses', CourseList, basename=None)
+router.register('carts', ShoppingCartViewSet)
+pprint(router.urls)
+
 courses_router = routers.NestedDefaultRouter(
-    parent_router=router, parent_prefix='', lookup='course')  # course_pk
+    parent_router=router, parent_prefix='courses', lookup='course')  # course_pk
 courses_router.register('reviews', ReviewViweSet, basename='course-reviews')
 # urlpatterns = router.urls
 

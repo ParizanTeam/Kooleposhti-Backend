@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Course, Review
+from .models import CartItem, Course, Review, ShoppingCart
 from decimal import Decimal
 from accounts.models import Instructor
 
@@ -29,3 +29,35 @@ class ReviewSerializer(serializers.ModelSerializer):
             course_id=course_id,
             **validated_data
         )
+
+
+class SimpleCourseSerializer():
+    # Basic info for Cart item
+    class Meta:
+        model = Course
+        fields = ['id', 'title', 'price']
+
+
+class CartItemSerializer(serializers.ModelSerializer):
+    course = SimpleCourseSerializer()
+    total_price = serializers.SerializerMethodField()
+
+    def get_total_price(self, cart_item: CartItem):
+        return cart_item.quantity * cart_item.course.price
+
+    class Meta:
+        model = CartItem
+        fields = ['id', 'course', 'quantity', 'total_price']
+
+
+class ShoppingCartSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only=True)
+    items = CartItemSerializer(many=True)
+    total_price = serializers.SerializerMethodField()
+
+    def get_total_price(self, cart: ShoppingCart):
+        return sum([item.quantity*item.course.price for item in cart.items.all()])
+
+    class Meta:
+        model = ShoppingCart
+        fields = ['id', 'items', 'total_price']

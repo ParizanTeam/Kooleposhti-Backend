@@ -5,13 +5,13 @@ from rest_framework.response import Response
 from accounts.models import Instructor, Student
 from courses.filters import CourseFilter
 from courses.pagination import DefaultPagination
-from .models import Course, Review
-from .serializers import CourseSerializer, ReviewSerializer
+from .models import CartItem, Course, Review, ShoppingCart
+from .serializers import CourseSerializer, ReviewSerializer, ShoppingCartSerializer
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.mixins import ListModelMixin, CreateModelMixin
+from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveModelMixin
 from rest_framework.generics import ListCreateAPIView
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import GenericViewSet, ModelViewSet, ReadOnlyModelViewSet
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
@@ -40,24 +40,27 @@ class ReviewViweSet(ModelViewSet):
         }
 
 
-# @api_view(['GET', 'POST'])
-# def course_list(request):
-#     if request.method == 'GET':
-#         queryset = Course.objects.all()
-#         serializer = CourseSerializer(queryset, many=True)
-#         return Response(serializer.data)
-#     elif request.method == 'POST':
-#         serializer = CourseSerializer(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-#         serializer.save()
-#         return Response(serializer.validated_data)
+class ShoppingCartViewSet(CreateModelMixin, RetrieveModelMixin, GenericViewSet):
+    queryset = ShoppingCart.objects.prefetch_related('items__course').all()
+    serializer_class = ShoppingCartSerializer
 
+    # @api_view(['GET', 'POST'])
+    # def course_list(request):
+    #     if request.method == 'GET':
+    #         queryset = Course.objects.all()
+    #         serializer = CourseSerializer(queryset, many=True)
+    #         return Response(serializer.data)
+    #     elif request.method == 'POST':
+    #         serializer = CourseSerializer(data=request.data)
+    #         serializer.is_valid(raise_exception=True)
+    #         serializer.save()
+    #         return Response(serializer.validated_data)
 
-# @api_view()
-# def course_detail(request, pk):
-#     course = get_object_or_404(Course, pk=pk)
-#     serializer = CourseSerializer(course)
-#     return Response(serializer.data)
+    # @api_view()
+    # def course_detail(request, pk):
+    #     course = get_object_or_404(Course, pk=pk)
+    #     serializer = CourseSerializer(course)
+    #     return Response(serializer.data)
 '''    
     try:
         course = Course.objects.get(pk=id)
@@ -78,6 +81,10 @@ def add_test_data():
     course = Course(title='Testt Course', description='Description for Course',
                     price=12.23, instructor=instructor)
     course.save()
+    item1 = CartItem(cart=ShoppingCart.objects.first(),
+                     course=Course.objects.first(),
+                     quantity=3)
+    item1.save()
 
 
 # def instructor_detail(request, pk):
