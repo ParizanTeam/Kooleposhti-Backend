@@ -15,9 +15,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from .views import StudentViewSet, InstructorList
+from .views import *
+from .api import *
+from rest_framework_simplejwt import views as jwt_views
 
 urlpatterns = [
+    path('register/', RegisterApi.as_view(), name='register'),
+    path('token/', jwt_views.TokenObtainPairView.as_view(), name ='token_create'),
+    path('token/refresh/', jwt_views.TokenRefreshView.as_view(), name ='token_refresh'),
+    path('blacklist/', LogoutAndBlacklistRefreshTokenForUserView.as_view(), name='blacklist'),
     # path('students/', StudentViewSet.as_view),
     path('instructors/<int:pk>/', InstructorList.as_view(),
          name='instructor-detail'),
