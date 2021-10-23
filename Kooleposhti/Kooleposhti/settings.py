@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
 import dj_database_url
 from environs import Env
@@ -157,11 +158,18 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+        # 'rest_framework.permissions.IsAuthenticated'
+    ]
 }
 
-
+# request header prefix JWT
+# SIMPLE JWT
 SIMPLE_JWT = {
+    # JWT ACCESS_TOKEN
     'AUTH_HEADER_TYPES': ('JWT',),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
 }
 
 # User Model For AUTH
@@ -170,6 +178,7 @@ AUTH_USER_MODEL = 'accounts.User'
 # DJOSER
 DJOSER = {
     "SERIALIZERS": {
-        'user_create': 'accounts.serlizers.UserCreateSerializer'
+        'user_create': 'accounts.serializers.UserCreateSerializer',
+        'current_user': 'accounts.serializers.UserSerializer',
     }
 }
