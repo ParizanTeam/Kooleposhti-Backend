@@ -17,11 +17,13 @@ from django.conf.urls import include
 from django.contrib import admin
 from django.urls import path
 from .views import StudentViewSet, InstructorList
-from rest_framework.routers import SimpleRouter
+from rest_framework.routers import DefaultRouter, SimpleRouter
+from rest_framework_nested import routers
 from pprint import pprint
 
-router = SimpleRouter()
+router = routers.DefaultRouter()
 router.register('instructors', InstructorList)
+router.register('students', StudentViewSet)
 # urlpatterns = router.urls
 
 
