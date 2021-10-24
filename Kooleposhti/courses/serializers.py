@@ -63,10 +63,3 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShoppingCart
         fields = ['id', 'items', 'total_price']
-
-
-
-class UserSerializer(BaseUserSerializer):
-    #  'current_user': 'djoser.serializers.UserSerializer',
-    class Meta (BaseUserSerializer.Meta):
-        fields = ['id', 'username', 'email', 'first_name', 'last_name']

@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
-
+import os
 from datetime import timedelta
 from pathlib import Path
 import dj_database_url
@@ -150,6 +150,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 django_heroku.settings(locals())
 
 
+# EMAIL
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get('EMAIL_ID')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PW')
+
+DEFAULT_FROM_EMAIL = 'Kooleposhti <no_reply@domain.com>'
+
+
 # Rest Framework Settings
 REST_FRAMEWORK = {
     'COERCE_DECIMAL_TO_STRING': False,
@@ -177,8 +188,25 @@ AUTH_USER_MODEL = 'accounts.User'
 
 # DJOSER
 DJOSER = {
+    "SEND_ACTIVATION_EMAIL": True,
+    "SEND_CONFIRMATION_EMAIL": True,
+    "USER_CREATE_PASSWORD_RETYPE": True,
+    "SET_PASSWORD_RETYPE": True,
+    "PASSWORD_RESET_CONFIRM_RETYPE": True,
+    "LOGOUT_ON_PASSWORD_CHANGE": True,
+    'PASSWORD_RESET_CONFIRM_URL': 'accounts/password/reset/confirm/{uid}/{token}',
+    'USERNAME_RESET_CONFIRM_URL': 'accounts/username/reset/confirm/{uid}/{token}',
+    'ACTIVATION_URL': 'accounts/activate/{uid}/{token}',
     "SERIALIZERS": {
         'user_create': 'accounts.serializers.UserCreateSerializer',
         'current_user': 'accounts.serializers.UserSerializer',
+    },
+    'EMAIL': {
+        'activation': 'accounts.email.ActivationEmail',
+        'confirmation': 'accounts.email.ConfirmationEmail',
+        'password_reset': 'accounts.email.PasswordResetEmail',
+        'password_changed_confirmation': 'accounts.email.PasswordChangedConfirmationEmail',
+        'username_changed_confirmation': 'accounts.email.UsernameChangedConfirmationEmail',
+        'username_reset': 'accounts.email.UsernameResetEmail',
     }
 }
