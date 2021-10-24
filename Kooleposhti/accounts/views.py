@@ -69,7 +69,7 @@ def activate_user_account(request, *args, **kwargs):
         },
         format='json'
     )
-    return Response(template_name="email/activation.html")
+    return Response(template_name="email/activation.htm")
 
 
 # accounts/activate/{uid}/{token}
