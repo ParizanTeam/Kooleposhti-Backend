@@ -36,7 +36,8 @@ DEBUG = env.bool('DEBUG', default=True)
 # ALLOWED_HOSTS = ['.herokuapp.com', 'localhost', '127.0.0.1']
 ALLOWED_HOSTS = ['*']
 # CORS
-CORS_ALLOWED_ORIGINS = True
+CORS_ALLOWED_ORIGINS = ['*']
+CORS_ORIGIN_ALLOW_ALL = True
 
 
 # Application definition
