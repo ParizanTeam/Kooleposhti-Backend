@@ -35,6 +35,8 @@ DEBUG = env.bool('DEBUG', default=True)
 
 # ALLOWED_HOSTS = ['.herokuapp.com', 'localhost', '127.0.0.1']
 ALLOWED_HOSTS = ['*']
+# CORS
+CORS_ALLOWED_ORIGINS = True
 
 
 # Application definition
@@ -211,6 +213,3 @@ DJOSER = {
         'username_reset': 'accounts.email.UsernameResetEmail',
     }
 }
-
-# CORS
-CORS_ALLOWED_ORIGINS = True
