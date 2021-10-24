@@ -33,11 +33,7 @@ SECRET_KEY = env.str('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG', default=True)
 
-# ALLOWED_HOSTS = ['.herokuapp.com', 'localhost', '127.0.0.1']
-ALLOWED_HOSTS = ['*']
-# CORS
-CORS_ALLOWED_ORIGINS = ['*']
-CORS_ORIGIN_ALLOW_ALL = True
+ALLOWED_HOSTS = ['.herokuapp.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -66,7 +62,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'Kooleposhti.urls'
