@@ -211,3 +211,6 @@ DJOSER = {
         'username_reset': 'accounts.email.UsernameResetEmail',
     }
 }
+
+# CORS
+CORS_ALLOWED_ORIGINS = True
