@@ -33,7 +33,14 @@ SECRET_KEY = env.str('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG', default=True)
 
-ALLOWED_HOSTS = ['.herokuapp.com', 'localhost', '127.0.0.1']
+# ALLOWED_HOSTS = ['.herokuapp.com', 'localhost', '127.0.0.1']
+
+ALLOWED_HOSTS = ['*']
+CORS_ORIGIN_ALLOW_ALL = True
+'''
+CORS_ORIGIN_ALLOW_ALL = False
+CORS_ORIGIN_WHITELIST = ('http://localhost:5000',)
+'''
 
 
 # Application definition
@@ -51,11 +58,13 @@ INSTALLED_APPS = [
     'djoser',
     'accounts',
     'courses',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
