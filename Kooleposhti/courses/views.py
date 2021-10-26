@@ -34,7 +34,7 @@ class ReviewViweSet(ModelViewSet):
     serializer_class = ReviewSerializer
 
     def get_queryset(self):
-        return Review.objects.filter(course_id=self.kwargs['course_pk'])
+        return Review.objects.filter(course_id=self.kwargs.get('course_pk'))
 
     def get_serializer_context(self):
         return {
@@ -53,7 +53,7 @@ class ShoppingCartItemViewSet(ModelViewSet):
 
     def get_queryset(self):
         return CartItem.objects \
-            .filter(pk=self.kwargs['pk']) \
+            .filter(pk=self.kwargs.get('pk')) \
             .select_related('course')
 
     # @api_view(['GET', 'POST'])
