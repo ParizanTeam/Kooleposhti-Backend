@@ -100,10 +100,10 @@ WSGI_APPLICATION = 'Kooleposhti.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'd7k7236cg45ugo',
-        'USER': 'bovzxigiqgyaby',
+        'NAME': 'dcnob3lebr55o2',
+        'USER': 'hzgvghwtcuhwbt',
         'PASSWORD': env.str('DB_PASSWORD'),
-        'HOST': 'ec2-44-199-19-76.compute-1.amazonaws.com',
+        'HOST': 'ec2-35-171-90-188.compute-1.amazonaws.com',
         'PORT': '5432',
     }
 }
