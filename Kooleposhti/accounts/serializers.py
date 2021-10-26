@@ -9,7 +9,6 @@ class UserCreateSerializer(BaseUserCreateSerializer):
     # birth_date = serializers.DateField()
 
     class Meta (BaseUserCreateSerializer.Meta):
-        ref_name = "User Create Serializer"
         fields = ['id', 'username', 'password',
                   'email', 'first_name', 'last_name',
                   #   'birth_date',
@@ -37,4 +36,5 @@ class StudentSerializer(serializers.ModelSerializer):
 class UserSerializer(BaseUserSerializer):
     #  'current_user': 'djoser.serializers.UserSerializer',
     class Meta (BaseUserSerializer.Meta):
+        ref_name = "My User Serializer"
         fields = ['id', 'username', 'email', 'first_name', 'last_name']
