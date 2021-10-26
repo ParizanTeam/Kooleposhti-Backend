@@ -13,6 +13,8 @@ from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework import permissions
 from rest_framework.test import APIRequestFactory
 from accounts import serializers
+from rest_framework.test import RequestsClient
+from django.conf import settings
 # Create your views here.
 
 
@@ -60,16 +62,15 @@ def reset_user_password(request, *args, **kwargs):
 
 @api_view(http_method_names=permissions.SAFE_METHODS)
 def activate_user_account(request, *args, **kwargs):
-    factory = APIRequestFactory()
-    request = factory.post(
-        path=reverse('user-activation'),
+    client = RequestsClient()
+    response = client.post(
+        url=f"{settings.WEBSITE_URL}{reverse('user-activation')}",
         data={
             'uid': kwargs.get('uid'),
             'token': kwargs.get('token')
-        },
-        format='json'
+        }
     )
-    return Response(template_name="email/activation.htm")
+    return render(request=request, template_name="email/activation.html")
 
 
 # accounts/activate/{uid}/{token}
