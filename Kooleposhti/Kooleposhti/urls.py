@@ -23,7 +23,7 @@ from rest_framework import permissions
 from django.conf import settings
 
 
-schema_view = get_schema_view(  # swagger # redoc
+schema_view = get_schema_view(  # swagger/redoc
     openapi.Info(
         title="Kooleposhti",
         default_version="v1",
