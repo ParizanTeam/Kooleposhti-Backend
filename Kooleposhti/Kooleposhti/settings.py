@@ -9,12 +9,12 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
-
+import os
+from datetime import timedelta
 from pathlib import Path
 import dj_database_url
 from environs import Env
 import django_heroku
-from _datetime import timedelta
 
 # Environment Variables
 env = Env()  # new
@@ -33,7 +33,14 @@ SECRET_KEY = env.str('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG', default=True)
 
-ALLOWED_HOSTS = ['.herokuapp.com', 'localhost', '127.0.0.1']
+# ALLOWED_HOSTS = ['.herokuapp.com', 'localhost', '127.0.0.1']
+
+ALLOWED_HOSTS = ['*']
+CORS_ORIGIN_ALLOW_ALL = True
+'''
+CORS_ORIGIN_ALLOW_ALL = False
+CORS_ORIGIN_WHITELIST = ('http://localhost:5000',)
+'''
 
 
 # Application definition
@@ -48,15 +55,17 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_filters',
     'rest_framework',
-    'rest_framework_simplejwt.token_blacklist',
     'djoser',
     'accounts',
     'courses',
+    'corsheaders',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -91,10 +100,10 @@ WSGI_APPLICATION = 'Kooleposhti.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'd7k7236cg45ugo',
-        'USER': 'bovzxigiqgyaby',
+        'NAME': 'dcnob3lebr55o2',
+        'USER': 'hzgvghwtcuhwbt',
         'PASSWORD': env.str('DB_PASSWORD'),
-        'HOST': 'ec2-44-199-19-76.compute-1.amazonaws.com',
+        'HOST': 'ec2-35-171-90-188.compute-1.amazonaws.com',
         'PORT': '5432',
     }
 }
@@ -110,9 +119,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
     },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
+    # {
+    #     'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    # },
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
@@ -147,8 +156,19 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-# Activate Django-Heroku
+# ActivateDjango-Heroku
 django_heroku.settings(locals())
+
+
+# EMAIL
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get('EMAIL_ID')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PW')
+
+DEFAULT_FROM_EMAIL = 'Kooleposhti <no_reply@domain.com>'
 
 
 # Rest Framework Settings
@@ -159,26 +179,18 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
-    'DEFAULT_PERMISSION_CLASSES': (
+    'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
-        # 'rest_framework.permissions.IsAuthenticated',
-    ),
+        # 'rest_framework.permissions.IsAuthenticated'
+    ]
 }
 
-
+# request header prefix JWT
+# SIMPLE JWT
 SIMPLE_JWT = {
+    # JWT ACCESS_TOKEN
     'AUTH_HEADER_TYPES': ('JWT',),
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=14),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,
-    'VERIFYING_KEY': None,
-    'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',
-    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
-    'TOKEN_TYPE_CLAIM': 'token_type',
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
 }
 
 # User Model For AUTH
@@ -186,7 +198,25 @@ AUTH_USER_MODEL = 'accounts.User'
 
 # DJOSER
 DJOSER = {
+    "SEND_ACTIVATION_EMAIL": True,
+    "SEND_CONFIRMATION_EMAIL": True,
+    "USER_CREATE_PASSWORD_RETYPE": True,
+    "SET_PASSWORD_RETYPE": True,
+    "PASSWORD_RESET_CONFIRM_RETYPE": True,
+    "LOGOUT_ON_PASSWORD_CHANGE": True,
+    'PASSWORD_RESET_CONFIRM_URL': 'accounts/password/reset/confirm/{uid}/{token}',
+    'USERNAME_RESET_CONFIRM_URL': 'accounts/username/reset/confirm/{uid}/{token}',
+    'ACTIVATION_URL': 'accounts/activate/{uid}/{token}',
     "SERIALIZERS": {
-        'user_create': 'accounts.serlizers.UserCreateSerializer'
+        'user_create': 'accounts.serializers.UserCreateSerializer',
+        'current_user': 'accounts.serializers.UserSerializer',
+    },
+    'EMAIL': {
+        'activation': 'accounts.email.ActivationEmail',
+        'confirmation': 'accounts.email.ConfirmationEmail',
+        'password_reset': 'accounts.email.PasswordResetEmail',
+        'password_changed_confirmation': 'accounts.email.PasswordChangedConfirmationEmail',
+        'username_changed_confirmation': 'accounts.email.UsernameChangedConfirmationEmail',
+        'username_reset': 'accounts.email.UsernameResetEmail',
     }
 }

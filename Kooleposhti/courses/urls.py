@@ -16,24 +16,29 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.urls.conf import include
-from .views import CourseList, ReviewViweSet, ShoppingCartViewSet
+from .views import CourseViewSet, ReviewViweSet, ShoppingCartViewSet, ShoppingCartItemViewSet
 from rest_framework.routers import SimpleRouter, DefaultRouter
 from rest_framework_nested import routers
 from pprint import pprint
 
 router = routers.DefaultRouter()
-router.register('courses', CourseList, basename=None)
+router.register('courses', CourseViewSet, basename=None)
 router.register('carts', ShoppingCartViewSet)
-pprint(router.urls)
+# pprint(router.urls)
 
 courses_router = routers.NestedDefaultRouter(
     parent_router=router, parent_prefix='courses', lookup='course')  # course_pk
 courses_router.register('reviews', ReviewViweSet, basename='course-reviews')
+
+carts_router = routers.NestedDefaultRouter(
+    parent_router=router, parent_prefix='carts', lookup='cart')
+carts_router.register('items', ShoppingCartItemViewSet, basename='cart-items')
 # urlpatterns = router.urls
 
 urlpatterns = [
     path('', include(router.urls)),
     path('', include(courses_router.urls)),
+    path('', include(carts_router.urls)),
     # path('', CourseList.as_view()),
     # path('<int:pk>/', course_detail),
 ]

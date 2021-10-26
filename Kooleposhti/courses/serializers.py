@@ -1,7 +1,9 @@
 from rest_framework import serializers
+from rest_framework.viewsets import ModelViewSet
 from .models import CartItem, Course, Review, ShoppingCart
 from decimal import Decimal
 from accounts.models import Instructor
+from djoser.serializers import UserSerializer as BaseUserSerializer
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -52,7 +54,7 @@ class CartItemSerializer(serializers.ModelSerializer):
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(read_only=True)
-    items = CartItemSerializer(many=True)
+    items = CartItemSerializer(many=True, read_only=True)
     total_price = serializers.SerializerMethodField()
 
     def get_total_price(self, cart: ShoppingCart):

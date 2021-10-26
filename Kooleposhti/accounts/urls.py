@@ -16,24 +16,22 @@ Including another URLconf
 from django.conf.urls import include
 from django.contrib import admin
 from django.urls import path
-from .views import *
-from .api import *
-from rest_framework_simplejwt import views as jwt_views
-from rest_framework.routers import SimpleRouter
+from .views import StudentViewSet, InstructorList, reset_user_password, activate_user_account
+from rest_framework.routers import DefaultRouter, SimpleRouter
+from rest_framework_nested import routers
 from pprint import pprint
 
-router = SimpleRouter()
+router = routers.DefaultRouter()
 router.register('instructors', InstructorList)
+router.register('students', StudentViewSet)
 # urlpatterns = router.urls
 
 
 # pprint(router.urls)
 urlpatterns = [
-    path('register/', RegisterApi.as_view(), name='register'),
-    path('token/', jwt_views.TokenObtainPairView.as_view(), name ='token_create'),
-    path('token/refresh/', jwt_views.TokenRefreshView.as_view(), name ='token_refresh'),
-    path('blacklist/', LogoutAndBlacklistRefreshTokenForUserView.as_view(), name='blacklist'),
     path('', include(router.urls)),
+    path('password/reset/confirm/{uid}/{token}', reset_user_password),
+    path('activate/<uid>/<token>', activate_user_account),
     # path('students/', StudentViewSet.as_view),
     # path('instructors/<int:pk>/', InstructorList.as_view(),
     #      name='instructor-detail'),
