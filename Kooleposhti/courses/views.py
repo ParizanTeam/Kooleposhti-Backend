@@ -38,7 +38,7 @@ class ReviewViweSet(ModelViewSet):
 
     def get_serializer_context(self):
         return {
-            'course_id': self.kwargs['course_pk']
+            'course_id': self.kwargs.get('course_pk')
         }
 
 
