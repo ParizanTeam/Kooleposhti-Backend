@@ -2189,4 +2189,5 @@ pip-selfcheck.json
 
 
 # pipefile.lock
-*.lock
+Pipfile
+Pipfile.lock
