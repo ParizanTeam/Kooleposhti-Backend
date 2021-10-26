@@ -220,3 +220,6 @@ DJOSER = {
         'username_reset': 'accounts.email.UsernameResetEmail',
     }
 }
+
+# WEBSITE URL that deployed
+WEBSITE_URL = os.environ.get('WEBSITE_URL')
