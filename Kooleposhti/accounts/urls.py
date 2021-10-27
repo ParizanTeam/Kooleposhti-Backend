@@ -17,6 +17,7 @@ from django.conf.urls import include
 from django.contrib import admin
 from django.urls import path
 from .views import StudentViewSet, InstructorList, reset_user_password, activate_user_account
+from .email import ActivationEmail
 from rest_framework.routers import DefaultRouter, SimpleRouter
 from rest_framework_nested import routers
 from pprint import pprint
@@ -31,7 +32,8 @@ router.register('students', StudentViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     path('password/reset/confirm/{uid}/{token}', reset_user_password),
-    path('activate/<uid>/<token>', activate_user_account),
+    path('activate/', ActivationEmail.as_view(), name='activate')
+    # path('activate/<uid>/<token>', activate_user_account),
     # path('students/', StudentViewSet.as_view),
     # path('instructors/<int:pk>/', InstructorList.as_view(),
     #      name='instructor-detail'),

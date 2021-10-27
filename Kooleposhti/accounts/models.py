@@ -20,6 +20,12 @@ class User(AbstractUser):
             ('cancel_order', 'Can cancel order')
         ]
 
+class Verification(models.Model):
+
+    email = models.EmailField(unique=True)
+    code = models.CharField(max_length=6)
+    create_time = models.DateTimeField(auto_now_add=True)
+
 
 class Instructor(models.Model):
     '''
