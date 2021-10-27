@@ -223,3 +223,7 @@ DJOSER = {
 
 # WEBSITE URL that deployed
 WEBSITE_URL = os.environ.get('WEBSITE_URL')
+
+
+# Token Expiration Time for Email verification in days
+TOKEN_EXPIRATION_TIME = 1

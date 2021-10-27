@@ -1,6 +1,5 @@
 from django.contrib.auth.tokens import default_token_generator
 from templated_mail.mail import BaseEmailMessage
-
 from .models import Verification
 from djoser import utils
 from djoser.conf import settings
@@ -12,12 +11,18 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 import random
+from datetime import timedelta
 
+
+def remove_expired_tokens():
+    for verification in Verification.objects:
+        if verification.create_time > timedelta(days=settings.TOKEN_EXPIRATION_TIME):
+            verification.delete()
 
 
 class ActivationEmail(APIView):
     def post(self, request: HttpRequest):
-
+        remove_expired_tokens()
         user_email = request.POST['email']
         user_first_name = request.POST['first_name']
 
@@ -25,15 +30,15 @@ class ActivationEmail(APIView):
             random_code = random.randrange(100000, 1000000)
             template = render_to_string('accounts/activation.html',
                                         {
-                                        'name': user_first_name,
-                                        'code': random_code
+                                            'name': user_first_name,
+                                            'code': random_code
                                         })
 
             email = EmailMessage('تایید حساب کاربری در کوله پشتی',
-                                template, 
-                                'Kooleposhti', 
-                                [user_email]
-                                )
+                                 template,
+                                 'Kooleposhti',
+                                 [user_email]
+                                 )
 
             email.content_subtype = "html"
             email.fail_silently = False
@@ -41,7 +46,7 @@ class ActivationEmail(APIView):
 
             try:
                 # email resent
-                verification_code = Verification.objects.get(email= email)
+                verification_code = Verification.objects.get(email=email)
                 verification_code.code = str(random_code)
                 verification_code.save()
 
@@ -49,11 +54,11 @@ class ActivationEmail(APIView):
                 # email sent
                 Verification.objects.create(email=email, code=str(random_code))
 
-            return Response(status= status.HTTP_200_OK)
+            return Response(status=status.HTTP_200_OK, data='Email sent successfully')
             # return Response({"code": random_code}, status= status.HTTP_200_OK)
 
         else:
-            return Response(f"'{email}' doesn't exist", status=status.HTTP_404_NOT_FOUND)
+            return Response(f"'{user_email}' doesn't exist", status=status.HTTP_404_NOT_FOUND)
 
 
 # class ActivationEmail(BaseEmailMessage):
