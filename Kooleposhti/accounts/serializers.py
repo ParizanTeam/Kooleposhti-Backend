@@ -1,7 +1,7 @@
 from django.conf import settings
 from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
 from rest_framework import serializers
-from accounts.models import Student, Instructor
+from accounts.models import Student, Instructor, User
 from rest_framework import serializers
 from djoser.serializers import UserSerializer as BaseUserSerializer
 
@@ -9,23 +9,36 @@ from djoser.serializers import UserSerializer as BaseUserSerializer
 class UserCreateSerializer(serializers.ModelSerializer):
     # birth_date = serializers.DateField()
     is_instructor = serializers.BooleanField(default=False)
+    password1 = serializers.CharField(
+        max_length=255, write_only=True, source='password')
+    password2 = serializers.CharField(max_length=255, write_only=True)
 
     class Meta ():
-        model = settings.AUTH_USER_MODEL
-        fields = ['id', 'username', 'password',
+        model = User
+        fields = ['id', 'username', 'password1', 'password2',
                   'email', 'first_name', 'last_name',
                   'is_instructor'
                   #   'birth_date',
                   ]
 
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password2']:
+            raise serializers.ValidationError("Passwords Do not match")
+        return super().validate(attrs)
+
     def create(self, validated_data):
-        if 'is_instructor' in validated_data:
-            del validated_data['is_instructor']
+        self.excluded_fields(validated_data)
         return super().create(validated_data)
+    
+    def excluded_fields(self, data) :
+        if 'is_instructor' in data:
+            del data['is_instructor']
+        if 'password2' in data:
+            del data['password2']
+        
 
     def update(self, instance, validated_data):
-        if 'is_instructor' in validated_data:
-            del validated_data['is_instructor']
+        self.excluded_fields(validated_data)
         return super().update(instance, validated_data)
 
 

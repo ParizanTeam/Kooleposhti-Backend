@@ -33,8 +33,8 @@ urlpatterns = [
     path('', include(router.urls)),
     path('password/reset/confirm/{uid}/{token}', reset_user_password),
     path('activate/', ActivationEmail.as_view(), name='activate'),
-    path('check_email/', check_email, name="check_email"),
-    path('check-username/', check_username, name="check-username"),
+    path('checkemail/', check_email, name="check_email"),
+    path('checkusername/', check_username, name="check-username"),
     path('signup/', sign_up_user, name='sign_up')
     # path('activate/<uid>/<token>', activate_user_account),
     # path('students/', StudentViewSet.as_view),
