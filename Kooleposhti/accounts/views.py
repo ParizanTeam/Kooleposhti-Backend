@@ -10,7 +10,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
-from rest_framework import permissions
+from rest_framework import permissions, status
 from rest_framework.test import APIRequestFactory
 from accounts import serializers
 from rest_framework.test import RequestsClient
@@ -71,6 +71,26 @@ def activate_user_account(request, *args, **kwargs):
         }
     )
     return render(request=request, template_name="email/activation.html")
+
+
+def check_email(request):
+    try:
+        User.objects.get(email=request.Post['email'])
+        return Response(f"email '{request.Post['email']}' already exists!", 
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    except User.DoesNotExist:
+        return Response(status=status.HTTP_200_OK)
+
+
+def check_username(request):
+    try:
+        User.objects.get(username=request.Post['username'])
+        return Response(f"username '{request.Post['username']}' is already taken!", 
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    except User.DoesNotExist:
+        return Response(status=status.HTTP_200_OK)
 
 
 # accounts/activate/{uid}/{token}
