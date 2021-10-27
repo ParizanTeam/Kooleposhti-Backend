@@ -22,7 +22,7 @@ class User(AbstractUser):
 
 
 class Verification(models.Model):
-    email = models.EmailField(unique=True)
+    email = models.EmailField(primary_key=True)
     token = models.CharField(max_length=6)
     create_time = models.DateTimeField(auto_now_add=True)
 

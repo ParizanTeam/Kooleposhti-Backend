@@ -1,3 +1,5 @@
+from .serializers import UserCreateSerializer
+# from . signals import user_created
 from validate_email import validate_email
 from django.http.request import HttpRequest
 from django.urls import reverse
@@ -76,30 +78,30 @@ def activate_user_account(request, *args, **kwargs):
     return render(request=request, template_name="email/activation.html")
 
 
+@api_view(http_method_names=['POST'])
 def check_email(request):
     try:
-        User.objects.get(email=request.Post['email'])
-        return Response(f"email '{request.Post['email']}' already exists!",
+        User.objects.get(email=request.data['email'])
+        return Response(f"email '{request.data['email']}' already exists!",
                         status=status.HTTP_400_BAD_REQUEST)
-
     except User.DoesNotExist:
-        return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK, data='New Email')
 
 
+@api_view(http_method_names=['POST'])
 def check_username(request):
     try:
-        User.objects.get(username=request.Post['username'])
-        return Response(f"username '{request.Post['username']}' is already taken!",
+        User.objects.get(username=request.data['username'])
+        return Response(f"username '{request.data['username']}' is already taken!",
                         status=status.HTTP_400_BAD_REQUEST)
-
     except User.DoesNotExist:
-        return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK, data='New Username')
 
 
-@api_view(http_method_names='POST')
+@api_view(http_method_names=['POST'])
 def check_code(request: HttpRequest, *args, **kwargs):
-    email = request.POST.get('email')
-    token = request.POST.get('token')
+    email = request.data.get('email')
+    token = request.data.get('token')
     if email is None:
         return Response(status=status.HTTP_400_BAD_REQUEST, data='Email is not Provided')
     if token is None:
@@ -117,6 +119,14 @@ def check_code(request: HttpRequest, *args, **kwargs):
     return Response(data='Valid Email and Token', status=status.HTTP_202_ACCEPTED)
 
 
-@api_view(http_method_names='POST')
+@api_view(http_method_names=['POST'])
 def sign_up_user(request: HttpRequest, *args, **kwargs):
-    pass
+    serializer = UserCreateSerializer(**request.data)
+    if not serializer.is_valid():
+        return Response(data=serializer.errors, status=status.HTTP_406_NOT_ACCEPTABLE)
+    is_instructor = serializer.data['is_instructor']
+    user = serializer.save()
+    if is_instructor:
+        Instructor.objects.create(user=user)
+    else:
+        Student.objects.create(user=user)
