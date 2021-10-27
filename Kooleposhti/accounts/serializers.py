@@ -1,3 +1,4 @@
+from django.conf import settings
 from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
 from rest_framework import serializers
 from accounts.models import Student, Instructor
@@ -5,14 +6,27 @@ from rest_framework import serializers
 from djoser.serializers import UserSerializer as BaseUserSerializer
 
 
-class UserCreateSerializer(BaseUserCreateSerializer):
+class UserCreateSerializer(serializers.ModelSerializer):
     # birth_date = serializers.DateField()
+    is_instructor = serializers.BooleanField(default=False)
 
-    class Meta (BaseUserCreateSerializer.Meta):
+    class Meta ():
+        model = settings.AUTH_USER_MODEL
         fields = ['id', 'username', 'password',
                   'email', 'first_name', 'last_name',
+                  'is_instructor'
                   #   'birth_date',
                   ]
+
+    def create(self, validated_data):
+        if 'is_instructor' in validated_data:
+            del validated_data['is_instructor']
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        if 'is_instructor' in validated_data:
+            del validated_data['is_instructor']
+        return super().update(instance, validated_data)
 
 
 class InstructorSerializer(serializers.ModelSerializer):
