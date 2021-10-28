@@ -10,8 +10,8 @@ from django.conf import settings
 class User(AbstractUser):
     email = models.EmailField(unique=True)
     phone_no = models.CharField(max_length=20)
-    first_name = models.CharField(max_length=20)
-    last_name = models.CharField(max_length=20)
+    first_name = models.CharField(max_length=255, blank=True)
+    last_name = models.CharField(max_length=255, blank=True)
 
     class Meta:
         # model = User

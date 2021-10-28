@@ -21,6 +21,9 @@ from .email import ActivationEmail
 from rest_framework.routers import DefaultRouter, SimpleRouter
 from rest_framework_nested import routers
 from pprint import pprint
+from django.urls import re_path
+from rest_framework_simplejwt import views
+
 
 router = routers.DefaultRouter()
 router.register('instructors', InstructorList)
@@ -37,6 +40,11 @@ urlpatterns = [
     path('checkusername/', check_username, name="check-username"),
     path('signup/', sign_up_user, name='sign_up'),
     path('checkcode/', check_code, name='check_code'),
+    re_path(r"^jwt/create/?", views.TokenObtainPairView.as_view(),
+            name="jwt-create"),
+    re_path(r"^jwt/refresh/?", views.TokenRefreshView.as_view(),
+            name="jwt-refresh"),
+    re_path(r"^jwt/verify/?", views.TokenVerifyView.as_view(), name="jwt-verify"),
     # path('activate/<uid>/<token>', activate_user_account),
     # path('students/', StudentViewSet.as_view),
     # path('instructors/<int:pk>/', InstructorList.as_view(),

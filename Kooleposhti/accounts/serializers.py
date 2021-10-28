@@ -16,8 +16,9 @@ class UserCreateSerializer(serializers.ModelSerializer):
     class Meta ():
         model = User
         fields = ['id', 'username', 'password1', 'password2',
-                  'email', 'first_name', 'last_name',
-                  'is_instructor'
+                  'email',
+                  #   'first_name', 'last_name',
+                  'is_instructor',
                   #   'birth_date',
                   ]
 
@@ -27,19 +28,20 @@ class UserCreateSerializer(serializers.ModelSerializer):
         return super().validate(attrs)
 
     def create(self, validated_data):
-        self.excluded_fields(validated_data)
-        return super().create(validated_data)
-    
-    def excluded_fields(self, data) :
-        if 'is_instructor' in data:
-            del data['is_instructor']
-        if 'password2' in data:
-            del data['password2']
-        
+        validated_data_cp = self.excluded_fields(validated_data)
+        return super().create(validated_data_cp)
+
+    def excluded_fields(self, validated_data):
+        validated_data_cp = validated_data.copy()
+        if 'is_instructor' in validated_data:
+            del validated_data_cp['is_instructor']
+        if 'password2' in validated_data:
+            del validated_data_cp['password2']
+        return validated_data_cp
 
     def update(self, instance, validated_data):
-        self.excluded_fields(validated_data)
-        return super().update(instance, validated_data)
+        validated_data_cp = self.excluded_fields(validated_data)
+        return super().update(instance, validated_data_cp)
 
 
 class InstructorSerializer(serializers.ModelSerializer):

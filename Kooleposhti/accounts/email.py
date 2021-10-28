@@ -11,18 +11,18 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 import random
-from datetime import timedelta
+from datetime import *
 from django import conf
 
 
 def remove_expired_tokens():
-    Verification.objects.filter(create_time__gte=timedelta(
-        days=conf.settings.TOKEN_EXPIRATION_TIME)).delete()
+    time_threshold = datetime.now(timezone.utc) - timedelta(days=1)
+    Verification.objects.filter(create_time__lte=time_threshold).delete()
 
 
 class ActivationEmail(APIView):
     def post(self, request: HttpRequest):
-        # remove_expired_tokens()
+        remove_expired_tokens()
         user_email = request.data['email']
         user_username = request.data['username']
 
@@ -31,7 +31,8 @@ class ActivationEmail(APIView):
             template = render_to_string('myemail/activation.html',
                                         {
                                             'username': user_username,
-                                            'code': rnd_tok
+                                            'code': rnd_tok,
+                                            'WEBSITE_URL': 'kooleposhti.herokuapp.com',
                                         })
 
             email = EmailMessage('تایید حساب کاربری در کوله پشتی',

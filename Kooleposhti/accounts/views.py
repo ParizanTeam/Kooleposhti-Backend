@@ -141,8 +141,8 @@ def sign_up_user(request: HttpRequest, *args, **kwargs):
             'password1': request.data.get('password1'),
             'password2': request.data.get('password2'),
             'email': request.data.get('email'),
-            'first_name': request.data.get('first_name'),
-            'last_name': request.data.get('last_name'),
+            # 'first_name': request.data.get('first_name'),
+            # 'last_name': request.data.get('last_name'),
             'is_instructor': request.data.get('is_instructor', False),
         }
         serializer = UserCreateSerializer(data=serializer_dict)
@@ -153,4 +153,7 @@ def sign_up_user(request: HttpRequest, *args, **kwargs):
             Instructor.objects.create(user=user)
         else:
             Student.objects.create(user=user)
-        return Response(status=status.HTTP_201_CREATED, data=serializer.data)
+        data = serializer.validated_data.copy()
+        del data['password']
+        del data['password2']
+        return Response(status=status.HTTP_201_CREATED, data=data)
