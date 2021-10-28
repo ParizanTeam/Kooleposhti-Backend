@@ -40,7 +40,7 @@ urlpatterns = [
     path('checkusername/', check_username, name="check-username"),
     path('signup/', sign_up_user, name='sign_up'),
     path('checkcode/', check_code, name='check_code'),
-    re_path(r"^jwt/create/?", views.TokenObtainPairView.as_view(),
+    re_path(r"^jwt/create/?", MyTokenObtainPairView.as_view(),
             name="jwt-create"),
     re_path(r"^jwt/refresh/?", views.TokenRefreshView.as_view(),
             name="jwt-refresh"),

@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'courses',
     'corsheaders',
     'drf_yasg',
+    'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
@@ -229,3 +230,9 @@ WEBSITE_URL = os.environ.get('WEBSITE_URL')
 
 # Token Expiration Time for Email verification in days
 TOKEN_EXPIRATION_TIME = 1
+
+
+# Authentication Backend
+AUTHENTICATION_BACKENDS = [
+    'accounts.backends.MyModelBackend',
+]
