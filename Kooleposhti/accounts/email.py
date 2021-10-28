@@ -24,13 +24,13 @@ class ActivationEmail(APIView):
     def post(self, request: HttpRequest):
         # remove_expired_tokens()
         user_email = request.data['email']
-        user_first_name = request.data['first_name']
+        user_username = request.data['username']
 
         if validate_email(user_email):
             rnd_tok = random.randrange(100000, 1000000)
             template = render_to_string('email/activation.html',
                                         {
-                                            'name': user_first_name,
+                                            'username': user_username,
                                             'code': rnd_tok
                                         })
 
