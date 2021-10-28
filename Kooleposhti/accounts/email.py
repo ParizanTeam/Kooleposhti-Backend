@@ -28,7 +28,7 @@ class ActivationEmail(APIView):
 
         if validate_email(user_email):
             rnd_tok = random.randrange(100000, 1000000)
-            template = render_to_string('email/activation.html',
+            template = render_to_string('myemail/activation.html',
                                         {
                                             'username': user_username,
                                             'code': rnd_tok
@@ -46,13 +46,16 @@ class ActivationEmail(APIView):
 
             try:
                 # email resent
-                verification_code = Verification.objects.create(
-                    email=email, token=str(rnd_tok))
-                verification_code.save()
+                verification_obj = Verification.objects.get(email=user_email)
+                verification_obj.token = str(rnd_tok)
+                verification_obj.save()
 
             except Verification.DoesNotExist:
                 # email sent
-                Verification.objects.create(email=email, code=str(rnd_tok))
+                verification_obj = Verification.objects.create(
+                    email=user_email,
+                    token=str(rnd_tok))
+                verification_obj.save()
 
             return Response(status=status.HTTP_200_OK, data='Email sent successfully')
             # return Response({"code": random_code}, status= status.HTTP_200_OK)

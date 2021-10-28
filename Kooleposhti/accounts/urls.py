@@ -35,7 +35,8 @@ urlpatterns = [
     path('activate/', ActivationEmail.as_view(), name='activate'),
     path('checkemail/', check_email, name="check_email"),
     path('checkusername/', check_username, name="check-username"),
-    path('signup/', sign_up_user, name='sign_up')
+    path('signup/', sign_up_user, name='sign_up'),
+    path('checkcode/', check_code, name='check_code'),
     # path('activate/<uid>/<token>', activate_user_account),
     # path('students/', StudentViewSet.as_view),
     # path('instructors/<int:pk>/', InstructorList.as_view(),

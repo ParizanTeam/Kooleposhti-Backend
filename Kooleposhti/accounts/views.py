@@ -105,6 +105,16 @@ def check_code(request: HttpRequest, *args, **kwargs):
     if request.method == 'POST':
         email = request.data.get('email')
         token = request.data.get('token')
+        try:
+            User.objects.get(email=email)
+            try:
+                verification_obj = Verification.objects.get(pk=email)
+                verification_obj.delete()
+            except Verification.DoesNotExist:
+                pass
+            return Response(status=status.HTTP_400_BAD_REQUEST, data='User is currently activated')
+        except User.DoesNotExist:
+            pass
         if email is None:
             return Response(status=status.HTTP_400_BAD_REQUEST, data='Email is not Provided')
         if token is None:
@@ -114,11 +124,12 @@ def check_code(request: HttpRequest, *args, **kwargs):
         if not validate_email(email):
             return Response(status=status.HTTP_406_NOT_ACCEPTABLE, data='email is in the wrong format')
         try:
-            verification_obj = Verification.objects.get(email=email)
+            verification_obj = Verification.objects.get(pk=email)
             if token != verification_obj.token:
                 return Response(status=status.HTTP_406_NOT_ACCEPTABLE, data='wrong or expired token')
         except Verification.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST, data='wrong email or expired token')
+        verification_obj.delete()
         return Response(data='Valid Email and Token', status=status.HTTP_202_ACCEPTED)
 
 
