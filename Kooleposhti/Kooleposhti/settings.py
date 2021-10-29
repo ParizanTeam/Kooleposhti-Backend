@@ -205,8 +205,8 @@ PASSWORD_RESET_CONFIRM_URL = 'accounts/password/reset/confirm/{uid}/{token}'
 
 # DJOSER
 DJOSER = {
-    "SEND_ACTIVATION_EMAIL": True,
-    "SEND_CONFIRMATION_EMAIL": True,
+    # "SEND_ACTIVATION_EMAIL": True, # login ro tahte tasir gharar mide
+    # "SEND_CONFIRMATION_EMAIL": True,
     "USER_CREATE_PASSWORD_RETYPE": True,
     "SET_PASSWORD_RETYPE": True,
     "PASSWORD_RESET_CONFIRM_RETYPE": True,
@@ -221,7 +221,7 @@ DJOSER = {
     'EMAIL': {
         # 'activation': 'accounts.email.ActivationEmail',
         # 'confirmation': 'accounts.email.ConfirmationEmail',
-        'password_reset': 'accounts.email.PasswordResetEmail',
+        # 'password_reset': 'accounts.email.PasswordResetEmail',
         # 'password_changed_confirmation': 'accounts.email.PasswordChangedConfirmationEmail',
         # 'username_changed_confirmation': 'accounts.email.UsernameChangedConfirmationEmail',
         # 'username_reset': 'accounts.email.UsernameResetEmail',
