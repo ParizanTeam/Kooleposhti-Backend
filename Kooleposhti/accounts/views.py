@@ -1,3 +1,12 @@
+from .serializers import UserSerializer
+from .email import PasswordChangedConfirmationEmail
+from django.contrib.auth.tokens import default_token_generator
+from djoser import utils
+from .email import PasswordResetEmail
+from djoser.serializers import PasswordResetConfirmRetypeSerializer
+from djoser.serializers import SendEmailResetSerializer
+from djoser.compat import get_user_email
+from django.utils.timezone import now
 from rest_framework_simplejwt.views import TokenViewBase
 from .serializers import UserCreateSerializer
 # from . signals import user_created
@@ -19,7 +28,8 @@ from rest_framework import permissions, status
 from rest_framework.test import APIRequestFactory
 from accounts import serializers
 from rest_framework.test import RequestsClient
-from django.conf import settings
+from django import conf
+from pprint import pprint
 # Create your views here.
 
 
@@ -38,6 +48,8 @@ class StudentViewSet(ModelViewSet):
 
     @action(detail=False, methods=['GET', 'PUT'], permission_classes=IsAuthenticated)
     def me(self, request):
+        s = Student.objects.first()
+        pprint(dir(s))
         student, is_created = Student.objects.get_or_create(pk=request.user.id)
         if request.method == 'GET':
             # Anonymous User : not logged in
@@ -70,7 +82,7 @@ def activate_user_account(request, *args, **kwargs):
     # accounts/activate/{uid}/{token}
     client = RequestsClient()
     response = client.post(
-        url=f"{settings.WEBSITE_URL}{reverse('user-activation')}",
+        url=f"{conf.settings.WEBSITE_URL}{reverse('user-activation')}",
         data={
             'uid': kwargs.get('uid'),
             'token': kwargs.get('token')
@@ -166,3 +178,61 @@ class MyTokenObtainPairView(TokenViewBase):
     token pair to prove the authentication of those credentials.
     """
     serializer_class = serializers.MyTokenObtainPairSerializer
+
+
+class UserResetPassword(GenericViewSet):
+    token_generator = default_token_generator
+
+    def get_serializer_class(self):
+        if self.action == 'reset_password':
+            return SendEmailResetSerializer
+        elif self.action == 'reset_password_confirm':
+            return PasswordResetConfirmRetypeSerializer
+
+        return UserSerializer
+
+    @action(["post"], detail=False)
+    def reset_password(self, request, *args, **kwargs):
+        '''
+        {
+            "email": "mahdijavid1380@yahoo.com"
+        }
+        '''
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.get_user()
+
+        if user:
+            context = {"user": user}
+            to = [get_user_email(user)]
+            PasswordResetEmail(request, context).send(to)
+
+        return Response(status=status.HTTP_202_ACCEPTED, data={
+            'url': conf.settings.PASSWORD_RESET_CONFIRM_URL.format(
+                        uid=utils.encode_uid(user.pk),
+                        token=default_token_generator.make_token(user)),
+        })
+
+    @action(["post"], detail=False)
+    def reset_password_confirm(self, request, *args, **kwargs):
+        '''
+        {
+            "uid": "",
+            "token": "",
+            "new_password": "",
+            "re_new_password": ""
+        }
+        '''
+        # serializer = PasswordResetConfirmRetypeSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.user.set_password(serializer.data["new_password"])
+        if hasattr(serializer.user, "last_login"):
+            serializer.user.last_login = now()
+        serializer.user.save()
+
+        context = {"user": serializer.user}
+        to = [get_user_email(serializer.user)]
+        PasswordChangedConfirmationEmail(request, context).send(to)
+        return Response(status=status.HTTP_200_OK, data='password has been changed!')

@@ -1,3 +1,5 @@
+from djoser.conf import settings
+from djoser import utils
 from django.contrib.auth.tokens import default_token_generator
 from templated_mail.mail import BaseEmailMessage
 from .models import Verification
@@ -83,22 +85,22 @@ class ActivationEmail(APIView):
 #     template_name = "email/confirmation.html"
 
 
-# class PasswordResetEmail(BaseEmailMessage):
-#     template_name = "email/password_reset.html"
+class PasswordResetEmail(BaseEmailMessage):
+    template_name = "email/password_reset.html"
 
-#     def get_context_data(self):
-#         # PasswordResetEmail can be deleted
-#         context = super().get_context_data()
+    def get_context_data(self):
+        # PasswordResetEmail can be deleted
+        context = super().get_context_data()
 
-#         user = context.get("user")
-#         context["uid"] = utils.encode_uid(user.pk)
-#         context["token"] = default_token_generator.make_token(user)
-#         context["url"] = settings.PASSWORD_RESET_CONFIRM_URL.format(**context)
-#         return context
+        user = context.get("user")
+        context["uid"] = utils.encode_uid(user.pk)
+        context["token"] = default_token_generator.make_token(user)
+        context["url"] = settings.PASSWORD_RESET_CONFIRM_URL.format(**context)
+        return context
 
 
-# class PasswordChangedConfirmationEmail(BaseEmailMessage):
-#     template_name = "email/password_changed_confirmation.html"
+class PasswordChangedConfirmationEmail(BaseEmailMessage):
+    template_name = "email/password_changed_confirmation.html"
 
 
 # class UsernameChangedConfirmationEmail(BaseEmailMessage):

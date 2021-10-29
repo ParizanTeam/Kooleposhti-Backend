@@ -28,6 +28,7 @@ from rest_framework_simplejwt import views
 router = routers.DefaultRouter()
 router.register('instructors', InstructorList)
 router.register('students', StudentViewSet)
+router.register('users', UserResetPassword, basename='user')
 # urlpatterns = router.urls
 
 
@@ -45,6 +46,9 @@ urlpatterns = [
     re_path(r"^jwt/refresh/?", views.TokenRefreshView.as_view(),
             name="jwt-refresh"),
     re_path(r"^jwt/verify/?", views.TokenVerifyView.as_view(), name="jwt-verify"),
+    # path('reset_password/', reset_password, name='reset_password'),
+    # path('reset_password_confirm/', reset_password_confirm,
+    #      name='reset_password_confirm'),
     # path('activate/<uid>/<token>', activate_user_account),
     # path('students/', StudentViewSet.as_view),
     # path('instructors/<int:pk>/', InstructorList.as_view(),

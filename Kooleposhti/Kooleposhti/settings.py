@@ -199,10 +199,14 @@ SIMPLE_JWT = {
 # User Model For AUTH
 AUTH_USER_MODEL = 'accounts.User'
 
+
+# Reset password Email
+PASSWORD_RESET_CONFIRM_URL = 'accounts/password/reset/confirm/{uid}/{token}'
+
 # DJOSER
 DJOSER = {
-    # "SEND_ACTIVATION_EMAIL": True,
-    # "SEND_CONFIRMATION_EMAIL": True,
+    "SEND_ACTIVATION_EMAIL": True,
+    "SEND_CONFIRMATION_EMAIL": True,
     "USER_CREATE_PASSWORD_RETYPE": True,
     "SET_PASSWORD_RETYPE": True,
     "PASSWORD_RESET_CONFIRM_RETYPE": True,
@@ -214,14 +218,14 @@ DJOSER = {
         'user_create': 'accounts.serializers.UserCreateSerializer',
         'current_user': 'accounts.serializers.UserSerializer',
     },
-    # 'EMAIL': {
-    #     'activation': 'accounts.email.ActivationEmail',
-    #     'confirmation': 'accounts.email.ConfirmationEmail',
-    #     'password_reset': 'accounts.email.PasswordResetEmail',
-    #     'password_changed_confirmation': 'accounts.email.PasswordChangedConfirmationEmail',
-    #     'username_changed_confirmation': 'accounts.email.UsernameChangedConfirmationEmail',
-    #     'username_reset': 'accounts.email.UsernameResetEmail',
-    # }
+    'EMAIL': {
+        # 'activation': 'accounts.email.ActivationEmail',
+        # 'confirmation': 'accounts.email.ConfirmationEmail',
+        'password_reset': 'accounts.email.PasswordResetEmail',
+        # 'password_changed_confirmation': 'accounts.email.PasswordChangedConfirmationEmail',
+        # 'username_changed_confirmation': 'accounts.email.UsernameChangedConfirmationEmail',
+        # 'username_reset': 'accounts.email.UsernameResetEmail',
+    }
 }
 
 # WEBSITE URL that deployed
