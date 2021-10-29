@@ -1,3 +1,4 @@
+from rest_framework_simplejwt.views import TokenViewBase
 from .serializers import UserCreateSerializer
 # from . signals import user_created
 from validate_email import validate_email
@@ -138,19 +139,30 @@ def sign_up_user(request: HttpRequest, *args, **kwargs):
     if request.method == 'POST':
         serializer_dict = {
             'username': request.data.get('username'),
-            'password1': request.data.get('password1'),
+            'password': request.data.get('password1'),
             'password2': request.data.get('password2'),
             'email': request.data.get('email'),
-            'first_name': request.data.get('first_name'),
-            'last_name': request.data.get('last_name'),
+            # 'first_name': request.data.get('first_name'),
+            # 'last_name': request.data.get('last_name'),
             'is_instructor': request.data.get('is_instructor', False),
         }
+        is_instructor = serializer_dict.get('is_instructor')
         serializer = UserCreateSerializer(data=serializer_dict)
         serializer.is_valid(raise_exception=True)
-        is_instructor = serializer.validated_data['is_instructor']
         user = serializer.save()
         if is_instructor:
             Instructor.objects.create(user=user)
         else:
             Student.objects.create(user=user)
+        # data = serializer.validated_data.copy()
+        # del data['password']
+        # del data['password2']
         return Response(status=status.HTTP_201_CREATED, data=serializer.data)
+
+
+class MyTokenObtainPairView(TokenViewBase):
+    """
+    Takes a set of user credentials and returns an access and refresh JSON web
+    token pair to prove the authentication of those credentials.
+    """
+    serializer_class = serializers.MyTokenObtainPairSerializer

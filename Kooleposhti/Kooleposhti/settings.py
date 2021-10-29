@@ -60,13 +60,14 @@ INSTALLED_APPS = [
     'courses',
     'corsheaders',
     'drf_yasg',
+    'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -229,3 +230,9 @@ WEBSITE_URL = os.environ.get('WEBSITE_URL')
 
 # Token Expiration Time for Email verification in days
 TOKEN_EXPIRATION_TIME = 1
+
+
+# Authentication Backend
+AUTHENTICATION_BACKENDS = [
+    'accounts.backends.MyModelBackend',
+]
