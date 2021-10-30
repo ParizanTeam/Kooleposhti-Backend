@@ -201,7 +201,7 @@ AUTH_USER_MODEL = 'accounts.User'
 
 
 # Reset password Email
-PASSWORD_RESET_CONFIRM_URL = 'accounts/password/reset/confirm/{uid}/{token}'
+PASSWORD_RESET_CONFIRM_URL = 'reset-password/?uid={uid}&token={token}'
 
 # DJOSER
 DJOSER = {
@@ -211,7 +211,7 @@ DJOSER = {
     "SET_PASSWORD_RETYPE": True,
     "PASSWORD_RESET_CONFIRM_RETYPE": True,
     "LOGOUT_ON_PASSWORD_CHANGE": True,
-    'PASSWORD_RESET_CONFIRM_URL': 'accounts/password/reset/confirm/{uid}/{token}',
+    'PASSWORD_RESET_CONFIRM_URL': PASSWORD_RESET_CONFIRM_URL,
     'USERNAME_RESET_CONFIRM_URL': 'accounts/username/reset/confirm/{uid}/{token}',
     'ACTIVATION_URL': 'accounts/activate/{uid}/{token}',
     "SERIALIZERS": {
@@ -240,3 +240,6 @@ TOKEN_EXPIRATION_TIME = 1
 AUTHENTICATION_BACKENDS = [
     'accounts.backends.MyModelBackend',
 ]
+
+
+FRONTEND_URL = 'kooleposhti-front.herokuapp.com'
