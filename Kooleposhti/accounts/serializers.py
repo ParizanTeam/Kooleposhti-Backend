@@ -8,11 +8,11 @@ from rest_framework import exceptions, serializers
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import update_last_login
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from django.conf import settings
+from django import conf
 from rest_framework import serializers
 from accounts.models import Student, Instructor, User
 from rest_framework import serializers
-from djoser.serializers import UserSerializer as BaseUserSerializer
+from djoser.serializers import SendEmailResetSerializer, UserSerializer as BaseUserSerializer
 from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
 
 
@@ -152,3 +152,31 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             update_last_login(None, self.user)
 
         return data
+
+
+class MyUserFunctionsMixin:
+    def get_user(self, is_active=True):
+        try:
+            user = User._default_manager.get(
+                is_active=is_active,
+                **{self.email_field: self.data.get(self.email_field, "")},
+            )
+            if user.has_usable_password():
+                return user
+        except User.DoesNotExist:
+            if (conf.settings.PASSWORD_RESET_SHOW_EMAIL_NOT_FOUND or
+                        conf.settings.USERNAME_RESET_SHOW_EMAIL_NOT_FOUND
+                    ):
+                self.fail("email_not_found")
+
+
+class MySendEmailResetSerializer(serializers.Serializer, MyUserFunctionsMixin):
+    default_error_messages = {
+        "email_not_found": 'User with given email does not exist.'
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.email_field = User.get_email_field_name()
+        self.fields[self.email_field] = serializers.EmailField()

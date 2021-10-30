@@ -39,7 +39,7 @@ urlpatterns = [
     path('activate/', ActivationEmail.as_view(), name='activate'),
     path('checkemail/', check_email, name="check_email"),
     path('checkusername/', check_username, name="check-username"),
-    path('signup/', sign_up_user, name='sign_up'),
+    path('signup/', sign_up_user, name='signup'),
     path('checkcode/', check_code, name='check_code'),
     re_path(r"^jwt/create/?", MyTokenObtainPairView.as_view(),
             name="jwt-create"),

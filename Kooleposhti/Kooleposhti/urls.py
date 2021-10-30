@@ -19,6 +19,7 @@ from django.urls.conf import include
 # from rest_framework.schemas import get_schema_view
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from marshmallow.utils import pprint
 from rest_framework import permissions
 from django.conf import settings
 
@@ -49,6 +50,7 @@ urlpatterns = [
                                        cache_timeout=0), name='schema-redoc'),
 ]
 
+pprint(urlpatterns)
 
 '''    
     path('openapi', get_schema_view(
