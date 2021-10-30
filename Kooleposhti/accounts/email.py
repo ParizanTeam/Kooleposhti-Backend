@@ -86,7 +86,7 @@ class ActivationEmail(APIView):
 
 
 class PasswordResetEmail(BaseEmailMessage):
-    template_name = "email/password_reset.html"
+    template_name = "myemail/password_reset.html"
 
     def get_context_data(self):
         # PasswordResetEmail can be deleted
