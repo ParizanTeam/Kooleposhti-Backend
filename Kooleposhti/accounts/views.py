@@ -1,4 +1,4 @@
-from .serializers import UserSerializer
+from .serializers import MySendEmailResetSerializer, UserSerializer
 from .email import PasswordChangedConfirmationEmail
 from django.contrib.auth.tokens import default_token_generator
 from djoser import utils
@@ -183,10 +183,11 @@ class MyTokenObtainPairView(TokenViewBase):
 
 class UserResetPassword(GenericViewSet):
     token_generator = default_token_generator
+    queryset = User.objects.all()
 
     def get_serializer_class(self):
         if self.action == 'reset_password':
-            return SendEmailResetSerializer
+            return MySendEmailResetSerializer
         elif self.action == 'reset_password_confirm':
             return PasswordResetConfirmRetypeSerializer
 

@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
+import sys
 import os
 from datetime import timedelta
 from pathlib import Path
@@ -108,8 +109,14 @@ DATABASES = {
         'PASSWORD': env.str('DB_PASSWORD'),
         'HOST': 'ec2-35-171-90-188.compute-1.amazonaws.com',
         'PORT': '5432',
+    },
+    'TEST': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'test_db.sqlite3'),
     }
 }
+if 'test' in sys.argv:
+    DATABASES['default'] = DATABASES['TEST']
 
 
 # Password validation
@@ -243,3 +250,7 @@ AUTHENTICATION_BACKENDS = [
 
 
 FRONTEND_URL = 'kooleposhti-front.herokuapp.com'
+
+
+USERNAME_RESET_SHOW_EMAIL_NOT_FOUND = True
+PASSWORD_RESET_SHOW_EMAIL_NOT_FOUND = True
