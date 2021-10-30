@@ -50,7 +50,6 @@ urlpatterns = [
                                        cache_timeout=0), name='schema-redoc'),
 ]
 
-pprint(urlpatterns)
 
 '''    
     path('openapi', get_schema_view(
