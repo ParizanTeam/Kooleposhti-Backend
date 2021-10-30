@@ -170,6 +170,7 @@ def sign_up_user(request: HttpRequest, *args, **kwargs):
         # del data['password']
         # del data['password2']
         return Response(status=status.HTTP_201_CREATED, data=serializer.data)
+    return Response(status=status.HTTP_404_NOT_FOUND, data='Maybe your request method is not correct')
 
 
 class MyTokenObtainPairView(TokenViewBase):

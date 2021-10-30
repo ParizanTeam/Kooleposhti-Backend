@@ -1,3 +1,4 @@
+from django.utils.functional import empty
 from rest_framework_simplejwt.serializers import PasswordField
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken, SlidingToken, UntypedToken
@@ -98,7 +99,7 @@ class UserSerializer(BaseUserSerializer):
         fields = ['id', 'username', 'email', 'first_name', 'last_name']
 
 
-class MyTokenObtainPairSerializer(TokenObtainPairSerializer, serializers.Serializer):
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = get_user_model().USERNAME_FIELD
 
     default_error_messages = {
@@ -108,9 +109,11 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer, serializers.Seriali
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.fields[self.username_field] = serializers.CharField(default=None)
+        self.fields[self.username_field] = serializers.CharField(
+            default=None, allow_blank=True)
         self.fields['password'] = PasswordField()
-        self.fields['email'] = serializers.EmailField(default=None)
+        self.fields['email'] = serializers.EmailField(
+            default=None, allow_blank=True)
 
     @classmethod
     def get_token(cls, user):
@@ -118,9 +121,9 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer, serializers.Seriali
 
     def super_validate(self, attrs):
         authenticate_kwargs = {
-            self.username_field: attrs[self.username_field],
+            self.username_field: None if attrs[self.username_field] == "" else attrs[self.username_field],
             'password': attrs['password'],
-            'email': attrs['email'],
+            'email': None if attrs['email'] == "" else attrs['email'],
         }
         try:
             authenticate_kwargs['request'] = self.context['request']

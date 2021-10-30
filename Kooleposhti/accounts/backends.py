@@ -12,14 +12,17 @@ class MyModelBackend(ModelBackend):
     """
 
     def authenticate(self, request, username=None, password=None, email=None, **kwargs):
+        username = None if username == '' else username
+        email = None if email == '' else email
+
         if username is None:
             username = kwargs.get(UserModel.USERNAME_FIELD)
         if (email is None and username is None) or password is None:
             return
         try:
-            if email is None:
+            if not username is None:
                 user = UserModel._default_manager.get_by_natural_key(username)
-            elif username is None:
+            elif not email is None:
                 user = UserModel._default_manager.get(
                     email=request.data['email'])
         except UserModel.DoesNotExist:
