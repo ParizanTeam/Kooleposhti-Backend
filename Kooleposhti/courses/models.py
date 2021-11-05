@@ -1,6 +1,7 @@
 from django.db import models
 from accounts.models import Instructor, Student
 from uuid import uuid4
+from Kooleposhti import settings
 
 
 class Promotion(models.Model):
@@ -8,19 +9,64 @@ class Promotion(models.Model):
     # course_set -> all courses promotions applied to
     discount = models.FloatField()
 
+class Category(models.Model):
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.title
+
+
+class Tag(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.name
+
 
 class Course(models.Model):
     '''
     ('title', 'description', 'price', 'last_update', 'instructor')
     '''
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    tag = models.ManyToManyField(Tag)
+    instructor = models.ForeignKey(Instructor, on_delete=models.CASCADE)
+    students = models.ManyToManyField(Student, blank=True)
+
     title = models.CharField(max_length=255)
-    description = models.TextField()
+    slug = models.CharField(max_length=255, unique=True)
+    description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=6, decimal_places=2)  # 9999.99
     # first time we create Course django stores the current datetime
     last_update = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    enrollment_start_date = models.DateTimeField()
+    enrollment_end_date = models.DateTimeField()
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    start_class = models.DateTimeField()
+    end_class = models.DateTimeField()
     promotions = models.ManyToManyField(Promotion)
-    instructor = models.OneToOneField(Instructor, on_delete=models.CASCADE)
+    max_students = models.IntegerField()
+    min_age = models.IntegerField()
+    max_age = models.IntegerField()
+
+    def __str__(self):
+        return self.title
+
+
+
+class Chapter(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    number = models.IntegerField()
+    description = models.TextField(blank=True)
+    slug = models.SlugField(max_length=255, unique=True)
+    created_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
 
 
 class Order (models.Model):
