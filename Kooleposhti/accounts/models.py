@@ -10,8 +10,9 @@ from django.conf import settings
 class User(AbstractUser):
     email = models.EmailField(unique=True)
     phone_no = models.CharField(max_length=20)
-    first_name = models.CharField(max_length=255, blank=True)
-    last_name = models.CharField(max_length=255, blank=True)
+    first_name = models.CharField(max_length=255, null=True)
+    last_name = models.CharField(max_length=255, null=True)
+    birth_date = models.DateField(null=True)
 
     class Meta:
         # model = User
@@ -27,17 +28,19 @@ class Verification(models.Model):
     create_time = models.DateTimeField(auto_now_add=True)
 
 
+class Tag (models.Model):
+    name = models.CharField(max_length=255, null=False,
+                            blank=False, unique=True)
+
+
 class Instructor(models.Model):
     '''
     fields = ('first_name', 'last_name', 'email', 'phone', 'birth_date')
     '''
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    # first_name = models.CharField(max_length=255)
-    # last_name = models.CharField(max_length=255)
-    # email = models.EmailField(unique=True, default=None)
+    tags = models.ManyToManyField(Tag)
     # phone = models.CharField(max_length=11)
-    birth_date = models.DateField(null=True)  # nullable
 
     def __str__(self):
         return f'{self.user.first_name} {self.user.last_name}'
@@ -52,11 +55,7 @@ class Student(models.Model):
     '''
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    # first_name = models.CharField(max_length=255)
-    # last_name = models.CharField(max_length=255)
-    # email = models.EmailField(unique=True, default=None)
     # phone = models.CharField(max_length=11)
-    birth_date = models.DateField(null=True)  # nullable
 
     def __str__(self):
         return f'{self.user.first_name} {self.user.last_name}'
