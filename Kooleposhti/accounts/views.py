@@ -1,3 +1,4 @@
+from rest_framework.views import APIView
 from .serializers import MySendEmailResetSerializer, UserSerializer
 from .email import PasswordChangedConfirmationEmail
 from django.contrib.auth.tokens import default_token_generator
@@ -31,35 +32,42 @@ from rest_framework.test import RequestsClient
 from django import conf
 from pprint import pprint
 # Create your views here.
+import djoser.views
+from django.core.exceptions import ValidationError
+from django.db.models.query import QuerySet
+from django.http import Http404
+from django.shortcuts import get_object_or_404 as _get_object_or_404
 
+from rest_framework import mixins, views
+from rest_framework.settings import api_settings
+from django.conf import settings
+from django.core.exceptions import PermissionDenied
+from django.db import connection, models, transaction
+from django.http import Http404
+from django.http.response import HttpResponseBase
+from django.utils.cache import cc_delim_re, patch_vary_headers
+from django.utils.encoding import smart_str
+from django.views.decorators.csrf import csrf_exempt
+from django.views.generic import View
 
-class StudentViewSet(ModelViewSet):
-    queryset = Student.objects.all()
-    serializer_class = StudentSerializer
-    # permission_classes = [
-    #     IsAdminUser
-    #     # DjangoModelPermission
-    # ]
+from rest_framework import exceptions, status
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.schemas import DefaultSchema
+from rest_framework.settings import api_settings
+from rest_framework.utils import formatting
+from collections import OrderedDict
+from functools import update_wrapper
+from inspect import getmembers
 
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [AllowAny()]
-        return [IsAuthenticated()]
+from django.urls import NoReverseMatch
+from django.utils.decorators import classonlymethod
+from django.views.decorators.csrf import csrf_exempt
 
-    @action(detail=False, methods=['GET', 'PUT'], permission_classes=IsAuthenticated)
-    def me(self, request):
-        s = Student.objects.first()
-        pprint(dir(s))
-        student, is_created = Student.objects.get_or_create(pk=request.user.id)
-        if request.method == 'GET':
-            # Anonymous User : not logged in
-            serializer = StudentSerializer(student)
-            return Response(serializer.data)
-        elif request.method == 'PUT':
-            serializer = StudentSerializer(student, data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return serializer.data
+from rest_framework import generics, mixins, views
+from rest_framework.reverse import reverse
+from .students import StudentViewSet
+# APIView
 
 
 class InstructorList(ModelViewSet):

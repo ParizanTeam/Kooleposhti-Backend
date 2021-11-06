@@ -88,7 +88,6 @@ class StudentSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'user_id',
-            'birth_date',
         ]
 
 
