@@ -1,16 +1,31 @@
 from rest_framework import serializers
 from rest_framework.viewsets import ModelViewSet
-from .models import CartItem, Course, Review, ShoppingCart
+from .models import *
 from decimal import Decimal
 from accounts.models import Instructor
 from djoser.serializers import UserSerializer as BaseUserSerializer
+from accounts.serializers import StudentSerializer, InstructorSerializer
 
+
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = '__all__'
+
+class ChapterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Chapter
+        fields = '__all__'
 
 class CourseSerializer(serializers.ModelSerializer):
+    chapter = ChapterSerializer(many=True)
+    students = StudentSerializer(many=True)
+    tags = TagSerializer(many=True)
     class Meta:
         model = Course
-        fields = ('title', 'description', 'price',
-                  'last_update', 'instructor', 'new_price')  # __all__
+        fields = '__all__'
+        # fields = ('title', 'description', 'price',
+        #           'last_update', 'instructor', 'new_price')  # __all__
     instructor = serializers.HyperlinkedRelatedField(
         queryset=Instructor.objects.all(), view_name='instructor-detail')
     new_price = serializers.SerializerMethodField(
@@ -18,6 +33,23 @@ class CourseSerializer(serializers.ModelSerializer):
 
     def calculate_new_price(self, course: Course):
         return course.price * Decimal(1.1)
+
+    def create(self, validated_data):
+        course = super().create_(validated_data)
+        request = self.context.get("request")
+        instructor = request.user
+        course.instructor = instructor
+        course.save()
+        return course
+
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    courses = CourseSerializer(many=True)
+    class Meta:
+        model = Category
+        fields = '__all__'
+        
 
 
 class ReviewSerializer(serializers.ModelSerializer):
