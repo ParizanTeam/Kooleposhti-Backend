@@ -2,7 +2,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.urls import reverse
 from rest_framework.viewsets import ModelViewSet
 from accounts.models import Student
-from .serializers import StudentSerializer
+from .student_serializers import StudentSerializer
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAdminUser, IsAuthenticated
@@ -34,12 +34,13 @@ from django.core.exceptions import ValidationError
 from django.db.models.query import QuerySet
 from rest_framework import mixins, views
 from rest_framework.settings import api_settings
+import djoser.views
 # import rest_framework.request
 
 
 class StudentViewSet(views.APIView):
     queryset = Student.objects.all()
-    serializer_class = StudentSerializer
+    # serializer_class = StudentSerializer
     # permission_classes = [
     #     IsAdminUser
     #     # DjangoModelPermission
@@ -155,13 +156,15 @@ class StudentViewSet(views.APIView):
 
         (Eg. admins get full serialization, others get basic serialization)
         """
-        assert self.serializer_class is not None, (
-            "'%s' should either include a `serializer_class` attribute, "
-            "or override the `get_serializer_class()` method."
-            % self.__class__.__name__
-        )
+        serializer_map = {
+            'list': StudentSerializer,
+            'retrieve': StudentSerializer,
+            'me': StudentSerializer,
+            # 'update'
+            # 'partial_update'
+        }
 
-        return self.serializer_class
+        return serializer_map[self.action]
 
     def get_serializer_context(self):
         """
@@ -238,7 +241,7 @@ class StudentViewSet(views.APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def perform_destroy(self, instance):
-        instance.delete()
+        instance.user.delete()
 
     """
     Update a model instance.
@@ -277,7 +280,7 @@ class StudentViewSet(views.APIView):
 
     """
     Create a model instance.
-    """
+    
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -288,6 +291,7 @@ class StudentViewSet(views.APIView):
 
     def perform_create(self, serializer):
         serializer.save()
+    """
 
     def get_success_headers(self, data):
         try:
@@ -808,9 +812,11 @@ class StudentViewSet(views.APIView):
 
     @action(detail=False, methods=['GET', 'PUT'], permission_classes=IsAuthenticated)
     def me(self, request):
-        s = Student.objects.first()
-        pprint(dir(s))
-        student, is_created = Student.objects.get_or_create(pk=request.user.id)
+        # student, is_created = Student.objects.get_or_create(pk=request.user.id)
+        try:
+            student = Student.objects.get(pk=request.user.student.id)
+        except Student.DoesNotExist:
+            return Response(data={'message': 'Student does not exist'}, status=status.HTTP_404_NOT_FOUND)
         if request.method == 'GET':
             # Anonymous User : not logged in
             serializer = StudentSerializer(student)
@@ -819,4 +825,4 @@ class StudentViewSet(views.APIView):
             serializer = StudentSerializer(student, data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            return serializer.data
+            return Response(serializer.data)

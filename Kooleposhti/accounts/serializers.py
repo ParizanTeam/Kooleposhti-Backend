@@ -14,6 +14,7 @@ from accounts.models import Student, Instructor, User
 from rest_framework import serializers
 from djoser.serializers import SendEmailResetSerializer, UserSerializer as BaseUserSerializer
 from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
+from .student_serializers import StudentSerializer
 
 
 class UserCreateSerializer(BaseUserCreateSerializer):
@@ -77,18 +78,18 @@ class UserCreateSerializer(BaseUserCreateSerializer):
 class InstructorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Instructor
-        fields = ('birth_date',)
+        fields = []
 
 
-class StudentSerializer(serializers.ModelSerializer):
-    user_id = serializers.IntegerField(read_only=True)
+# class StudentSerializer(serializers.ModelSerializer):
+#     user_id = serializers.IntegerField(read_only=True)
 
-    class Meta:
-        model = Student
-        fields = [
-            'id',
-            'user_id',
-        ]
+#     class Meta:
+#         model = Student
+#         fields = [
+#             'id',
+#             'user_id',
+#         ]
 
 
 class UserSerializer(BaseUserSerializer):
@@ -164,8 +165,8 @@ class MyUserFunctionsMixin:
                 return user
         except User.DoesNotExist:
             if (conf.settings.PASSWORD_RESET_SHOW_EMAIL_NOT_FOUND or
-                        conf.settings.USERNAME_RESET_SHOW_EMAIL_NOT_FOUND
-                    ):
+                conf.settings.USERNAME_RESET_SHOW_EMAIL_NOT_FOUND
+                ):
                 self.fail("email_not_found")
 
 

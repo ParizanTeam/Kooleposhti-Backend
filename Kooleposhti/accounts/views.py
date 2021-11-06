@@ -20,7 +20,7 @@ from django.shortcuts import render
 from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, UpdateModelMixin
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from accounts.models import Instructor, Student
-from .serializers import InstructorSerializer, StudentSerializer
+from .serializers import InstructorSerializer
 from rest_framework.generics import ListAPIView
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response

@@ -9,7 +9,7 @@ from django.conf import settings
 
 class User(AbstractUser):
     email = models.EmailField(unique=True)
-    phone_no = models.CharField(max_length=20)
+    phone_no = models.CharField(max_length=20, null=True)
     first_name = models.CharField(max_length=255, null=True)
     last_name = models.CharField(max_length=255, null=True)
     birth_date = models.DateField(null=True)
@@ -47,6 +47,9 @@ class Instructor(models.Model):
 
     # class Meta:
     #     odering = ['user__first_name', 'user__last_name']
+
+
+# class StudentManager(models.Manager) :
 
 
 class Student(models.Model):
