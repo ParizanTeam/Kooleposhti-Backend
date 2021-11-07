@@ -9,6 +9,7 @@ class Promotion(models.Model):
     # course_set -> all courses promotions applied to
     discount = models.FloatField()
 
+
 class Category(models.Model):
     title = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True)
@@ -32,7 +33,6 @@ class Course(models.Model):
     tag = models.ManyToManyField(Tag)
     instructor = models.ForeignKey(Instructor, on_delete=models.CASCADE)
     students = models.ManyToManyField(Student, blank=True)
-
     title = models.CharField(max_length=255)
     slug = models.CharField(max_length=255, unique=True)
     description = models.TextField(blank=True)
@@ -54,6 +54,8 @@ class Course(models.Model):
     def __str__(self):
         return self.title
 
+    def is_enrolled(self, user):
+        return self.students.filter(id=user.id).exists()
 
 
 class Chapter(models.Model):
@@ -66,7 +68,6 @@ class Chapter(models.Model):
 
     def __str__(self):
         return self.name
-
 
 
 class Order (models.Model):

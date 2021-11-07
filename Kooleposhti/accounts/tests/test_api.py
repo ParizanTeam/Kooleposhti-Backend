@@ -202,8 +202,8 @@ class UserAPITests(TestCase):
             data={
                 'username': 'test',
                 'email': 'test@gmail.com',
-                'password1': '777222',
-                'password2': '777222',
+                'password1': '7772asjdkl22',
+                'password2': '7772asjdkl22',
                 'is_instructor': False
             })
         data1 = json.loads(response.content)
@@ -214,8 +214,8 @@ class UserAPITests(TestCase):
             data={
                 'username': 'Test',
                 'email': 'Test@gmail.com',
-                'password1': '777222',
-                'password2': '777222',
+                'password1': '7772asjdkl22',
+                'password2': '7772asjdkl22',
                 'is_instructor': False
             })
         data2 = json.loads(response.content)
