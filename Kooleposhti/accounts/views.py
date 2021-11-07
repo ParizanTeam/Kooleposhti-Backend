@@ -70,14 +70,14 @@ from .students import StudentViewSet
 # APIView
 
 
-class InstructorList(ModelViewSet):
-    queryset = Instructor.objects.all()
-    serializer_class = InstructorSerializer
+# class InstructorList(ModelViewSet):
+#     queryset = Instructor.objects.all()
+#     serializer_class = InstructorSerializer
 
-    def get_serializer_context(self):
-        return {
-            'request': self.request
-        }
+#     def get_serializer_context(self):
+#         return {
+#             'request': self.request
+#         }
 
 
 @api_view(http_method_names=permissions.SAFE_METHODS)

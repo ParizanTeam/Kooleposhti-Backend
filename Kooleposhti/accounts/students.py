@@ -1,8 +1,9 @@
+from courses.models import Course
 from django.contrib.auth.tokens import default_token_generator
 from django.urls import reverse
 from rest_framework.viewsets import ModelViewSet
 from accounts.models import Student
-from .student_serializers import StudentSerializer
+from .student_serializers import StudentCourseSerializer, StudentSerializer
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAdminUser, IsAuthenticated
@@ -157,14 +158,16 @@ class StudentViewSet(views.APIView):
         (Eg. admins get full serialization, others get basic serialization)
         """
         serializer_map = {
-            'list': StudentSerializer,
-            'retrieve': StudentSerializer,
-            'me': StudentSerializer,
-            # 'update'
-            # 'partial_update'
+            'list': StudentSerializer,  # get /
+            'me': StudentSerializer,  # get, put /me
+            'retrieve': StudentSerializer,  # get /<pk>
+            'update': StudentSerializer,  # put /<pk>
+            'partial_update': StudentSerializer,  # patch /<pk>
+            'destroy': StudentSerializer,  # delete /<pk>
+            'classes': StudentCourseSerializer,  # get /<pk>/classes
         }
 
-        return serializer_map[self.action]
+        return serializer_map.get(self.action, StudentSerializer)
 
     def get_serializer_context(self):
         """
@@ -280,7 +283,7 @@ class StudentViewSet(views.APIView):
 
     """
     Create a model instance.
-    
+
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -810,19 +813,66 @@ class StudentViewSet(views.APIView):
             return [AllowAny()]
         return [IsAuthenticated()]
 
+    def get_student(self, request, *args, **kwargs):
+        return get_object_or_404(Student, pk=request.user.student.pk)
+        try:
+            student = Student.objects.get(pk=request.user.student.id)
+            return student, True
+        except Student.DoesNotExist:
+            return None, False
+
     @action(detail=False, methods=['GET', 'PUT'], permission_classes=IsAuthenticated)
     def me(self, request):
         # student, is_created = Student.objects.get_or_create(pk=request.user.id)
-        try:
-            student = Student.objects.get(pk=request.user.student.id)
-        except Student.DoesNotExist:
-            return Response(data={'message': 'Student does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        student = self.get_student(request)  # student, found
+        # if not found:
+        #     return Response(data={'message': 'Student does not exist'}, status=status.HTTP_404_NOT_FOUND)
         if request.method == 'GET':
             # Anonymous User : not logged in
-            serializer = StudentSerializer(student)
+            serializer = self.get_serializer(instance=student)
             return Response(serializer.data)
         elif request.method == 'PUT':
-            serializer = StudentSerializer(student, data=request.data)
+            serializer = self.get_serializer(
+                instance=student, data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data)
+
+    # def get_course(self, request, *args, **kwargs) :
+    #     try :
+    #         course =
+
+    @action(detail=False, methods=['GET'], permission_classes=IsAuthenticated)
+    def classes(self, request):
+        if request.method != 'GET':
+            return Response(data={'message': 'Method not allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        student = self.get_student(request)
+        # if not found:
+        #     return Response(data={'message': 'Student does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        courses = student.course_set.all()
+        serializer = StudentCourseSerializer(courses, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['POST'], permission_classes=IsAuthenticated, url_path='enroll/(?P<course_pk>[^/.]+)')
+    def enroll(self, request, *args, **kwargs):
+        if request.method != 'POST':
+            return Response(data={'message': 'Method not allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        student = self.get_student(request)
+        # if not found:
+        #     return Response(data={'message': 'Student does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        course = get_object_or_404(Course, pk=kwargs['course_pk'])
+        if course.is_enrolled(student):
+            return Response(data={'message': 'Already enrolled'}, status=status.HTTP_400_BAD_REQUEST)
+        student.course_set.add(course)
+        return Response(data={'message': 'Successfully enrolled'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['POST'], permission_classes=IsAuthenticated, url_path='leave/(?P<course_pk>[^/.]+)')
+    def leave(self, request, *args, **kwargs):
+        if request.method != 'POST':
+            return Response(data={'message': 'Method not allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        student = self.get_student(request)
+        course = get_object_or_404(Course, pk=kwargs['course_pk'])
+        if not course.is_enrolled(student):
+            return Response(data={'message': 'Not enrolled'}, status=status.HTTP_400_BAD_REQUEST)
+        student.course_set.remove(course)
+        return Response(data={'message': 'Successfully left'}, status=status.HTTP_200_OK)
