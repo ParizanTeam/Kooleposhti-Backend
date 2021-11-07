@@ -16,7 +16,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import mixins, views
 from rest_framework.settings import api_settings
 from django.conf import settings
-from django.http.response import HttpResponseBase
+from django.http.response import Http404, HttpResponseBase
 from django.utils.cache import cc_delim_re, patch_vary_headers
 from django.utils.encoding import smart_str
 from django.views.decorators.csrf import csrf_exempt
@@ -739,7 +739,6 @@ class InstructorViewSet(views.APIView):
                 exc.auth_header = auth_header
             else:
                 exc.status_code = status.HTTP_403_FORBIDDEN
-
         exception_handler = self.get_exception_handler()
 
         context = self.get_exception_handler_context()
@@ -811,7 +810,12 @@ class InstructorViewSet(views.APIView):
 
     @action(detail=False, methods=['GET', 'PUT'], permission_classes=IsAuthenticated)
     def me(self, request):
-        instructor = self.get_instructor(request)
+        try:
+            instructor = self.get_instructor(request)
+        except AttributeError as e:
+            return Response(data={'message': 'you are not logged in'}, status=status.HTTP_401_UNAUTHORIZED)
+        except Http404 as e:
+            return Response(data={'message': 'Instructor does not exist'}, status=status.HTTP_404_NOT_FOUND)
         if request.method == 'GET':
             serializer = self.get_serializer(instance=instructor)
             return Response(serializer.data)

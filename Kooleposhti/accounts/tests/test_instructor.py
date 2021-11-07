@@ -1,3 +1,4 @@
+from pprint import pprint
 from rest_framework.test import APIClient, force_authenticate
 from rest_framework.test import RequestsClient
 import json
@@ -53,7 +54,7 @@ class InstructorAPITests(TestCase):
         data = json.loads(response.content)
         return data['access']
 
-    def test_signup(self):
+    def test_change_instructor_profile(self):
         '''
             get instructor profile
         '''
@@ -66,9 +67,39 @@ class InstructorAPITests(TestCase):
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
-        print(f'get Instructor profile {data} \n')
+        pprint(f'get Instructor profile {data} \n')
         self.assertEquals(data['username'], u.username)
         self.assertEquals(data['email'], u.email)
+        self.assertEquals(data['id'], u.id)
+
+    def test_change_instructor_profile(self):
+        '''
+            change instructor profile
+        '''
+        u = User.objects.get(username='insructor_test')
+        i_tmp = u.instructor
+        token = self.login(u.username, '1234567GG89MMM')
+        self.my_client.credentials(HTTP_AUTHORIZATION='JWT ' + token)
+        new_first_name = "ali"
+        new_last_name = "rezayi"
+        new_phone_no = "12309812398"
+        new_birth_date = "2020-02-01"
+        response = self.my_client.put(
+            path=reverse('accounts-instructor-me'),
+            data={
+                'first_name': new_first_name,
+                'last_name': new_last_name,
+                'phone_no': new_phone_no,
+                'birth_date': new_birth_date
+            }
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+        pprint(f'get Instructor profile {data} \n')
+        self.assertEquals(data['first_name'], new_first_name)
+        self.assertEquals(data['last_name'], new_last_name)
+        self.assertEquals(data['phone_no'], new_phone_no)
+        self.assertEquals(data['birth_date'], new_birth_date)
 
     # def test_signup_wrong_username(self):
     #     '''
