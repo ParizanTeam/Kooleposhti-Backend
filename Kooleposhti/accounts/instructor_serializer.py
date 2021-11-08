@@ -2,7 +2,7 @@ from rest_framework.serializers import raise_errors_on_nested_writes
 from rest_framework.utils import html, model_meta, representation
 from .models import Instructor, Tag
 from rest_framework import serializers
-from .student_serializers import BaseUserSerializer
+from .user_serializers import BaseUserSerializer
 
 
 class TagProfileSerializer(serializers.ModelSerializer):
@@ -17,4 +17,4 @@ class InstructorProfileSerializer(BaseUserSerializer):
 
     class Meta(BaseUserSerializer.Meta):
         model = Instructor
-        fields = BaseUserSerializer.Meta.fields + ['tags']
+        fields = BaseUserSerializer.Meta.fields + ['tags', 'user_id', ]

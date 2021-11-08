@@ -6,6 +6,11 @@ from django.contrib.auth.models import User
 from django.contrib.auth.models import AbstractUser, AbstractBaseUser
 from django.conf import settings
 
+ROLES = [
+    'instructor',
+    'student',
+]
+
 
 class User(AbstractUser):
     email = models.EmailField(unique=True)
@@ -20,6 +25,18 @@ class User(AbstractUser):
         permissions = [  # auth_permission (codename, name)
             ('cancel_order', 'Can cancel order')
         ]
+
+    @property
+    def has_role(self, role):
+        return hasattr(self, role)
+
+    @property
+    def get_user_roles(self):
+        roles = []
+        for role in ROLES:
+            if hasattr(self, role):
+                roles.append(role)
+        return roles
 
 
 class Verification(models.Model):
