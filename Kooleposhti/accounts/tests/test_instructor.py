@@ -100,6 +100,7 @@ class InstructorAPITests(TestCase):
         self.assertEquals(data['last_name'], new_last_name)
         self.assertEquals(data['phone_no'], new_phone_no)
         self.assertEquals(data['birth_date'], new_birth_date)
+        pprint('instructor profile changed successfully')
 
     # def test_signup_wrong_username(self):
     #     '''
