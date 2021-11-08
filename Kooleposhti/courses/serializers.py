@@ -4,7 +4,7 @@ from .models import *
 from decimal import Decimal
 from accounts.models import Instructor
 from djoser.serializers import UserSerializer as BaseUserSerializer
-from accounts.serializers import StudentSerializer, InstructorSerializer
+from accounts.student_serializers import StudentSerializer
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -12,15 +12,18 @@ class TagSerializer(serializers.ModelSerializer):
         model = Tag
         fields = '__all__'
 
+
 class ChapterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Chapter
         fields = '__all__'
 
+
 class CourseSerializer(serializers.ModelSerializer):
     chapter = ChapterSerializer(many=True)
     students = StudentSerializer(many=True)
     tags = TagSerializer(many=True)
+
     class Meta:
         model = Course
         fields = '__all__'
@@ -43,13 +46,12 @@ class CourseSerializer(serializers.ModelSerializer):
         return course
 
 
-
 class CategorySerializer(serializers.ModelSerializer):
     courses = CourseSerializer(many=True)
+
     class Meta:
         model = Category
         fields = '__all__'
-        
 
 
 class ReviewSerializer(serializers.ModelSerializer):
