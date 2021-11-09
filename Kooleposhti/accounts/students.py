@@ -853,7 +853,7 @@ class StudentViewSet(views.APIView):
         serializer = StudentCourseSerializer(courses, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['POST'], permission_classes=IsAuthenticated, url_path='enroll/(?P<course_pk>[^/.]+)')
+    @action(detail=False, methods=['POST'], permission_classes=IsAuthenticated, url_path='enroll/(?P<course_pk>[^/.]+)')
     def enroll(self, request, *args, **kwargs):
         if request.method != 'POST':
             return Response(data={'message': 'Method not allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -866,7 +866,7 @@ class StudentViewSet(views.APIView):
         student.course_set.add(course)
         return Response(data={'message': 'Successfully enrolled'}, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['POST'], permission_classes=IsAuthenticated, url_path='leave/(?P<course_pk>[^/.]+)')
+    @action(detail=False, methods=['POST'], permission_classes=IsAuthenticated, url_path='leave/(?P<course_pk>[^/.]+)')
     def leave(self, request, *args, **kwargs):
         if request.method != 'POST':
             return Response(data={'message': 'Method not allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)

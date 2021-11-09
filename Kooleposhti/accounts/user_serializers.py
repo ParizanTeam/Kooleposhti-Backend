@@ -6,8 +6,9 @@ from .serializers import update_relation
 
 
 class BaseUserSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(read_only=True, source='user.username')
-    email = serializers.EmailField(read_only=True, source='user.email')
+    username = serializers.CharField(source='user.username')
+    email = serializers.EmailField(source='user.email')
+    password = serializers.CharField(write_only=True, max_length=128)
     first_name = serializers.CharField(source='user.first_name')
     last_name = serializers.CharField(source='user.last_name')
     phone_no = serializers.CharField(source='user.phone_no')
@@ -16,11 +17,18 @@ class BaseUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         ref_name = None
-        fields = ['id', 'username', 'email',
+        fields = ['id', 'username', 'email', 'password',
                   'first_name', 'last_name', 'phone_no', 'birth_date',
                   'roles', ]
 
+    def set_password(self, instance, validated_data):
+        if not 'password' in validated_data:
+            return
+        password = validated_data.pop('password')
+        instance.user.set_password(password)
+
     def update(self, instance, validated_data):
+        self.set_password(instance, validated_data)
         update_relation(instance, validated_data, 'user')
         info = model_meta.get_field_info(instance)
 
