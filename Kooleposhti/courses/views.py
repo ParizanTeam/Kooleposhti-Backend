@@ -65,25 +65,25 @@ class CourseViewSet(ModelViewSet):
     permission_classes = [AllowAny]
 
 
-    @action(detail=True, methods=['post'],
+    @action(detail=True, methods=['put'],
             permission_classes=[IsStudent])
     def enroll(self, request, *args, **kwargs):
         course = self.get_object()
         if course.is_enrolled(request.user):
             return Response('Already enrolled', status=status.HTTP_400_BAD_REQUEST)
         course.students.add(request.user)
-        return Response({'enrolled': True})
+        return Response({'enrolled': True}, status=status.HTTP_200_OK)
 
     
-    @action(detail=True, methods=['delete'],
-            permission_classes=[IsStudent], url_name="leave", 
+    @action(detail=True, methods=['put'],
+            permission_classes=[AllowAny], url_name="leave", 
             url_path="leave")
     def leave(self, request: HttpRequest, *args, **kwargs):
         course = self.get_object()
         if not course.is_enrolled(request.user):
             return Response('Not enrolled', status=status.HTTP_400_BAD_REQUEST)
-        course.students.delete(request.user)
-        return Response({'left': True})
+        course.students.remove(request.user)
+        return Response({'left': True}, status=status.HTTP_200_OK)
 
 
     @action(detail=True, permission_classes=[AllowAny], 
@@ -102,12 +102,12 @@ class CourseViewSet(ModelViewSet):
         return Response(serializer.data)
 
 
-    @action(detail=True, methods=['delete'],
+    @action(detail=True, methods=['put'],
             permission_classes=[AllowAny], url_name="delete-student", 
             url_path="delete-student/(?P<sid>[^/.]+)")
     def delete_student(self, request: HttpRequest, sid, *args, **kwargs):
         course = self.get_object()
-        student = Student.objects.filter(student_id=sid)
+        student = get_object_or_404(Student, pk=sid)
         if not course.is_enrolled(student):
             return Response('Not enrolled', status=status.HTTP_400_BAD_REQUEST)
         course.students.remove(student)
@@ -116,27 +116,38 @@ class CourseViewSet(ModelViewSet):
 
     @action(detail=True, methods=['post'],
             permission_classes=[AllowAny])
-    def rate(self, request: HttpRequest, *args, **kwargs):
+    def comment(self, request, *args, **kwargs):
         course = self.get_object()
         if course.is_enrolled(request.user):
-            new_rate = round(request.POST['rate'], 1)
-            course.rate = round((course.rate * course.rate_no + new_rate) / (course.no_rate + 1), 1)
-            course.no_rate += 1
+            Comment.objects.create(course=course, student=request.user, 
+                                        text=request.data['comment'])
+            return Response('succssesfuly commented', status=status.HTTP_200_OK)
+        return Response('Not enrolled', status=status.HTTP_403_FORBIDDEN)
+
+
+    @action(detail=True, methods=['post'],
+            permission_classes=[AllowAny])
+    def rate(self, request, *args, **kwargs):
+        course = self.get_object()
+        if course.is_enrolled(request.user):
+            new_rate = round(request.data['rate'], 1)
+            course.rate = round((course.rate * course.rate_no + new_rate) / (course.rate_no + 1), 1)
+            course.rate_no += 1
             course.save()
             return Response('rated successfully', status=status.HTTP_200_OK)
         else:
-            return Response({"you're not enrolled."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            return Response({"you're not enrolled."}, status=status.HTTP_403_FORBIDDEN)
 
 
 
-class CommentViewSet(ModelViewSet):
-    queryset = Comment.objects.all()
-    serializer_class = CommentSerializer
-    # permission_classes = [IsAdminOrReadOnly]
-    permission_classes = [AllowAny]
+# class CommentViewSet(ModelViewSet):
+#     queryset = Comment.objects.all()
+#     serializer_class = CommentSerializer
+#     # permission_classes = [IsAdminOrReadOnly]
+#     permission_classes = [AllowAny]
 
-    def get_queryset(self):
-        return Comment.objects.filter(course_id=self.kwargs.get('course_pk'))
+#     def get_queryset(self):
+#         return Comment.objects.filter(course_id=self.kwargs.get('course_pk'))
 
 class CategoryViewSet(ModelViewSet):
     queryset = Category.objects.all()
@@ -151,38 +162,36 @@ class CategoryViewSet(ModelViewSet):
         return Response(serializer.data)
 
 
-class TagViewSet(ModelViewSet):
-    serializer_class = TagSerializer
-    permission_classes = [AllowAny]
+# class TagViewSet(ModelViewSet):
+    # serializer_class = TagSerializer
+    # permission_classes = [AllowAny]
 
-    def get_queryset(self):
-        return Tag.objects.filter(course_id=self.kwargs.get('course_pk'))
+    # def get_queryset(self):
+    #     return Tag.objects.filter(course_id=self.kwargs.get('course_pk'))
         
-    # def get_serializer_context(self):
-    #     return {'course_id': self.kwargs.get('course_pk')}
 
 
-class TagViewSet(ModelViewSet):
-    serializer_class = TagSerializer
-    # permission_classes = [IsAdminOrReadOnly]
-    permission_classes = [AllowAny]
+# class GoalViewSet(ModelViewSet):
+#     serializer_class = TagSerializer
+#     # permission_classes = [IsAdminOrReadOnly]
+#     permission_classes = [AllowAny]
 
-    def get_queryset(self):
-        return Goal.objects.filter(course_id=self.kwargs.get('course_pk'))
+#     def get_queryset(self):
+#         return Goal.objects.filter(course_id=self.kwargs.get('course_pk'))
         
-    def get_serializer_context(self):
-        return {'course_id': self.kwargs.get('course_pk')}
+#     def get_serializer_context(self):
+#         return {'course_id': self.kwargs.get('course_pk')}
 
 
 
-class ChapterViewSet(ModelViewSet):
-    serializer_class = ChapterSerializer
-    permission_classes = [IsAdminOrReadOnly]
-    def get_queryset(self):
-        return Chapter.objects.filter(course_id=self.kwargs.get('course_pk'))
+# class ChapterViewSet(ModelViewSet):
+#     serializer_class = ChapterSerializer
+#     permission_classes = [IsAdminOrReadOnly]
+#     def get_queryset(self):
+#         return Chapter.objects.filter(course_id=self.kwargs.get('course_pk'))
 
-    def get_serializer_context(self):
-        return {'course_id': self.kwargs.get('course_pk')}
+#     def get_serializer_context(self):
+#         return {'course_id': self.kwargs.get('course_pk')}
 
 
 class ReviewViweSet(ModelViewSet):

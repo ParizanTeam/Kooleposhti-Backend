@@ -15,8 +15,8 @@ class IsInstructorOrReadOnly(IsAuthenticated):
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             return True
-        return super().has_permission() and bool(request.user.instructor)
+        return super().has_permission(request, view) and bool(request.user.instructor)
 
-class IsStudent(BasePermission):
+class IsStudent(IsAuthenticated):
     def has_permission(self, request, view):
-        return super().has_permission() and bool(request.user.student)
+        return super().has_permission(request, view) and bool(request.user.student)
