@@ -164,7 +164,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # MEDIA_URL = '/media/'
 
 
-MEDIA_URL = STATIC_URL + "/media/"
+MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(STATIC_ROOT, "media")
 
 # Default primary key field type
