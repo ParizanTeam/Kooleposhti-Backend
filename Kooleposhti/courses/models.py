@@ -12,62 +12,104 @@ class Promotion(models.Model):
 
 class Category(models.Model):
     title = models.CharField(max_length=255)
-    slug = models.SlugField(max_length=255, unique=True)
+    slug = models.SlugField(max_length=255, unique=True, null=True, blank=True)
+    image = models.ImageField(upload_to='static/images/course_images/', blank=True, default="static/images/no_photo.jpg")
 
     def __str__(self):
         return self.title
 
-
-class Tag(models.Model):
-    name = models.CharField(max_length=255, unique=True)
-
-    def __str__(self):
-        return self.name
 
 
 class Course(models.Model):
     '''
     ('title', 'description', 'price', 'last_update', 'instructor')
     '''
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    tag = models.ManyToManyField(Tag)
-    instructor = models.ForeignKey(Instructor, on_delete=models.CASCADE)
-    students = models.ManyToManyField(Student, blank=True)
+    category = models.ForeignKey(Category, related_name='courses', on_delete=models.CASCADE)
+    # tags = models.ManyToManyField(Tag, blank=True)
+    instructor = models.ForeignKey(Instructor, blank=True, related_name='courses', on_delete=models.CASCADE, null=True)
+    students = models.ManyToManyField(Student, blank=True, related_name='courses')
     title = models.CharField(max_length=255)
-    slug = models.CharField(max_length=255, unique=True)
+    slug = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    image = models.ImageField(upload_to='static/images/course_images/', blank=True, default="static/images/no_photo.jpg")
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=6, decimal_places=2)  # 9999.99
+    rate = models.DecimalField(max_digits=2, decimal_places=1, default=0)
+    rate_no = models.IntegerField(default=0)
     # first time we create Course django stores the current datetime
     last_update = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    enrollment_start_date = models.DateTimeField()
-    enrollment_end_date = models.DateTimeField()
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
-    start_class = models.DateTimeField()
-    end_class = models.DateTimeField()
-    promotions = models.ManyToManyField(Promotion)
+    # enrollment_start_date = models.DateTimeField()
+    # enrollment_end_date = models.DateTimeField()
+    # start_date = models.DateTimeField()
+    # end_date = models.DateTimeField()
+    # start_class = models.DateTimeField()
+    # end_class = models.DateTimeField()
+    duration = models.DurationField()
+    promotions = models.ManyToManyField(Promotion, blank=True)
+    min_students = models.IntegerField(blank=True, default=1)
     max_students = models.IntegerField()
-    min_age = models.IntegerField()
-    max_age = models.IntegerField()
+    min_age = models.IntegerField(default=1)
+    max_age = models.IntegerField(default=18)
 
     def __str__(self):
         return self.title
 
+    def capacity(self):
+        return self.max_students - len(self.students)
+
     def is_enrolled(self, user):
         return self.students.filter(id=user.id).exists()
 
+    def is_course_instructor(self, user):
+        return self.instructor == user
+
+
+
+class Class(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='classes')
+    # student_no = models.IntegerField()
+    # enrollment_start_date = models.DateTimeField()
+    # enrollment_end_date = models.DateTimeField()
+    # price = models.DecimalField(max_digits=6, decimal_places=2)  # 9999.99
+    date = models.DateField()
+    time = models.TimeField()
+    # end_time = models.TimeField(blank=True)
+
+
+class Comment(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='comments')
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='comments')
+    created_date = models.DateTimeField(auto_now_add=True)
+    text = models.TextField()
+
+
+class Tag(models.Model):
+    course = models.ForeignKey(Course, blank=True, on_delete=models.CASCADE, related_name='tags')
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+
 
 class Chapter(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, blank=True, on_delete=models.CASCADE, related_name='chapters')
     name = models.CharField(max_length=255)
-    number = models.IntegerField()
+    number = models.IntegerField(blank=True)
     description = models.TextField(blank=True)
     slug = models.SlugField(max_length=255, unique=True)
     created_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
+
+
+class Goal(models.Model):
+    course = models.ForeignKey(Course, blank=True, related_name='goals' , on_delete=models.CASCADE)
+    text = models.TextField()
+
+    def __str__(self):
+        return self.text
 
 
 class Order (models.Model):

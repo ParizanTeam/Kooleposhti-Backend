@@ -4,9 +4,10 @@ from .models import *
 from decimal import Decimal
 from accounts.models import Instructor
 from djoser.serializers import UserSerializer as BaseUserSerializer
-from accounts.serializers import InstructorSerializer
+from accounts.instructor_serializer import InstructorProfileSerializer as InstructorSerializer
 from accounts.student_serializers import StudentSerializer
-import jdatetime
+import jdatetime, datetime
+import base64
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -15,13 +16,13 @@ class TagSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     # def create(self, validated_data):
-    #     course_id = self.context.get('course_id')
-    #     return Tag.objects.create( course_id=course_id, **validated_data)
+    #     course = self.context.get('course')
+    #     return Tag.objects.create( course=course, **validated_data)
 
 
 class GoalSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Tag
+        model = Goal
         fields = '__all__'
 
     # def create(self, validated_data):
@@ -63,21 +64,24 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class CourseSerializer(serializers.ModelSerializer):
-    chapter = ChapterSerializer(many=True)
-    students = StudentSerializer(many=True)
+    instructor = InstructorSerializer(read_only=True)
+    chapters = ChapterSerializer(many=True)
+    students = StudentSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True)
+    goals = GoalSerializer(many=True)
     classes = ClassSerializer(many=True)
-    instructor = InstructorSerializer()
 
     class Meta:
         model = Course
         fields = '__all__'
-        # fields = ('title', 'description', 'price',
-        #           'last_update', 'instructor', 'new_price')  # __all__
+        # fields = ('category', 'tags', 'students', 'goals' , 'instructor',
+        #             'title', 'slug', 'image', 'description', 'price',
+        #             'rate', 'rate_no', 'last_update', 'created_at',
+        #             'duration', 'min_students', 'max_students',
+        #             'min_age', 'max_age', 'chapters', 'classes')
     # instructor = serializers.HyperlinkedRelatedField(
     #     queryset=Instructor.objects.all(), view_name='instructor-detail')
-    new_price = serializers.SerializerMethodField(
-        method_name='calculate_new_price')
+        new_price = serializers.SerializerMethodField(method_name='calculate_new_price')
 
     def calculate_new_price(self, course: Course):
         return course.price * Decimal(1.1)
@@ -85,19 +89,20 @@ class CourseSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         request = self.context.get("request")
         instructor = request.user
-        category = Category.objects.filter(title=validated_data.pop('category'))
-        course = Course.objects.create( instructor=instructor, category=category, **validated_data)
-        tags = validated_data.pop('tags')
-        for tag in tags:
+        tags_data = validated_data.pop('tags')
+        goals_data = validated_data.pop('goals')
+        chapters_data = validated_data.pop('chapters')
+        classes_data = validated_data.pop('classes')
+        # duration = datetime.timedelta(minutes=int(validated_data.pop('duration')))
+        # category = Category.objects.filter(title=validated_data.pop('category'))
+        course = Course.objects.create(**validated_data)
+        for tag in tags_data:
             Tag.objects.create(course=course, **tag)
-        goals = validated_data.pop('goals')
-        for goal in goals:
+        for goal in goals_data:
             Goal.objects.create(course=course, **goal)
-        # chapters = validated_data.pop('chapters')
-        # for chapter in chapters:
-        #     Chapter.objects.create(course=course, **chapter)
-        classes = validated_data.pop('classes')
-        for myclass in classes:
+        for chapter in chapters_data:
+            Chapter.objects.create(course=course, **chapter)
+        for myclass in classes_data:
             Class.objects.create(course=course, **myclass)
         
         return course
@@ -106,11 +111,12 @@ class CourseSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    courses = CourseSerializer(many=True)
+    courses = CourseSerializer(many=True, read_only=True)
 
     class Meta:
         model = Category
         fields = '__all__'
+        # fields = ['title', 'slug', 'image', 'courses']
 
 
 class ReviewSerializer(serializers.ModelSerializer):

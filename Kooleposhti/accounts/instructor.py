@@ -37,6 +37,7 @@ from django.db.models.query import QuerySet
 from rest_framework import mixins, views
 from rest_framework.settings import api_settings
 import djoser.views
+from courses import serializers as course_serializers
 # import rest_framework.request
 
 
@@ -824,3 +825,13 @@ class InstructorViewSet(views.APIView):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data)
+
+
+    @action(detail=False, methods=['GET'], 
+    permission_classes=[IsAuthenticated],
+    url_name="classes", url_path="classes")
+    def get_classes(self, request):
+        instructor = self.get_object()
+        courses = instructor.courses.all()
+        serializer = course_serializers.CourseSerializer(courses, many=True)
+        return Response(serializer.data)
