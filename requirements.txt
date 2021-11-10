@@ -30,7 +30,6 @@ inflection==0.5.1
 itypes==1.2.0
 jdatetime==3.6.4
 Jinja2==3.0.3
-libpcap==1.11.0b1
 Markdown==3.3.4
 MarkupSafe==2.0.1
 marshmallow==3.14.0

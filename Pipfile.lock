@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "da313f96fb615fbc6e014789f971abb2a97951e5e18f51831481db329314f7f6"
+            "sha256": "6ec0f50eaf8027e47bb29a5863f930578c2d5ec5b21871f3f2758a99ab288d83"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -321,14 +321,6 @@
             ],
             "index": "pypi",
             "version": "==3.0.2"
-        },
-        "libpcap": {
-            "hashes": [
-                "sha256:093e41f5141d98510ae8eff36afab76a7d204a5ede274eb444a3c096b127e6d8",
-                "sha256:cbd272b4c6718e99a10e7badbe63672281c18f93cf556394f8b84c33cee04d18"
-            ],
-            "index": "pypi",
-            "version": "==1.11.0b1"
         },
         "markdown": {
             "hashes": [
