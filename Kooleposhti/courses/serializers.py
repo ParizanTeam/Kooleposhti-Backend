@@ -4,7 +4,8 @@ from .models import *
 from decimal import Decimal
 from accounts.models import Instructor
 from djoser.serializers import UserSerializer as BaseUserSerializer
-from accounts.serializers import StudentSerializer, InstructorSerializer
+from accounts.serializers import InstructorSerializer
+from accounts.student_serializers import StudentSerializer
 import jdatetime
 
 
@@ -67,6 +68,7 @@ class CourseSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
     classes = ClassSerializer(many=True)
     instructor = InstructorSerializer()
+
     class Meta:
         model = Course
         fields = '__all__'
@@ -105,10 +107,10 @@ class CourseSerializer(serializers.ModelSerializer):
 
 class CategorySerializer(serializers.ModelSerializer):
     courses = CourseSerializer(many=True)
+
     class Meta:
         model = Category
         fields = '__all__'
-        
 
 
 class ReviewSerializer(serializers.ModelSerializer):

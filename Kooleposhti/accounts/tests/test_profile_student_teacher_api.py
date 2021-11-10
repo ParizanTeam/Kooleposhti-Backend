@@ -54,7 +54,7 @@ class InstructorAPITests(TestCase):
         data = json.loads(response.content)
         return data['access']
 
-    def test_change_instructor_profile(self):
+    def test_get_instructor_profile(self):
         '''
             get instructor profile
         '''
@@ -70,7 +70,29 @@ class InstructorAPITests(TestCase):
         pprint(f'get Instructor profile {data} \n')
         self.assertEquals(data['username'], u.username)
         self.assertEquals(data['email'], u.email)
-        self.assertEquals(data['id'], u.id)
+        self.assertEquals(data['user_id'], u.id)
+        pprint('instructor profile get successfully \n')
+        print('\n' * 3)
+
+    def test_get_student_profile(self):
+        '''
+            get student profile
+        '''
+        u = User.objects.get(username='student_test')
+        s_tmp = u.student
+        token = self.login(u.username, '1234567GG89MMM')
+        self.my_client.credentials(HTTP_AUTHORIZATION='JWT ' + token)
+        response = self.my_client.get(
+            path=reverse('accounts-student-me'),
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+        pprint(f'get student profile {data} \n')
+        self.assertEquals(data['username'], u.username)
+        self.assertEquals(data['email'], u.email)
+        self.assertEquals(data['user_id'], u.id)
+        pprint('student profile get successfully \n')
+        print('\n' * 3)
 
     def test_change_instructor_profile(self):
         '''
@@ -100,6 +122,39 @@ class InstructorAPITests(TestCase):
         self.assertEquals(data['last_name'], new_last_name)
         self.assertEquals(data['phone_no'], new_phone_no)
         self.assertEquals(data['birth_date'], new_birth_date)
+        pprint('instructor profile changed successfully')
+        print('\n' * 3)
+
+    def test_change_student_profile(self):
+        '''
+            change student profile
+        '''
+        u = User.objects.get(username='student_test')
+        s_tmp = u.student
+        token = self.login(u.username, '1234567GG89MMM')
+        self.my_client.credentials(HTTP_AUTHORIZATION='JWT ' + token)
+        new_first_name = "ali"
+        new_last_name = "rezayi"
+        new_phone_no = "12309812398"
+        new_birth_date = "2020-02-01"
+        response = self.my_client.put(
+            path=reverse('accounts-student-me'),
+            data={
+                'first_name': new_first_name,
+                'last_name': new_last_name,
+                'phone_no': new_phone_no,
+                'birth_date': new_birth_date
+            }
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+        pprint(f'get student profile {data} \n')
+        self.assertEquals(data['first_name'], new_first_name)
+        self.assertEquals(data['last_name'], new_last_name)
+        self.assertEquals(data['phone_no'], new_phone_no)
+        self.assertEquals(data['birth_date'], new_birth_date)
+        pprint('student profile changed successfully')
+        print('\n' * 3)
 
     # def test_signup_wrong_username(self):
     #     '''
