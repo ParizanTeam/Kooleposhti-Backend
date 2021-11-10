@@ -63,7 +63,6 @@ INSTALLED_APPS = [
     'drf_yasg',
     'rest_framework_simplejwt',
     'jalali_date',
-    'jalali',
 ]
 
 MIDDLEWARE = [
@@ -265,7 +264,7 @@ PASSWORD_RESET_SHOW_EMAIL_NOT_FOUND = True
 
 
 JALALI_DATE_DEFAULTS = {
-   'Strftime': {
+    'Strftime': {
         'date': '%y/%m/%d',
         'datetime': '%H:%M:%S _ %y/%m/%d',
     },

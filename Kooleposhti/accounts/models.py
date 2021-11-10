@@ -18,8 +18,8 @@ class User(AbstractUser):
     first_name = models.CharField(max_length=255, null=True)
     last_name = models.CharField(max_length=255, null=True)
     birth_date = models.DateField(null=True)
-    image = models.ImageField(
-        _(""), upload_to=r"images/", height_field=None, width_field=None, max_length=None)
+    # image = models.ImageField(verbose_name="profile image", upload_to=r"images/",
+    #                           height_field=None, width_field=None, max_length=None)
 
     class Meta:
         # model = User
