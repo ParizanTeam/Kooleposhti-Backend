@@ -42,7 +42,7 @@ class BaseUserSerializer(serializers.ModelSerializer):
         #         m2m_fields.append((attr, value))
         #     else:
         #         setattr(instance, attr, value)
-
+        self.context.get('request').user = instance.user
         instance.save()
 
         # Note that many-to-many fields are set after updating instance.

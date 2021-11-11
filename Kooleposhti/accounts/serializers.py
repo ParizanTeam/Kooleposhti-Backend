@@ -186,3 +186,4 @@ def update_relation(instance, validated_data, relation):
     instance = getattr(instance, relation)
     for key, val in validated_data[relation].items():
         setattr(instance, key, val)
+        instance.save()

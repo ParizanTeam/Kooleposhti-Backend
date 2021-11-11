@@ -826,10 +826,9 @@ class InstructorViewSet(views.APIView):
             serializer.save()
             return Response(serializer.data)
 
-
-    @action(detail=False, methods=['GET'], 
-    permission_classes=[IsAuthenticated],
-    url_name="classes", url_path="classes")
+    @action(detail=False, methods=['GET'],
+            permission_classes=[IsAuthenticated],
+            url_name="classes", url_path="classes")
     def get_classes(self, request):
         try:
             instructor = self.get_instructor(request)
