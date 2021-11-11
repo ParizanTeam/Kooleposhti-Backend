@@ -15,9 +15,14 @@ class TagProfileSerializer(serializers.ModelSerializer):
 class InstructorProfileSerializer(BaseUserSerializer):
     tags = TagProfileSerializer(many=True, read_only=True)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name in self.Meta.excluded_fields:
+            if not field_name in self.fields:
+                continue
+            self.fields.pop(field_name)
+
     class Meta(BaseUserSerializer.Meta):
         model = Instructor
-        fields = ['id', 'username', 'email', 'password',
-                  'first_name', 'last_name', 'phone_no', 'roles', 'image'] + \
-            ['tags', 'user_id', ]
+        fields = BaseUserSerializer.Meta.fields + ['tags', 'user_id', ]
         excluded_fields = ['birth_date']
