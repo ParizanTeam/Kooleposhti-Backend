@@ -20,3 +20,7 @@ class IsInstructorOrReadOnly(IsAuthenticated):
 class IsStudent(IsAuthenticated):
     def has_permission(self, request, view):
         return super().has_permission(request, view) and bool(request.user.student)
+
+class IsInstructor(IsAuthenticated):
+    def has_permission(self, request, view):
+        return super().has_permission(request, view) and bool(request.user.instructor)

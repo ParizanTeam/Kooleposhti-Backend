@@ -20,6 +20,7 @@ class Category(models.Model):
 
 
 
+
 class Course(models.Model):
     '''
     ('title', 'description', 'price', 'last_update', 'instructor')
@@ -33,8 +34,8 @@ class Course(models.Model):
     image = models.ImageField(upload_to='static/images/course_images/', blank=True, default="static/images/no_photo.jpg")
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=6, decimal_places=2)  # 9999.99
-    rate = models.DecimalField(max_digits=2, decimal_places=1, default=0)
-    rate_no = models.IntegerField(default=0)
+    # rate = models.DecimalField(max_digits=2, decimal_places=1, default=0)
+    # rate_no = models.IntegerField(default=0)
     # first time we create Course django stores the current datetime
     last_update = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -54,14 +55,33 @@ class Course(models.Model):
     def __str__(self):
         return self.title
 
-    def capacity(self):
-        return self.max_students - len(self.students)
-
     def is_enrolled(self, user):
         return self.students.filter(id=user.id).exists()
 
-    def is_course_instructor(self, user):
+    def is_owner(self, user):
         return self.instructor == user
+
+    @property
+    def capacity(self):
+        return self.max_students - len(self.students)
+
+    @property
+    def rate_no(self):
+        return len(self.rates)
+
+    @property
+    def rate(self):
+        return sum([rate_obj.rate for rate_obj in self.rates]) / self.rate_no
+
+
+
+class Rate(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='rates')
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='rates')
+    rate = models.DecimalField(max_digits=2, decimal_places=1, default=0)
+
+    def __str__(self):
+        return self.rate
 
 
 
