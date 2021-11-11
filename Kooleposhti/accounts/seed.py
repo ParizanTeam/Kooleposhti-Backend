@@ -4,7 +4,7 @@ from django.utils.text import slugify
 from datetime import datetime
 
 i = User.objects.create_user(
-    username='mahdi3', password='1234567GG89MMM', email='mahdi3@test.com')
+    username='mahdi3', password='1234567GG89MM', email='mahdi3@test.com')
 i = Instructor.objects.create(user=i)
 t1 = Tag.objects.create(name='python')
 t2 = Tag.objects.create(name='JAVA')
