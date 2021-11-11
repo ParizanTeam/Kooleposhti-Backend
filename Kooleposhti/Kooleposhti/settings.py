@@ -63,6 +63,8 @@ INSTALLED_APPS = [
     'drf_yasg',
     'rest_framework_simplejwt',
     'jalali_date',
+    'images',
+
 ]
 
 MIDDLEWARE = [
