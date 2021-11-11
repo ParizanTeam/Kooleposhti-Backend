@@ -20,8 +20,8 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
 
 
-class ClassViewSet(ModelViewSet):
-    serializer_class = ClassSerializer
+class SessionViewSet(ModelViewSet):
+    serializer_class = SessionSerializer
     permission_classes = [IsInstructorOrReadOnly]
     # permission_classes = [AllowAny]
 
@@ -147,6 +147,7 @@ class CourseViewSet(ModelViewSet):
                 # course.rate_no += 1
                 # course.save()
                 return Response('rated successfully', status=status.HTTP_200_OK)
+            course.update_rate()
         else:
             return Response({"you're not enrolled."}, status=status.HTTP_403_FORBIDDEN)
 

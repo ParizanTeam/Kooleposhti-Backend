@@ -6,7 +6,7 @@ from accounts.models import Instructor
 from djoser.serializers import UserSerializer as BaseUserSerializer
 from accounts.instructor_serializer import InstructorProfileSerializer as InstructorSerializer
 from accounts.student_serializers import StudentSerializer
-import jdatetime, datetime
+import jdatetime, datetime, jalali_date
 import base64
 
 
@@ -25,6 +25,11 @@ class GoalSerializer(serializers.ModelSerializer):
         model = Goal
         fields = '__all__'
 
+class PrerequisiteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Prerequisite
+        fields = '__all__'
+
 
 class ChapterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -36,9 +41,9 @@ class ChapterSerializer(serializers.ModelSerializer):
     #     return Chapter.objects.create( course_id=course_id, **validated_data)
 
 
-class ClassSerializer(serializers.ModelSerializer):
+class SessionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Class
+        model = Session
         fields = '__all__'
 
     # def create(self, validated_data):
@@ -77,7 +82,8 @@ class CourseSerializer(serializers.ModelSerializer):
     comments = CommentSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True)
     goals = GoalSerializer(many=True)
-    classes = ClassSerializer(many=True)
+    prerequisites = PrerequisiteSerializer(many=True)
+    sessions = SessionSerializer(many=True)
 
     class Meta:
         model = Course
@@ -99,20 +105,27 @@ class CourseSerializer(serializers.ModelSerializer):
         instructor = request.user
         tags_data = validated_data.pop('tags')
         goals_data = validated_data.pop('goals')
+        prerequisites_data = validated_data.pop('prerequisites')
         chapters_data = validated_data.pop('chapters')
-        classes_data = validated_data.pop('classes')
-        # category = Category.objects.get(pk=validated_data.pop('category')['pk'])
+        sessions_data = validated_data.pop('sessions')
+        start_date = sessions_data[0]['date']
+        end_date = sessions_data[-1]['date']
+        # start_date = jdatetime.date(start.year, start.month, start.day).togregorian()
+        # end_date = jdatetime.date(end.year, end.month, end.day).togregorian()
+
         # duration_data = validated_data.pop('duration')
         # duration = datetime.timedelta(minutes=int(duration_data))
-        course = Course.objects.create(**validated_data)
+        course = Course.objects.create(start_date=start_date, end_date=end_date, **validated_data)
         for tag in tags_data:
             Tag.objects.create(course=course, **tag)
         for goal in goals_data:
             Goal.objects.create(course=course, **goal)
+        for prerequisite in prerequisites_data:
+            Prerequisite.objects.create(course=course, **prerequisite)
         for chapter in chapters_data:
             Chapter.objects.create(course=course, **chapter)
-        for myclass in classes_data:
-            Class.objects.create(course=course, **myclass)
+        for session in sessions_data:
+            Session.objects.create(course=course, **session)
         
         return course
 
