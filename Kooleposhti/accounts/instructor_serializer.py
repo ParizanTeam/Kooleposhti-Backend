@@ -18,6 +18,6 @@ class InstructorProfileSerializer(BaseUserSerializer):
     class Meta(BaseUserSerializer.Meta):
         model = Instructor
         fields = ['id', 'username', 'email', 'password',
-                  'first_name', 'last_name', 'phone_no', 'roles', ] + \
+                  'first_name', 'last_name', 'phone_no', 'roles', 'image'] + \
             ['tags', 'user_id', ]
         excluded_fields = ['birth_date']

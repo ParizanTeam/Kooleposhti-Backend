@@ -1,25 +1,32 @@
 from rest_framework import serializers
 from rest_framework.utils import model_meta
+
+from images.serializers import ProfileImageSerializer
 from .models import User
 from rest_framework import serializers
 from .serializers import update_relation
 
 
 class BaseUserSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(source='user.username')
-    email = serializers.EmailField(source='user.email')
-    password = serializers.CharField(write_only=True, max_length=128)
-    first_name = serializers.CharField(source='user.first_name')
-    last_name = serializers.CharField(source='user.last_name')
-    phone_no = serializers.CharField(source='user.phone_no')
-    birth_date = serializers.DateField(source='user.birth_date')
-    roles = serializers.ReadOnlyField(source='user.get_user_roles')
+    username = serializers.CharField(source='user.username', required=False)
+    email = serializers.EmailField(source='user.email', required=False)
+    password = serializers.CharField(
+        write_only=True, max_length=128, required=False)
+    first_name = serializers.CharField(
+        source='user.first_name', required=False)
+    last_name = serializers.CharField(source='user.last_name', required=False)
+    phone_no = serializers.CharField(source='user.phone_no', required=False)
+    birth_date = serializers.DateField(
+        source='user.birth_date', required=False)
+    roles = serializers.ReadOnlyField(
+        source='user.get_user_roles', required=False)
+    image = ProfileImageSerializer(source='user.image', required=False)
 
     class Meta:
         ref_name = None
         fields = ['id', 'username', 'email', 'password',
                   'first_name', 'last_name', 'phone_no', 'birth_date',
-                  'roles', ]
+                  'roles', 'image']
 
     def set_password(self, instance, validated_data):
         if not 'password' in validated_data:
@@ -28,7 +35,16 @@ class BaseUserSerializer(serializers.ModelSerializer):
         instance.user.set_password(password)
         instance.save()
 
+    def set_image(self, instance, validated_data):
+        image = validated_data.pop('image', None)
+        image = ProfileImageSerializer(data=image)
+        image.is_valid(raise_exception=True)
+        image = image.save()
+        instance.user.image = image
+        instance.save()
+
     def update(self, instance, validated_data):
+        self.set_image(instance, validated_data['user'])
         self.set_password(instance, validated_data)
         update_relation(instance, validated_data, 'user')
         info = model_meta.get_field_info(instance)
@@ -57,13 +73,14 @@ class BaseUserSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(BaseUserSerializer):
-    username = serializers.CharField(read_only=True)
-    email = serializers.EmailField(read_only=True)
-    first_name = serializers.CharField()
-    last_name = serializers.CharField()
-    phone_no = serializers.CharField()
-    birth_date = serializers.DateField()
-    roles = serializers.ReadOnlyField(source='get_user_roles')
+    username = serializers.CharField(read_only=True, required=False)
+    email = serializers.EmailField(read_only=True, required=False)
+    first_name = serializers.CharField(required=False)
+    last_name = serializers.CharField(required=False)
+    phone_no = serializers.CharField(required=False)
+    birth_date = serializers.DateField(required=False)
+    roles = serializers.ReadOnlyField(source='get_user_roles', required=False)
+    image = ProfileImageSerializer(required=False)
 
     class Meta (BaseUserSerializer.Meta):
         model = User

@@ -6,6 +6,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth.models import AbstractUser, AbstractBaseUser
 from django.conf import settings
 
+from images.models import MyImage
+
 ROLES = [
     'instructor',
     'student',
@@ -18,8 +20,7 @@ class User(AbstractUser):
     first_name = models.CharField(max_length=255, null=True)
     last_name = models.CharField(max_length=255, null=True)
     birth_date = models.DateField(null=True)
-    image = models.ImageField(verbose_name="profile image", upload_to=r"images/",
-                              height_field=None, width_field=None, max_length=None, null=True)
+    image = models.OneToOneField(MyImage, on_delete=models.CASCADE, null=True)
 
     class Meta:
         # model = User
