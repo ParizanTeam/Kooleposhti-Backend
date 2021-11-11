@@ -831,7 +831,12 @@ class InstructorViewSet(views.APIView):
     permission_classes=[IsAuthenticated],
     url_name="classes", url_path="classes")
     def get_classes(self, request):
-        instructor = self.get_object()
+        try:
+            instructor = self.get_instructor(request)
+        except AttributeError as e:
+            return Response(data={'message': 'you are not logged in'}, status=status.HTTP_401_UNAUTHORIZED)
+        except Http404 as e:
+            return Response(data={'message': 'Instructor does not exist'}, status=status.HTTP_404_NOT_FOUND)
         courses = instructor.courses.all()
         serializer = course_serializers.CourseSerializer(courses, many=True)
         return Response(serializer.data)

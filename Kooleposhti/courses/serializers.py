@@ -25,10 +25,6 @@ class GoalSerializer(serializers.ModelSerializer):
         model = Goal
         fields = '__all__'
 
-    # def create(self, validated_data):
-    #     course_id = self.context.get('course_id')
-    #     return Goal.objects.create( course_id=course_id, **validated_data)
-
 
 class ChapterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -45,11 +41,11 @@ class ClassSerializer(serializers.ModelSerializer):
         model = Class
         fields = '__all__'
 
-    def create(self, validated_data):
-        # course_id = self.context.get('course_id')
-        date = validated_data.pop('date')
-        date = jdatetime.date(*date.split('/')).togregorian()
-        return Class.objects.create(date=date, **validated_data)
+    # def create(self, validated_data):
+    #     # course_id = self.context.get('course_id')
+    #     date = validated_data.pop('date')
+    #     date = jdatetime.date(*date.split('/')).togregorian()
+    #     return Class.objects.create(date=date, **validated_data)
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -57,16 +53,28 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = '__all__'
 
-    def create(self, validated_data):
-        request = self.context.get("request")
-        student = request.user
-        return Comment.objects.create(student=student, **validated_data)
+    # def create(self, validated_data):
+    #     request = self.context.get("request")
+    #     student = request.user
+    #     return Comment.objects.create(student=student, **validated_data)
+
+
+    
+class CategorySerializer(serializers.ModelSerializer):
+    # courses = CourseSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Category
+        fields = '__all__'
+        # fields = ['title', 'slug', 'image', 'courses']
 
 
 class CourseSerializer(serializers.ModelSerializer):
     instructor = InstructorSerializer(read_only=True)
+    # category = CategorySerializer()
     chapters = ChapterSerializer(many=True)
     students = StudentSerializer(many=True, read_only=True)
+    comments = CommentSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True)
     goals = GoalSerializer(many=True)
     classes = ClassSerializer(many=True)
@@ -93,8 +101,9 @@ class CourseSerializer(serializers.ModelSerializer):
         goals_data = validated_data.pop('goals')
         chapters_data = validated_data.pop('chapters')
         classes_data = validated_data.pop('classes')
-        # duration = datetime.timedelta(minutes=int(validated_data.pop('duration')))
-        # category = Category.objects.filter(title=validated_data.pop('category'))
+        # category = Category.objects.get(pk=validated_data.pop('category')['pk'])
+        # duration_data = validated_data.pop('duration')
+        # duration = datetime.timedelta(minutes=int(duration_data))
         course = Course.objects.create(**validated_data)
         for tag in tags_data:
             Tag.objects.create(course=course, **tag)
@@ -109,14 +118,6 @@ class CourseSerializer(serializers.ModelSerializer):
 
 
 
-
-class CategorySerializer(serializers.ModelSerializer):
-    courses = CourseSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Category
-        fields = '__all__'
-        # fields = ['title', 'slug', 'image', 'courses']
 
 
 class ReviewSerializer(serializers.ModelSerializer):

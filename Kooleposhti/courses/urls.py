@@ -32,10 +32,10 @@ router.register('categories', CategoryViewSet)
 courses_router = routers.NestedDefaultRouter(
     parent_router=router, parent_prefix='courses', lookup='course')  # course_pk
 courses_router.register('reviews', ReviewViweSet, basename='course-reviews')
-courses_router.register('tags', TagViewSet, basename='course-tags')
-courses_router.register('chapters', ChapterViewSet, basename='course-chapters')
+# courses_router.register('tags', TagViewSet, basename='course-tags')
+# courses_router.register('chapters', ChapterViewSet, basename='course-chapters')
 courses_router.register('classes', ClassViewSet, basename='course-classes')
-courses_router.register('goals', ClassViewSet, basename='course-classes')
+# courses_router.register('goals', GoalViewSet, basename='course-classes')
 
 
 carts_router = routers.NestedDefaultRouter(
