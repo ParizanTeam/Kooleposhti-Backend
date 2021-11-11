@@ -26,6 +26,7 @@ class BaseUserSerializer(serializers.ModelSerializer):
             return
         password = validated_data.pop('password')
         instance.user.set_password(password)
+        instance.save()
 
     def update(self, instance, validated_data):
         self.set_password(instance, validated_data)
