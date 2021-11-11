@@ -27,7 +27,7 @@ class Course(models.Model):
     '''
     category = models.ForeignKey(Category, related_name='courses', on_delete=models.CASCADE)
     # tags = models.ManyToManyField(Tag, blank=True)
-    instructor = models.ForeignKey(Instructor, blank=True, related_name='courses', on_delete=models.CASCADE, null=True)
+    instructor = models.ForeignKey(Instructor, blank=True, related_name='courses', on_delete=models.CASCADE)
     students = models.ManyToManyField(Student, blank=True, related_name='courses')
     title = models.CharField(max_length=255)
     slug = models.CharField(max_length=255, unique=True, null=True, blank=True)
@@ -78,7 +78,7 @@ class Rate(models.Model):
     rate = models.DecimalField(max_digits=2, decimal_places=1, default=0)
 
     def __str__(self):
-        return self.rate
+        return f"{self.course__title} {self.rate}"
 
 
 
@@ -92,6 +92,8 @@ class Session(models.Model):
     date = models.DateField()
     time = models.TimeField()
     # end_time = models.TimeField(blank=True)
+    def __str__(self):
+        return f"{self.course__title} {self.date} {self.time}"
 
 
 class Comment(models.Model):
@@ -99,6 +101,8 @@ class Comment(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='comments')
     created_date = models.DateTimeField(auto_now_add=True)
     text = models.TextField()
+    def __str__(self):
+        return f"{self.course__title} {self.text}"
 
 
 class Tag(models.Model):
@@ -106,7 +110,7 @@ class Tag(models.Model):
     name = models.CharField(max_length=255)
 
     def __str__(self):
-        return self.name
+        return f"{self.course__title} {self.name}"
 
 
 
@@ -114,12 +118,12 @@ class Chapter(models.Model):
     course = models.ForeignKey(Course, blank=True, on_delete=models.CASCADE, related_name='chapters')
     name = models.CharField(max_length=255)
     number = models.IntegerField(blank=True)
-    description = models.TextField(blank=True)
-    slug = models.SlugField(max_length=255, unique=True)
-    created_date = models.DateTimeField(auto_now_add=True)
+    # description = models.TextField(blank=True)
+    # slug = models.SlugField(max_length=255, unique=True)
+    # created_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.name
+        return f"{self.course__title} {self.name}"
 
 
 class Goal(models.Model):
@@ -127,7 +131,7 @@ class Goal(models.Model):
     text = models.TextField()
 
     def __str__(self):
-        return self.text
+        return f"{self.course__title} {self.text}"
 
 
 class Prerequisite(models.Model):
@@ -135,7 +139,7 @@ class Prerequisite(models.Model):
     text = models.TextField()
 
     def __str__(self):
-        return self.text
+        return f"{self.course__title} {self.text}"
 
 
 class Order (models.Model):
