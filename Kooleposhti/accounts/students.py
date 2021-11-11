@@ -849,7 +849,7 @@ class StudentViewSet(views.APIView):
         student = self.get_student(request)
         # if not found:
         #     return Response(data={'message': 'Student does not exist'}, status=status.HTTP_404_NOT_FOUND)
-        courses = student.course_set.all()
+        courses = student.courses.all()
         serializer = StudentCourseSerializer(courses, many=True)
         return Response(serializer.data)
 
@@ -863,7 +863,7 @@ class StudentViewSet(views.APIView):
         course = get_object_or_404(Course, pk=kwargs['course_pk'])
         if course.is_enrolled(student):
             return Response(data={'message': 'Already enrolled'}, status=status.HTTP_400_BAD_REQUEST)
-        student.course_set.add(course)
+        student.courses.add(course)
         return Response(data={'message': 'Successfully enrolled'}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['POST'], permission_classes=IsAuthenticated, url_path='leave/(?P<course_pk>[^/.]+)')
@@ -874,5 +874,5 @@ class StudentViewSet(views.APIView):
         course = get_object_or_404(Course, pk=kwargs['course_pk'])
         if not course.is_enrolled(student):
             return Response(data={'message': 'Not enrolled'}, status=status.HTTP_400_BAD_REQUEST)
-        student.course_set.remove(course)
+        student.courses.remove(course)
         return Response(data={'message': 'Successfully left'}, status=status.HTTP_200_OK)
