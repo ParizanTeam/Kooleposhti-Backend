@@ -22,8 +22,8 @@ from rest_framework.pagination import PageNumberPagination, LimitOffsetPaginatio
 
 class ClassViewSet(ModelViewSet):
     serializer_class = ClassSerializer
-    # permission_classes = [IsInstructorOrReadOnly]
-    permission_classes = [AllowAny]
+    permission_classes = [IsInstructorOrReadOnly]
+    # permission_classes = [AllowAny]
 
     def get_queryset(self):
         return Tag.objects.filter(course_id=self.kwargs.get('course_pk'))
@@ -61,8 +61,8 @@ class CourseViewSet(ModelViewSet):
     search_fields = ['title', 'description']  # space comma seprator
     ordering_fields = ['price', 'last_update']  # -prince, last_update
     pagination_class = DefaultPagination  # can be moved to settings
-    # permission_classes = [IsInstructorOrReadOnly]
-    permission_classes = [AllowAny]
+    permission_classes = [IsInstructorOrReadOnly]
+    # permission_classes = [AllowAny]
 
 
     @action(detail=True, methods=['put'],
@@ -76,7 +76,7 @@ class CourseViewSet(ModelViewSet):
 
     
     @action(detail=True, methods=['put'],
-            permission_classes=[AllowAny], url_name="leave", 
+            permission_classes=[IsStudent], url_name="leave", 
             url_path="leave")
     def leave(self, request: HttpRequest, *args, **kwargs):
         course = self.get_object()
@@ -86,7 +86,7 @@ class CourseViewSet(ModelViewSet):
         return Response({'left': True}, status=status.HTTP_200_OK)
 
 
-    @action(detail=True, permission_classes=[AllowAny], 
+    @action(detail=True, permission_classes=[IsInstructor], 
             url_name="get-students", url_path="students")
     def get_students(self, request, *args, **kwargs):
         course = self.get_object()
@@ -103,38 +103,50 @@ class CourseViewSet(ModelViewSet):
 
 
     @action(detail=True, methods=['put'],
-            permission_classes=[AllowAny], url_name="delete-student", 
+            permission_classes=[IsInstructor], url_name="delete-student", 
             url_path="delete-student/(?P<sid>[^/.]+)")
     def delete_student(self, request: HttpRequest, sid, *args, **kwargs):
         course = self.get_object()
-        student = get_object_or_404(Student, pk=sid)
-        if not course.is_enrolled(student):
-            return Response('Not enrolled', status=status.HTTP_400_BAD_REQUEST)
-        course.students.remove(student)
-        return Response({'deleted': True})
+        instructor = request.user.instructor
+        if course.is_owner(instructor):
+            student = get_object_or_404(Student, pk=sid)
+            if not course.is_enrolled(student):
+                return Response('Not enrolled', status=status.HTTP_400_BAD_REQUEST)
+            course.students.remove(student)
+            return Response({'deleted': True})
+        else:
+            return Response("your'e not the course owner", status=status.HTTP_403_FORBIDDEN)
 
 
     @action(detail=True, methods=['post'],
-            permission_classes=[AllowAny])
+            permission_classes=[IsAuthenticated])
     def comment(self, request, *args, **kwargs):
         course = self.get_object()
-        if course.is_enrolled(request.user):
+        if course.is_enrolled(request.user.student) or course.is_owner(request.user.instructor):
             Comment.objects.create(course=course, student=request.user, 
                                         text=request.data['comment'])
             return Response('succssesfuly commented', status=status.HTTP_200_OK)
-        return Response('Not enrolled', status=status.HTTP_403_FORBIDDEN)
+        return Response("you're not enrolled", status=status.HTTP_403_FORBIDDEN)
 
 
     @action(detail=True, methods=['post'],
-            permission_classes=[AllowAny])
+            permission_classes=[IsStudent])
     def rate(self, request, *args, **kwargs):
         course = self.get_object()
-        if course.is_enrolled(request.user):
-            new_rate = round(request.data['rate'], 1)
-            course.rate = round((course.rate * course.rate_no + new_rate) / (course.rate_no + 1), 1)
-            course.rate_no += 1
-            course.save()
-            return Response('rated successfully', status=status.HTTP_200_OK)
+        student = request.user.student
+        if course.is_enrolled(student):
+            rate_data = request.data['rate']
+            try:
+                rate_obj = Rate.objects.filter(course=course, student=student)
+                rate_obj.rate = rate_data
+                rate_obj.save()
+                return Response('you change rour rate.', status=status.HTTP_200_OK)
+            except:
+                Rate.objects.create(course=course, student=student, rate=rate_data)
+                # course.rate = round((course.rate * course.rate_no + rate_data) / (course.rate_no + 1), 1)
+                # course.rate_no += 1
+                # course.save()
+                return Response('rated successfully', status=status.HTTP_200_OK)
         else:
             return Response({"you're not enrolled."}, status=status.HTTP_403_FORBIDDEN)
 
