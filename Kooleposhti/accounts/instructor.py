@@ -830,6 +830,13 @@ class InstructorViewSet(views.APIView):
             return
         del self.request.data[field]
 
+    def delete_none_field(self, field):
+        if not field in self.request.data:
+            return
+        if not self.request.data[field] is None:
+            return
+        del self.request.data[field]
+
     @action(detail=False, methods=['GET', 'PUT'], permission_classes=IsAuthenticated)
     def me(self, request):
         try:
@@ -845,6 +852,7 @@ class InstructorViewSet(views.APIView):
             self.request.data._mutable = True
             self.delete_empty_field('password')
             self.delete_empty_field('image.image')
+            self.delete_none_field('image.image')
             self.request.data._mutable = False
             serializer = self.get_serializer(instructor, data=request.data)
             serializer.is_valid(raise_exception=True)

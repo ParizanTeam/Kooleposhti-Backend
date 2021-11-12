@@ -41,7 +41,9 @@ class BaseUserSerializer(serializers.ModelSerializer):
         instance.save()
 
     def set_image(self, instance, validated_data):
-        image = validated_data.pop('image', None)
+        if not 'image' in validated_data:
+            return
+        image = validated_data.pop('image')
         image = ProfileImageSerializer(data=image)
         image.is_valid(raise_exception=True)
         image = image.save()
