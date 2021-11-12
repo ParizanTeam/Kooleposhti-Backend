@@ -99,8 +99,8 @@ class CourseSerializer(serializers.ModelSerializer):
         fields = ('category', 'tags', 'goals' , 'instructor', 'duration',
                     'title', 'slug', 'image', 'description', 
                     'price', 'rate', 'rate_no', 'created_at', 'comments',
-                    'duration', 'min_students', 'max_students', 'prerequisites',
-                    'min_age', 'max_age', 'chapters', 'sessions')
+                    'duration', 'min_students', 'max_students',
+                    'min_age', 'max_age', 'sessions')
     # instructor = serializers.HyperlinkedRelatedField(
     #     queryset=Instructor.objects.all(), view_name='instructor-detail')
         new_price = serializers.SerializerMethodField(method_name='calculate_new_price')
