@@ -140,16 +140,16 @@ class Tag(models.Model):
 
 
 
-class Chapter(models.Model):
-    course = models.ForeignKey(Course, blank=True, on_delete=models.CASCADE, related_name='chapters')
-    name = models.CharField(max_length=255)
-    number = models.IntegerField(blank=True)
-    # description = models.TextField(blank=True)
-    # slug = models.SlugField(max_length=255, unique=True)
-    # created_date = models.DateTimeField(auto_now_add=True)
+# class Chapter(models.Model):
+#     course = models.ForeignKey(Course, blank=True, on_delete=models.CASCADE, related_name='chapters')
+#     name = models.CharField(max_length=255)
+#     number = models.IntegerField(blank=True)
+#     # description = models.TextField(blank=True)
+#     # slug = models.SlugField(max_length=255, unique=True)
+#     # created_date = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"{self.course.title} {self.name}"
+#     def __str__(self):
+#         return f"{self.course.title} {self.name}"
 
 
 class Goal(models.Model):
@@ -160,12 +160,12 @@ class Goal(models.Model):
         return f"{self.course.title} {self.text}"
 
 
-class Prerequisite(models.Model):
-    course = models.ForeignKey(Course, blank=True, related_name='prerequisites' , on_delete=models.CASCADE)
-    text = models.TextField()
+# class Prerequisite(models.Model):
+#     course = models.ForeignKey(Course, blank=True, related_name='prerequisites' , on_delete=models.CASCADE)
+#     text = models.TextField()
 
-    def __str__(self):
-        return f"{self.course.title} {self.text}"
+#     def __str__(self):
+#         return f"{self.course.title} {self.text}"
 
 
 class Order (models.Model):

@@ -22,16 +22,16 @@ class GoalSerializer(serializers.ModelSerializer):
         model = Goal
         fields = '__all__'
 
-class PrerequisiteSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Prerequisite
-        fields = '__all__'
+# class PrerequisiteSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Prerequisite
+#         fields = '__all__'
 
 
-class ChapterSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Chapter
-        fields = '__all__'
+# class ChapterSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Chapter
+#         fields = '__all__'
 
 
 class SessionSerializer(serializers.ModelSerializer):
