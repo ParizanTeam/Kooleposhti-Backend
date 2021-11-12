@@ -817,6 +817,11 @@ class InstructorViewSet(views.APIView):
     def get_instructor(self, request, *args, **kwargs):
         return get_object_or_404(Instructor, pk=request.user.instructor.pk)
 
+    def delete_empty_data(self, request):
+        for key in request.data.keys():
+            if request.data[key] == '':
+                del request.data[key]
+
     @action(detail=False, methods=['GET', 'PUT'], permission_classes=IsAuthenticated)
     def me(self, request):
         try:
@@ -829,6 +834,7 @@ class InstructorViewSet(views.APIView):
             serializer = self.get_serializer(instance=instructor)
             return Response(serializer.data)
         elif request.method == 'PUT':
+            self.delete_empty_data(request)
             serializer = self.get_serializer(instructor, data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
@@ -845,5 +851,6 @@ class InstructorViewSet(views.APIView):
         except Http404 as e:
             return Response(data={'message': 'Instructor does not exist'}, status=status.HTTP_404_NOT_FOUND)
         courses = instructor.courses.all()
-        serializer = course_serializers.InstructorCourseSerializer(courses, many=True)
+        serializer = course_serializers.InstructorCourseSerializer(
+            courses, many=True)
         return Response(serializer.data)
