@@ -823,12 +823,12 @@ class InstructorViewSet(views.APIView):
             if request.data[key] == '':
                 del request.data[key]
 
-    def delete_password(self):
-        if not 'password' in self.request.data:
+    def delete_empty_field(self, field):
+        if not field in self.request.data:
             return
-        if not self.request.data['password'] == '':
+        if not self.request.data[field] == '':
             return
-        del self.request.data['password']
+        del self.request.data[field]
 
     @action(detail=False, methods=['GET', 'PUT'], permission_classes=IsAuthenticated)
     def me(self, request):
@@ -842,7 +842,10 @@ class InstructorViewSet(views.APIView):
             serializer = self.get_serializer(instance=instructor)
             return Response(serializer.data)
         elif request.method == 'PUT':
-            self.delete_password()
+            self.request.data._mutable = True
+            self.delete_empty_field('password')
+            self.delete_empty_field('image.image')
+            self.request.data._mutable = False
             serializer = self.get_serializer(instructor, data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()

@@ -16,7 +16,7 @@ def image_file_path(instance, filename):
 
 class MyImage(models.Model):
     image = models.ImageField(
-        verbose_name="profile image", upload_to=image_file_path)
+        verbose_name="profile image", upload_to=image_file_path, null=True)
     name = models.CharField(max_length=100, blank=True)
     description = models.TextField(max_length=500, null=True)
     upload_date = models.DateTimeField(auto_now_add=True)
