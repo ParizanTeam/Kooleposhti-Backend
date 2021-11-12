@@ -78,7 +78,7 @@ class Rate(models.Model):
     rate = models.DecimalField(max_digits=2, decimal_places=1, default=0)
 
     def __str__(self):
-        return f"{self.course__title} {self.rate}"
+        return f"{self.course.title} {self.rate}"
 
 
 
@@ -118,7 +118,7 @@ class Session(models.Model):
     end_time = models.TimeField(blank = True)
 
     def __str__(self):
-        return f"{self.course__title} {self.date} {self.time}"
+        return f"{self.course.title} {self.date} {self.start_time}-{self.end_time}"
 
 
 class Comment(models.Model):
@@ -128,7 +128,7 @@ class Comment(models.Model):
     text = models.TextField()
 
     def __str__(self):
-        return f"{self.course__title} {self.text}"
+        return f"{self.course.title} {self.text}"
 
 
 class Tag(models.Model):
@@ -136,7 +136,7 @@ class Tag(models.Model):
     name = models.CharField(max_length=255)
 
     def __str__(self):
-        return f"{self.course__title} {self.name}"
+        return f"{self.course.title} {self.name}"
 
 
 
@@ -149,7 +149,7 @@ class Chapter(models.Model):
     # created_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.course__title} {self.name}"
+        return f"{self.course.title} {self.name}"
 
 
 class Goal(models.Model):
@@ -157,7 +157,7 @@ class Goal(models.Model):
     text = models.TextField()
 
     def __str__(self):
-        return f"{self.course__title} {self.text}"
+        return f"{self.course.title} {self.text}"
 
 
 class Prerequisite(models.Model):
@@ -165,7 +165,7 @@ class Prerequisite(models.Model):
     text = models.TextField()
 
     def __str__(self):
-        return f"{self.course__title} {self.text}"
+        return f"{self.course.title} {self.text}"
 
 
 class Order (models.Model):

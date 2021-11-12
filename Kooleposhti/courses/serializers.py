@@ -40,7 +40,9 @@ class SessionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-        course = validated_data.pop('course')
+        # course = validated_data.pop('course')
+        course_pk = self.context['course']
+        course = Course.objects.get(pk=course_pk)
         date = validated_data['date']
         new_time = datetime.combine(date.today(), validated_data['start_time']) + timedelta(minutes=course.duration)
         end_time = new_time.time()
@@ -130,8 +132,9 @@ class CourseSerializer(serializers.ModelSerializer):
         for chapter in chapters_data:
             Chapter.objects.create(course=course, **chapter)
         for session in sessions_data:
-            session['course'] = course.pk
+            # session['course'] = course.pk
             new_session = SessionSerializer(data=session)
+            new_session.context['course'] = course.pk
             new_session.is_valid(raise_exception=True)
             new_session.save()
         

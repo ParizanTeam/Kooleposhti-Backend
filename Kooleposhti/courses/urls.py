@@ -34,7 +34,7 @@ courses_router = routers.NestedDefaultRouter(
 courses_router.register('reviews', ReviewViweSet, basename='course-reviews')
 # courses_router.register('tags', TagViewSet, basename='course-tags')
 # courses_router.register('chapters', ChapterViewSet, basename='course-chapters')
-# courses_router.register('classes', SessionViewSet, basename='course-classes')
+courses_router.register('sessions', SessionViewSet, basename='course-sessions')
 # courses_router.register('goals', GoalViewSet, basename='course-classes')
 
 
