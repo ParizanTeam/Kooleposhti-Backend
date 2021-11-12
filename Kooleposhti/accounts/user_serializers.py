@@ -53,9 +53,12 @@ class BaseUserSerializer(serializers.ModelSerializer):
         self.fail(f'{field} exists')
 
     def update(self, instance, validated_data):
-        self.set_image(instance, validated_data['user'])
-        self.set_password(instance, validated_data)
-        update_relation(instance, validated_data, 'user')
+        if 'user' in validated_data:
+            if 'image' in validated_data['user']:
+                self.set_image(instance, validated_data['user'])
+            update_relation(instance, validated_data, 'user')
+        if 'password' in validated_data:
+            self.set_password(instance, validated_data)
         info = model_meta.get_field_info(instance)
 
         # Simply set each attribute on the instance, and then save it.
