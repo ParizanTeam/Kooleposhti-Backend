@@ -121,7 +121,7 @@ class CourseSerializer(serializers.ModelSerializer):
         capacity = validated_data['max_students']
         # start_date = jdatetime.date(start.year, start.month, start.day).togregorian()
         # end_date = jdatetime.date(end.year, end.month, end.day).togregorian()
-        course = Course.objects.create(start_date=start_date, end_date=end_date, 
+        course = Course.objects.create(instructor=instructor, start_date=start_date, end_date=end_date, 
                                         capacity=capacity, **validated_data)
         for tag in tags_data:
             Tag.objects.create(course=course, **tag)
