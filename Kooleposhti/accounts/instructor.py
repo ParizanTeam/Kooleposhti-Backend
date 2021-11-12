@@ -1,3 +1,4 @@
+from django.http.request import QueryDict
 from accounts.instructor_serializer import InstructorProfileSerializer
 from courses.models import Course
 from django.contrib.auth.tokens import default_token_generator
@@ -818,9 +819,16 @@ class InstructorViewSet(views.APIView):
         return get_object_or_404(Instructor, pk=request.user.instructor.pk)
 
     def delete_empty_data(self, request):
-        for key in request.data.keys():
+        for key in request.data.copy().keys():
             if request.data[key] == '':
                 del request.data[key]
+
+    def delete_password(self):
+        if not 'password' in self.request.data:
+            return
+        if not self.request.data['password'] == '':
+            return
+        del self.request.data['password']
 
     @action(detail=False, methods=['GET', 'PUT'], permission_classes=IsAuthenticated)
     def me(self, request):
@@ -834,7 +842,7 @@ class InstructorViewSet(views.APIView):
             serializer = self.get_serializer(instance=instructor)
             return Response(serializer.data)
         elif request.method == 'PUT':
-            self.delete_empty_data(request)
+            self.delete_password()
             serializer = self.get_serializer(instructor, data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
