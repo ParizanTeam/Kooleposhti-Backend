@@ -15,9 +15,11 @@ class BaseUserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True, max_length=128, required=False)
     first_name = serializers.CharField(
-        source='user.first_name', required=False)
-    last_name = serializers.CharField(source='user.last_name', required=False)
-    phone_no = serializers.CharField(source='user.phone_no', required=False)
+        source='user.first_name', required=False, allow_blank=True)
+    last_name = serializers.CharField(
+        source='user.last_name', required=False, allow_blank=True)
+    phone_no = serializers.CharField(
+        source='user.phone_no', required=False, allow_blank=True)
     birth_date = serializers.DateField(
         source='user.birth_date', required=False)
     roles = serializers.ReadOnlyField(
@@ -35,6 +37,7 @@ class BaseUserSerializer(serializers.ModelSerializer):
             return
         password = validated_data.pop('password')
         instance.user.set_password(password)
+        instance.user.save()
         instance.save()
 
     def set_image(self, instance, validated_data):
@@ -57,8 +60,7 @@ class BaseUserSerializer(serializers.ModelSerializer):
             if 'image' in validated_data['user']:
                 self.set_image(instance, validated_data['user'])
             update_relation(instance, validated_data, 'user')
-        if 'password' in validated_data:
-            self.set_password(instance, validated_data)
+        self.set_password(instance, validated_data)
         info = model_meta.get_field_info(instance)
 
         # Simply set each attribute on the instance, and then save it.
