@@ -34,8 +34,8 @@ class Course(models.Model):
     image = models.ImageField(upload_to='static/images/course_images/', blank=True, default="static/images/no_photo.jpg")
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=9, decimal_places=2)  # 9999.99
-    rate = models.DecimalField(max_digits=2, decimal_places=1, default=0)
-    rate_no = models.IntegerField(default=0)
+    rate = models.DecimalField(max_digits=2, decimal_places=1, default=0, blank=True)
+    rate_no = models.IntegerField(default=0, blank=True)
     # first time we create Course django stores the current datetime
     last_update = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
