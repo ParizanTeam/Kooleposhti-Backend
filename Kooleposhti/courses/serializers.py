@@ -85,12 +85,12 @@ class InstructorCourseSerializer(serializers.ModelSerializer):
 class CourseSerializer(serializers.ModelSerializer):
     instructor = InstructorSerializer(read_only=True)
     # category = CategorySerializer()
-    chapters = ChapterSerializer(many=True)
+    # chapters = ChapterSerializer(many=True)
     # students = StudentSerializer(many=True, read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True)
     goals = GoalSerializer(many=True)
-    prerequisites = PrerequisiteSerializer(many=True)
+    # prerequisites = PrerequisiteSerializer(many=True)
     sessions = SessionSerializer(many=True)
 
     class Meta:
@@ -113,8 +113,8 @@ class CourseSerializer(serializers.ModelSerializer):
         instructor = request.user
         tags_data = validated_data.pop('tags')
         goals_data = validated_data.pop('goals')
-        prerequisites_data = validated_data.pop('prerequisites')
-        chapters_data = validated_data.pop('chapters')
+        # prerequisites_data = validated_data.pop('prerequisites')
+        # chapters_data = validated_data.pop('chapters')
         sessions_data = validated_data.pop('sessions')
         start_date = sessions_data[0]['date']
         end_date = sessions_data[-1]['date']
@@ -127,10 +127,10 @@ class CourseSerializer(serializers.ModelSerializer):
             Tag.objects.create(course=course, **tag)
         for goal in goals_data:
             Goal.objects.create(course=course, **goal)
-        for prerequisite in prerequisites_data:
-            Prerequisite.objects.create(course=course, **prerequisite)
-        for chapter in chapters_data:
-            Chapter.objects.create(course=course, **chapter)
+        # for prerequisite in prerequisites_data:
+        #     Prerequisite.objects.create(course=course, **prerequisite)
+        # for chapter in chapters_data:
+        #     Chapter.objects.create(course=course, **chapter)
         for session in sessions_data:
             # session['course'] = course.pk
             new_session = SessionSerializer(data=session)
