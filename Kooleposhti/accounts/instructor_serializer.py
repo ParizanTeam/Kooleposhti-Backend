@@ -26,3 +26,11 @@ class InstructorProfileSerializer(BaseUserSerializer):
         model = Instructor
         fields = BaseUserSerializer.Meta.fields + ['tags', 'user_id', ]
         excluded_fields = ['birth_date']
+
+
+class InstructorSerializer(BaseUserSerializer):
+    tags = TagProfileSerializer(many=True, read_only=True)
+    class Meta(BaseUserSerializer.Meta):
+        model = Instructor
+        fields = ['id', 'username', 'first_name', 'last_name',
+                    'image', 'tags']

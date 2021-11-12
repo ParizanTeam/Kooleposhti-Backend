@@ -845,5 +845,5 @@ class InstructorViewSet(views.APIView):
         except Http404 as e:
             return Response(data={'message': 'Instructor does not exist'}, status=status.HTTP_404_NOT_FOUND)
         courses = instructor.courses.all()
-        serializer = course_serializers.CourseSerializer(courses, many=True)
+        serializer = course_serializers.InstructorCourseSerializer(courses, many=True)
         return Response(serializer.data)

@@ -33,7 +33,7 @@ class Course(models.Model):
     slug = models.CharField(max_length=255, unique=True, null=True, blank=True)
     image = models.ImageField(upload_to='static/images/course_images/', blank=True, default="static/images/no_photo.jpg")
     description = models.TextField(blank=True)
-    price = models.DecimalField(max_digits=6, decimal_places=2)  # 9999.99
+    price = models.DecimalField(max_digits=9, decimal_places=2)  # 9999.99
     rate = models.DecimalField(max_digits=2, decimal_places=1, default=0)
     rate_no = models.IntegerField(default=0)
     # first time we create Course django stores the current datetime
@@ -45,10 +45,11 @@ class Course(models.Model):
     end_date = models.DateField(blank=True)
     # start_class = models.DateTimeField()
     # end_class = models.DateTimeField()
-    duration = models.DurationField()
+    duration = models.IntegerField()
     promotions = models.ManyToManyField(Promotion, blank=True)
     min_students = models.IntegerField(blank=True, default=1)
     max_students = models.IntegerField()
+    capacity = models.IntegerField(blank=True)
     min_age = models.IntegerField(default=1)
     max_age = models.IntegerField(default=18)
 
@@ -61,13 +62,12 @@ class Course(models.Model):
     def is_owner(self, user):
         return self.instructor == user
 
-    @property
-    def capacity(self):
-        return self.max_students - len(self.students)
-
     def update_rate(self):
         self.rate_no = len(self.rates)
         self.rate = sum([rate_obj.rate for rate_obj in self.rates]) / self.rate_no
+
+    def update_capacity(self):
+        self.capacity = self.max_students - self.students.cout()
         
 
 
@@ -83,15 +83,40 @@ class Rate(models.Model):
 
 
 class Session(models.Model):
+    
+    WeekNames = [
+        ('0', "شنبه"), 
+        ('1', "یکشنبه"), 
+        ('2', "دو‌شنبه"), 
+        ('3', "سه‌شنبه"), 
+        ('4', "چها‌ر‌شنبه"), 
+        ('5', "پنجشنبه"), 
+        ('6', "جمعه")
+    ]
+    MonthNames = [
+        ('1', "فروردین"), 
+        ('2', "اردیبهشت"), 
+        ('3', "خرداد"), 
+        ('4', "تیر"), 
+        ('5', "مرداد"),
+        ('6', "شهریور"), 
+        ('7', "مهر"), 
+        ('8', "آبان"), 
+        ('9', "آذر"), 
+        ('10', "دی"), 
+        ('11', "بهمن"), 
+        ('12', "اسفند")
+    ]
+
     course = models.ForeignKey(Course, blank=True, on_delete=models.CASCADE, related_name='sessions')
     # title = models.CharField()
-    # student_no = models.IntegerField()
-    # enrollment_start_date = models.DateTimeField()
-    # enrollment_end_date = models.DateTimeField()
-    # price = models.DecimalField(max_digits=6, decimal_places=2)  # 9999.99
     date = models.DateField()
-    time = models.TimeField()
-    # end_time = models.TimeField(blank=True)
+    day = models.IntegerField(blank=True)
+    month = models.CharField(max_length=10, blank=True, choices=MonthNames)
+    week_day = models.CharField(max_length=10, blank=True, choices=WeekNames)
+    start_time = models.TimeField()
+    end_time = models.TimeField(blank = True)
+
     def __str__(self):
         return f"{self.course__title} {self.date} {self.time}"
 
@@ -101,6 +126,7 @@ class Comment(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='comments')
     created_date = models.DateTimeField(auto_now_add=True)
     text = models.TextField()
+
     def __str__(self):
         return f"{self.course__title} {self.text}"
 

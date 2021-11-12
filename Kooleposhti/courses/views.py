@@ -65,17 +65,20 @@ class CourseViewSet(ModelViewSet):
     # permission_classes = [AllowAny]
 
 
-    @action(detail=True, methods=['put'],
+    @action(detail=True, methods=['post'],
             permission_classes=[IsStudent])
     def enroll(self, request, *args, **kwargs):
         course = self.get_object()
         if course.is_enrolled(request.user):
             return Response('Already enrolled', status=status.HTTP_400_BAD_REQUEST)
+        if course.capacity < 1:
+            return Response("there's no enrollment available", status=status.HTTP_400_BAD_REQUEST)
         course.students.add(request.user)
+        course.update_capacity()
         return Response({'enrolled': True}, status=status.HTTP_200_OK)
 
     
-    @action(detail=True, methods=['put'],
+    @action(detail=True, methods=['post'],
             permission_classes=[IsStudent], url_name="leave", 
             url_path="leave")
     def leave(self, request: HttpRequest, *args, **kwargs):
@@ -83,6 +86,7 @@ class CourseViewSet(ModelViewSet):
         if not course.is_enrolled(request.user):
             return Response('Not enrolled', status=status.HTTP_400_BAD_REQUEST)
         course.students.remove(request.user)
+        course.update_capacity()
         return Response({'left': True}, status=status.HTTP_200_OK)
 
 
@@ -94,12 +98,12 @@ class CourseViewSet(ModelViewSet):
         return Response(serializer.data)
 
 
-    @action(detail=True, permission_classes=[AllowAny], 
-            url_name="get-students", url_path="classes")
-    def get_classes(self, request, *args, **kwargs):
-        course = self.get_object()
-        serializer = self.get_serializer(course.classes, many=True)
-        return Response(serializer.data)
+    # @action(detail=True, permission_classes=[AllowAny], 
+    #         url_name="get-students", url_path="classes")
+    # def get_classes(self, request, *args, **kwargs):
+    #     course = self.get_object()
+    #     serializer = self.get_serializer(course.classes, many=True)
+    #     return Response(serializer.data)
 
 
     @action(detail=True, methods=['put'],
@@ -113,6 +117,7 @@ class CourseViewSet(ModelViewSet):
             if not course.is_enrolled(student):
                 return Response('Not enrolled', status=status.HTTP_400_BAD_REQUEST)
             course.students.remove(student)
+            course.update_capacity()
             return Response({'deleted': True})
         else:
             return Response("your'e not the course owner", status=status.HTTP_403_FORBIDDEN)
@@ -140,7 +145,7 @@ class CourseViewSet(ModelViewSet):
                 rate_obj = Rate.objects.filter(course=course, student=student)
                 rate_obj.rate = rate_data
                 rate_obj.save()
-                return Response('you change rour rate.', status=status.HTTP_200_OK)
+                return Response('you changed rour rate.', status=status.HTTP_200_OK)
             except:
                 Rate.objects.create(course=course, student=student, rate=rate_data)
                 # course.rate = round((course.rate * course.rate_no + rate_data) / (course.rate_no + 1), 1)
