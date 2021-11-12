@@ -110,7 +110,7 @@ class CourseSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         request = self.context.get("request")
-        instructor = request.user
+        instructor = request.user.instructor
         tags_data = validated_data.pop('tags')
         goals_data = validated_data.pop('goals')
         # prerequisites_data = validated_data.pop('prerequisites')
