@@ -823,19 +823,19 @@ class InstructorViewSet(views.APIView):
             if request.data[key] == '':
                 del request.data[key]
 
-    def delete_empty_field(self, field):
-        if not field in self.request.data:
+    def delete_empty_field(self, field, request):
+        if not field in request.data:
             return
-        if not self.request.data[field] == '':
+        if not request.data[field] == '':
             return
-        del self.request.data[field]
+        del request.data[field]
 
-    def delete_none_field(self, field):
-        if not field in self.request.data:
+    def delete_none_field(self, field, request):
+        if not field in request.data:
             return
-        if not self.request.data[field] is None:
+        if not request.data[field] is None:
             return
-        del self.request.data[field]
+        del request.data[field]
 
     @action(detail=False, methods=['GET', 'PUT'], permission_classes=IsAuthenticated)
     def me(self, request):
@@ -849,11 +849,9 @@ class InstructorViewSet(views.APIView):
             serializer = self.get_serializer(instance=instructor)
             return Response(serializer.data)
         elif request.method == 'PUT':
-            self.request.data._mutable = True
-            self.delete_empty_field('password')
-            self.delete_empty_field('image.image')
-            self.delete_none_field('image.image')
-            self.request.data._mutable = False
+            self.delete_empty_field('password', request)
+            self.delete_empty_field('image.image', request)
+            self.delete_none_field('image.image', request)
             serializer = self.get_serializer(instructor, data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
