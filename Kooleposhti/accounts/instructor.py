@@ -837,6 +837,24 @@ class InstructorViewSet(views.APIView):
             return
         del request.data[field]
 
+    def delete_nested_field_none(self, field1, field2, request):
+        if not field1 in request.data:
+            return
+        if not field2 in request.data[field1]:
+            return
+        if not request.data[field1][field2] is None:
+            return
+        del request.data[field1]
+
+    def delete_nested_field_empty(self, field1, field2, request):
+        if not field1 in request.data:
+            return
+        if not field2 in request.data[field1]:
+            return
+        if not request.data[field1][field2] == '':
+            return
+        del request.data[field1]
+
     @action(detail=False, methods=['GET', 'PUT'], permission_classes=IsAuthenticated)
     def me(self, request):
         try:
@@ -852,6 +870,8 @@ class InstructorViewSet(views.APIView):
             self.delete_empty_field('password', request)
             self.delete_empty_field('image.image', request)
             self.delete_none_field('image.image', request)
+            self.delete_nested_field_none('image', 'image', request)
+            self.delete_nested_field_none('image', 'image', request)
             serializer = self.get_serializer(instructor, data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
