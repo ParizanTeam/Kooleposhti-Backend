@@ -34,7 +34,7 @@ router.register('instructors', InstructorViewSet,
 router.register('students', StudentViewSet, basename='accounts-student')
 router.register('users', UserViewSet, basename='accounts-user')
 # urlpatterns = router.urls
-pprint(router.urls)
+# pprint(router.urls)
 # pprint(router.urls)
 urlpatterns = [
     path('', include(router.urls)),

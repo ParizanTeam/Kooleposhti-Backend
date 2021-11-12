@@ -1,10 +1,12 @@
 from rest_framework import serializers
+from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.utils import model_meta
-
+from rest_framework.response import Response
 from images.serializers import ProfileImageSerializer
 from .models import User
 from rest_framework import serializers
 from .serializers import update_relation
+from rest_framework import status
 
 
 class BaseUserSerializer(serializers.ModelSerializer):
@@ -13,9 +15,11 @@ class BaseUserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True, max_length=128, required=False)
     first_name = serializers.CharField(
-        source='user.first_name', required=False)
-    last_name = serializers.CharField(source='user.last_name', required=False)
-    phone_no = serializers.CharField(source='user.phone_no', required=False)
+        source='user.first_name', required=False, allow_blank=True)
+    last_name = serializers.CharField(
+        source='user.last_name', required=False, allow_blank=True)
+    phone_no = serializers.CharField(
+        source='user.phone_no', required=False, allow_blank=True)
     birth_date = serializers.DateField(
         source='user.birth_date', required=False)
     roles = serializers.ReadOnlyField(
@@ -33,20 +37,32 @@ class BaseUserSerializer(serializers.ModelSerializer):
             return
         password = validated_data.pop('password')
         instance.user.set_password(password)
+        instance.user.save()
         instance.save()
 
     def set_image(self, instance, validated_data):
-        image = validated_data.pop('image', None)
+        if not 'image' in validated_data:
+            return
+        image = validated_data.pop('image')
         image = ProfileImageSerializer(data=image)
         image.is_valid(raise_exception=True)
         image = image.save()
         instance.user.image = image
         instance.save()
 
+    def unique_constraint(self, validated_data, field):
+        if not field in validated_data:
+            return
+        if User.objects.filter(**{field: validated_data[field]}).count() < 2:
+            return
+        self.fail(f'{field} exists')
+
     def update(self, instance, validated_data):
-        self.set_image(instance, validated_data['user'])
+        if 'user' in validated_data:
+            if 'image' in validated_data['user']:
+                self.set_image(instance, validated_data['user'])
+            update_relation(instance, validated_data, 'user')
         self.set_password(instance, validated_data)
-        update_relation(instance, validated_data, 'user')
         info = model_meta.get_field_info(instance)
 
         # Simply set each attribute on the instance, and then save it.
@@ -68,7 +84,6 @@ class BaseUserSerializer(serializers.ModelSerializer):
         # for attr, value in m2m_fields:
         #     field = getattr(instance, attr)
         #     field.set(value)
-
         return instance
 
 

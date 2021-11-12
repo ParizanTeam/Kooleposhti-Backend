@@ -1,3 +1,4 @@
+from django.http.request import QueryDict
 from accounts.instructor_serializer import InstructorProfileSerializer
 from courses.models import Course
 from django.contrib.auth.tokens import default_token_generator
@@ -38,6 +39,7 @@ from rest_framework import mixins, views
 from rest_framework.settings import api_settings
 import djoser.views
 from courses import serializers as course_serializers
+from django.db import utils
 # import rest_framework.request
 
 
@@ -533,7 +535,10 @@ class InstructorViewSet(views.APIView):
         """
         Returns the exception handler that this view uses.
         """
-        return self.settings.EXCEPTION_HANDLER
+        exception_map = {
+            'me': self.exception_handler_unique_constraint
+        }
+        return exception_map.get(self.action, self.settings.EXCEPTION_HANDLER)
 
     # API policy implementation methods
 
@@ -726,6 +731,10 @@ class InstructorViewSet(views.APIView):
 
         return response
 
+    def exception_handler_unique_constraint(self, exc, context):
+        if isinstance(exc, (utils.IntegrityError)):
+            return Response(data={'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
     def handle_exception(self, exc):
         """
         Handle any exception that occurs, by returning an appropriate response,
@@ -809,6 +818,43 @@ class InstructorViewSet(views.APIView):
     def get_instructor(self, request, *args, **kwargs):
         return get_object_or_404(Instructor, pk=request.user.instructor.pk)
 
+    def delete_empty_data(self, request):
+        for key in request.data.copy().keys():
+            if request.data[key] == '':
+                del request.data[key]
+
+    def delete_empty_field(self, field, request):
+        if not field in request.data:
+            return
+        if not request.data[field] == '':
+            return
+        del request.data[field]
+
+    def delete_none_field(self, field, request):
+        if not field in request.data:
+            return
+        if not request.data[field] is None:
+            return
+        del request.data[field]
+
+    def delete_nested_field_none(self, field1, field2, request):
+        if not field1 in request.data:
+            return
+        if not field2 in request.data[field1]:
+            return
+        if not request.data[field1][field2] is None:
+            return
+        del request.data[field1]
+
+    def delete_nested_field_empty(self, field1, field2, request):
+        if not field1 in request.data:
+            return
+        if not field2 in request.data[field1]:
+            return
+        if not request.data[field1][field2] == '':
+            return
+        del request.data[field1]
+
     @action(detail=False, methods=['GET', 'PUT'], permission_classes=IsAuthenticated)
     def me(self, request):
         try:
@@ -821,6 +867,11 @@ class InstructorViewSet(views.APIView):
             serializer = self.get_serializer(instance=instructor)
             return Response(serializer.data)
         elif request.method == 'PUT':
+            self.delete_empty_field('password', request)
+            self.delete_empty_field('image.image', request)
+            self.delete_none_field('image.image', request)
+            self.delete_nested_field_none('image', 'image', request)
+            self.delete_nested_field_none('image', 'image', request)
             serializer = self.get_serializer(instructor, data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
@@ -837,5 +888,6 @@ class InstructorViewSet(views.APIView):
         except Http404 as e:
             return Response(data={'message': 'Instructor does not exist'}, status=status.HTTP_404_NOT_FOUND)
         courses = instructor.courses.all()
-        serializer = course_serializers.InstructorCourseSerializer(courses, many=True)
+        serializer = course_serializers.InstructorCourseSerializer(
+            courses, many=True)
         return Response(serializer.data)
