@@ -38,6 +38,7 @@ from rest_framework import mixins, views
 from rest_framework.settings import api_settings
 import djoser.views
 from courses import serializers as course_serializers
+from django.db import utils
 # import rest_framework.request
 
 
@@ -533,7 +534,10 @@ class InstructorViewSet(views.APIView):
         """
         Returns the exception handler that this view uses.
         """
-        return self.settings.EXCEPTION_HANDLER
+        exception_map = {
+            'me': self.exception_handler_unique_constraint
+        }
+        return exception_map.get(self.action, self.settings.EXCEPTION_HANDLER)
 
     # API policy implementation methods
 
@@ -725,6 +729,10 @@ class InstructorViewSet(views.APIView):
             response[key] = value
 
         return response
+
+    def exception_handler_unique_constraint(self, exc, context):
+        if isinstance(exc, (utils.IntegrityError)):
+            return Response(data={'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
     def handle_exception(self, exc):
         """

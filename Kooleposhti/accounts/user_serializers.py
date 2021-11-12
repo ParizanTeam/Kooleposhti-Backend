@@ -1,10 +1,12 @@
 from rest_framework import serializers
+from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.utils import model_meta
-
+from rest_framework.response import Response
 from images.serializers import ProfileImageSerializer
 from .models import User
 from rest_framework import serializers
 from .serializers import update_relation
+from rest_framework import status
 
 
 class BaseUserSerializer(serializers.ModelSerializer):
@@ -43,6 +45,13 @@ class BaseUserSerializer(serializers.ModelSerializer):
         instance.user.image = image
         instance.save()
 
+    def unique_constraint(self, validated_data, field):
+        if not field in validated_data:
+            return
+        if User.objects.filter(**{field: validated_data[field]}).count() < 2:
+            return
+        self.fail(f'{field} exists')
+
     def update(self, instance, validated_data):
         self.set_image(instance, validated_data['user'])
         self.set_password(instance, validated_data)
@@ -68,7 +77,6 @@ class BaseUserSerializer(serializers.ModelSerializer):
         # for attr, value in m2m_fields:
         #     field = getattr(instance, attr)
         #     field.set(value)
-
         return instance
 
 
