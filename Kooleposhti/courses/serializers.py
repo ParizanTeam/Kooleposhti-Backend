@@ -97,7 +97,7 @@ class CourseSerializer(serializers.ModelSerializer):
         model = Course
         # fields = '__all__'
         fields = ('category', 'tags', 'goals' , 'instructor', 'duration',
-                    'title', 'slug', 'image', 'description', 
+                    'title', 'slug', 'image', 'description', 'id'
                     'price', 'rate', 'rate_no', 'created_at', 'comments',
                     'duration', 'min_students', 'max_students',
                     'min_age', 'max_age', 'sessions')
