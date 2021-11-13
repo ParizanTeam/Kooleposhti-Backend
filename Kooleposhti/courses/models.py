@@ -34,8 +34,8 @@ class Course(models.Model):
     image = models.ImageField(upload_to='static/images/course_images/', blank=True, default="static/images/no_photo.jpg")
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=9, decimal_places=2)  # 9999.99
-    rate = models.DecimalField(max_digits=2, decimal_places=1, default=0)
-    rate_no = models.IntegerField(default=0)
+    rate = models.DecimalField(max_digits=2, decimal_places=1, default=0, blank=True)
+    rate_no = models.IntegerField(default=0, blank=True)
     # first time we create Course django stores the current datetime
     last_update = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -78,7 +78,7 @@ class Rate(models.Model):
     rate = models.DecimalField(max_digits=2, decimal_places=1, default=0)
 
     def __str__(self):
-        return f"{self.course__title} {self.rate}"
+        return f"{self.course.title} {self.rate}"
 
 
 
@@ -118,7 +118,7 @@ class Session(models.Model):
     end_time = models.TimeField(blank = True)
 
     def __str__(self):
-        return f"{self.course__title} {self.date} {self.time}"
+        return f"{self.course.title} {self.date} {self.start_time}-{self.end_time}"
 
 
 class Comment(models.Model):
@@ -128,7 +128,7 @@ class Comment(models.Model):
     text = models.TextField()
 
     def __str__(self):
-        return f"{self.course__title} {self.text}"
+        return f"{self.course.title} {self.text}"
 
 
 class Tag(models.Model):
@@ -136,20 +136,20 @@ class Tag(models.Model):
     name = models.CharField(max_length=255)
 
     def __str__(self):
-        return f"{self.course__title} {self.name}"
+        return f"{self.course.title} {self.name}"
 
 
 
-class Chapter(models.Model):
-    course = models.ForeignKey(Course, blank=True, on_delete=models.CASCADE, related_name='chapters')
-    name = models.CharField(max_length=255)
-    number = models.IntegerField(blank=True)
-    # description = models.TextField(blank=True)
-    # slug = models.SlugField(max_length=255, unique=True)
-    # created_date = models.DateTimeField(auto_now_add=True)
+# class Chapter(models.Model):
+#     course = models.ForeignKey(Course, blank=True, on_delete=models.CASCADE, related_name='chapters')
+#     name = models.CharField(max_length=255)
+#     number = models.IntegerField(blank=True)
+#     # description = models.TextField(blank=True)
+#     # slug = models.SlugField(max_length=255, unique=True)
+#     # created_date = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"{self.course__title} {self.name}"
+#     def __str__(self):
+#         return f"{self.course.title} {self.name}"
 
 
 class Goal(models.Model):
@@ -157,15 +157,15 @@ class Goal(models.Model):
     text = models.TextField()
 
     def __str__(self):
-        return f"{self.course__title} {self.text}"
+        return f"{self.course.title} {self.text}"
 
 
-class Prerequisite(models.Model):
-    course = models.ForeignKey(Course, blank=True, related_name='prerequisites' , on_delete=models.CASCADE)
-    text = models.TextField()
+# class Prerequisite(models.Model):
+#     course = models.ForeignKey(Course, blank=True, related_name='prerequisites' , on_delete=models.CASCADE)
+#     text = models.TextField()
 
-    def __str__(self):
-        return f"{self.course__title} {self.text}"
+#     def __str__(self):
+#         return f"{self.course.title} {self.text}"
 
 
 class Order (models.Model):

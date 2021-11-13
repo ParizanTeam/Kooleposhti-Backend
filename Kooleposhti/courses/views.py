@@ -22,32 +22,14 @@ from rest_framework.pagination import PageNumberPagination, LimitOffsetPaginatio
 
 class SessionViewSet(ModelViewSet):
     serializer_class = SessionSerializer
-    permission_classes = [IsInstructorOrReadOnly]
-    # permission_classes = [AllowAny]
+    # permission_classes = [IsInstructorOrReadOnly]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
-        return Tag.objects.filter(course_id=self.kwargs.get('course_pk'))
+        return Session.objects.filter(course_id=self.kwargs.get('course_pk'))
         
-    # def get_serializer_context(self):
-    #     return {'course_id': self.kwargs.get('course_pk')}
-
-    # @action(detail=True, methods=['post'],
-    #         permission_classes=[AllowAny])
-    # def enroll(self, request, *args, **kwargs):
-    #     myclass = self.get_object()
-    #     myclass.students.add(request.user)
-    #     myclass.course.students.add(request.user)
-    #     return Response({'enrolled': True})
-
-
-    # @action(detail=True, methods=['delete'],
-    #         permission_classes=[AllowAny])
-    # def leave(self, request: HttpRequest, *args, **kwargs):
-    #     myclass = self.get_object()
-    #     myclass.students.delete(request.user)
-    #     myclass.course.students.delete(request.user)
-    #     return Response({'left': True})
-
+    def get_serializer_context(self):
+        return {'course': self.kwargs.get('course_pk')}
 
 
 
