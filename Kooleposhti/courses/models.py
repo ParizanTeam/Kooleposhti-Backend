@@ -67,7 +67,7 @@ class Course(models.Model):
         self.rate = sum([rate_obj.rate for rate_obj in self.rates]) / self.rate_no
 
     def update_capacity(self):
-        self.capacity = self.max_students - self.students.cout()
+        self.capacity = self.max_students - self.students.count()
         
 
 
