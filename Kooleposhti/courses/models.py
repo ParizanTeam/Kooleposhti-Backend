@@ -13,7 +13,7 @@ class Promotion(models.Model):
 class Category(models.Model):
     title = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True, null=True, blank=True)
-    image = models.ImageField(upload_to='static/images/course_images/', blank=True, default="static/images/no_photo.jpg")
+    image = models.ImageField(upload_to='images/course_images/', blank=True, default="images/no_photo.jpg")
 
     def __str__(self):
         return self.title
@@ -31,7 +31,7 @@ class Course(models.Model):
     students = models.ManyToManyField(Student, blank=True, related_name='courses')
     title = models.CharField(max_length=255)
     slug = models.CharField(max_length=255, unique=True, null=True, blank=True)
-    image = models.ImageField(upload_to='static/images/course_images/', blank=True, default="static/images/no_photo.jpg")
+    image = models.ImageField(upload_to='images/course_images/', blank=True, default="images/no_photo.jpg")
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=9, decimal_places=2)  # 9999.99
     rate = models.DecimalField(max_digits=2, decimal_places=1, default=0, blank=True)
