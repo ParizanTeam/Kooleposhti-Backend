@@ -76,7 +76,7 @@ class CourseViewSet(ModelViewSet):
             url_name="get-students", url_path="students")
     def get_students(self, request, *args, **kwargs):
         course = self.get_object()
-        serializer = self.get_serializer(course.students, many=True)
+        serializer = StudentSerializer(course.students, many=True)
         return Response(serializer.data)
 
 
