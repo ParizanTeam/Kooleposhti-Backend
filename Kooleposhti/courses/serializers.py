@@ -141,6 +141,37 @@ class CourseSerializer(serializers.ModelSerializer):
 
         return course
 
+    def update(self, instance, validated_data):
+        instance.tags.all().delete()
+        tags_data = validated_data.pop('tags', [])
+        instance.goals.all().delete()
+        goals_data = validated_data.pop('goals', [])
+        instance.sessions.all().delete()
+        sessions_data = validated_data.pop('sessions', [])
+        # if len(sessions_data):
+        validated_data['start_date'] = sessions_data[0]['date']
+        validated_data['end_date'] = sessions_data[-1]['date']
+        # else:
+
+        capacity = instance.capacity + \
+            validated_data['max_students'] - instance.max_students
+        # if capacity >= 0, 'class remaining enrolls '
+        validated_data['capacity'] = capacity
+        course = super().update(instance, validated_data)
+        for tag in tags_data:
+            Tag.objects.create(course=course, **tag)
+        for goal in goals_data:
+            Goal.objects.create(course=course, **goal)
+        for session in sessions_data:
+            new_session = SessionSerializer(data=session)
+            new_session.context['course'] = course.pk
+            new_session.is_valid(raise_exception=True)
+            new_session.save()
+
+        return course
+
+        return course
+
 
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:

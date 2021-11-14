@@ -79,6 +79,16 @@ class CourseViewSet(ModelViewSet):
         serializer = StudentSerializer(course.students, many=True)
         return Response(serializer.data)
 
+    @action(detail=True, permission_classes=[AllowAny], 
+            url_name="can-enroll", url_path="can-enroll")
+    def can_enroll(self, request, *args, **kwargs):
+        course = self.get_object()
+        try:
+            return Response({'enroll': not course.is_enrolled(request.user.student)}, 
+                            status=status.HTTP_200_OK)
+        except:
+            return Response({'enroll': not request.user.is_authenticated}, status=status.HTTP_200_OK)
+
 
     # @action(detail=True, permission_classes=[AllowAny], 
     #         url_name="get-students", url_path="classes")

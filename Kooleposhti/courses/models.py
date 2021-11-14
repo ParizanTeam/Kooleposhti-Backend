@@ -67,13 +67,14 @@ class Course(models.Model):
         return self.instructor == user
 
     def update_rate(self):
-        self.rate_no = len(self.rates)
-        self.rate = sum(
-            [rate_obj.rate for rate_obj in self.rates]) / self.rate_no
+        self.rate_no = len(self.rates.all())
+        self.rate = sum([rate_obj.rate for rate_obj in self.rates]) / self.rate_no
+        self.save()
 
     def update_capacity(self):
-        self.capacity = self.max_students - self.students.count()
-
+        self.capacity = self.max_students - len(self.students.all())
+        self.save()
+        
     def can_enroll(self, student):
         return True
 
