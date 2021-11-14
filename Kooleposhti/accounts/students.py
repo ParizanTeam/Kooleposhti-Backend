@@ -860,8 +860,8 @@ class StudentViewSet(views.APIView):
         student = self.get_student(request)
         # if not found:
         #     return Response(data={'message': 'Student does not exist'}, status=status.HTTP_404_NOT_FOUND)
-        courses = student.courses.all()
-        serializer = StudentCourseSerializer(courses, many=True)
+        # courses = student.courses.all()
+        serializer = StudentCourseSerializer(instance=student)
         return Response(serializer.data)
 
     def check_pk(self, request, *args, **kwargs):

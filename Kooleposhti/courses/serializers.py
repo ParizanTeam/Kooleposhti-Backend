@@ -5,8 +5,8 @@ from decimal import Decimal
 from accounts.models import Instructor
 from djoser.serializers import UserSerializer as BaseUserSerializer
 from accounts.instructor_serializer import InstructorSerializer
-from accounts.student_serializers import StudentSerializer
-import jdatetime, jalali_date
+import jdatetime
+import jalali_date
 from datetime import date, datetime, time, timedelta
 import base64
 
@@ -14,7 +14,7 @@ import base64
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = '__all__' 
+        fields = '__all__'
 
 
 class GoalSerializer(serializers.ModelSerializer):
@@ -44,14 +44,15 @@ class SessionSerializer(serializers.ModelSerializer):
         course_pk = self.context['course']
         course = Course.objects.get(pk=course_pk)
         date = validated_data['date']
-        new_time = datetime.combine(date.today(), validated_data['start_time']) + timedelta(minutes=course.duration)
+        new_time = datetime.combine(
+            date.today(), validated_data['start_time']) + timedelta(minutes=course.duration)
         end_time = new_time.time()
         day = date.day
         month = Session.MonthNames[date.month - 1][1]
         week = jdatetime.date(date.year, date.month, date.day).weekday()
         week_day = Session.WeekNames[week][1]
-        return Session.objects.create(course=course, day=day, month=month, 
-                                week_day=week_day, end_time=end_time, **validated_data)
+        return Session.objects.create(course=course, day=day, month=month,
+                                      week_day=week_day, end_time=end_time, **validated_data)
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -65,7 +66,6 @@ class CommentSerializer(serializers.ModelSerializer):
     #     return Comment.objects.create(student=student, **validated_data)
 
 
-    
 class CategorySerializer(serializers.ModelSerializer):
     # courses = CourseSerializer(many=True, read_only=True)
 
@@ -79,7 +79,7 @@ class InstructorCourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ['id', 'title', 'image', 'start_date',
-                    'end_date', 'max_students']
+                  'end_date', 'max_students']
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -96,14 +96,15 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         # fields = '__all__'
-        fields = ('category', 'tags', 'goals' , 'instructor', 'duration',
-                    'title', 'slug', 'image', 'description', 'id',
-                    'price', 'rate', 'rate_no', 'created_at', 'comments',
-                    'duration', 'min_students', 'max_students',
-                    'min_age', 'max_age', 'sessions', 'capacity')
+        fields = ('category', 'tags', 'goals', 'instructor', 'duration',
+                  'title', 'slug', 'image', 'description', 'id',
+                  'price', 'rate', 'rate_no', 'created_at', 'comments',
+                  'duration', 'min_students', 'max_students',
+                  'min_age', 'max_age', 'sessions', 'capacity')
     # instructor = serializers.HyperlinkedRelatedField(
     #     queryset=Instructor.objects.all(), view_name='instructor-detail')
-        new_price = serializers.SerializerMethodField(method_name='calculate_new_price')
+        new_price = serializers.SerializerMethodField(
+            method_name='calculate_new_price')
 
     def calculate_new_price(self, course: Course):
         return course.price * Decimal(1.1)
@@ -121,8 +122,8 @@ class CourseSerializer(serializers.ModelSerializer):
         capacity = validated_data['max_students']
         # start_date = jdatetime.date(start.year, start.month, start.day).togregorian()
         # end_date = jdatetime.date(end.year, end.month, end.day).togregorian()
-        course = Course.objects.create(instructor=instructor, start_date=start_date, end_date=end_date, 
-                                        capacity=capacity, **validated_data)
+        course = Course.objects.create(instructor=instructor, start_date=start_date, end_date=end_date,
+                                       capacity=capacity, **validated_data)
         for tag in tags_data:
             Tag.objects.create(course=course, **tag)
         for goal in goals_data:
@@ -137,11 +138,8 @@ class CourseSerializer(serializers.ModelSerializer):
             new_session.context['course'] = course.pk
             new_session.is_valid(raise_exception=True)
             new_session.save()
-        
+
         return course
-
-
-
 
 
 class ReviewSerializer(serializers.ModelSerializer):
