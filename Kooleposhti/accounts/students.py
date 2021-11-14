@@ -881,16 +881,16 @@ class StudentViewSet(views.APIView):
         course_pk = self.check_pk(request, *args, **kwargs)
         student = self.get_student(request)
         course = get_object_or_404(Course, pk=course_pk)
-        if course.is_enrolled(student):
-            raise Exception('Already enrolled')
-        if not course.can_enroll(student):
-            raise Exception('Cannot enroll')
         return student, course
 
     # (?P<course_pk>[^/.]+)
     @action(detail=False, methods=['POST'], permission_classes=[IsStudent], url_path='enroll')
     def enroll(self, request, *args, **kwargs):
         student, course = self.student_course(request, *args, **kwargs)
+        if course.is_enrolled(student):
+            raise Exception('Already enrolled')
+        if not course.can_enroll(student):
+            raise Exception('Cannot enroll')
         student.courses.add(course)
         return Response(data={'message': 'Successfully enrolled'}, status=status.HTTP_204_NO_CONTENT)
 
