@@ -72,12 +72,22 @@ class CourseViewSet(ModelViewSet):
         return Response({'left': True}, status=status.HTTP_200_OK)
 
 
-    @action(detail=True, permission_classes=[AllowAny], 
+    @action(detail=True, permission_classes=[IsInstructor], 
             url_name="get-students", url_path="students")
     def get_students(self, request, *args, **kwargs):
         course = self.get_object()
         serializer = StudentSerializer(course.students, many=True)
         return Response(serializer.data)
+
+    @action(detail=True, permission_classes=[AllowAny], 
+            url_name="is-inrolled", url_path="is-inrolled")
+    def is_enrolled(self, request, *args, **kwargs):
+        course = self.get_object()
+        try:
+            return Response({'enrolled': course.is_enrolled(request.user.student)}, 
+                            status=status.HTTP_200_OK)
+        except:
+            return Response({'enrolled': False}, status=status.HTTP_200_OK)
 
 
     # @action(detail=True, permission_classes=[AllowAny], 
