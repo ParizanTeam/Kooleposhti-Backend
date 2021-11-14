@@ -33,11 +33,12 @@ class BaseUserSerializer(serializers.ModelSerializer):
                   'roles', 'image']
 
     def validate(self, attrs):
-        phone_no = attrs.get('phone_no')
-        if not phone_no:  # not None
-            if not isinstance(phone_no, int):
-                raise serializers.ValidationError(
-                    detail='phone number is not in the correct format', code='phone_no')
+        if 'user' in attrs:
+            phone_no = attrs['user'].get('phone_no', None)
+            if phone_no:  # not None
+                if not phone_no.isdigit():
+                    raise serializers.ValidationError(
+                        detail='phone number is not in the correct format', code='phone_no')
         return super().validate(attrs)
 
     def set_password(self, instance, validated_data):
