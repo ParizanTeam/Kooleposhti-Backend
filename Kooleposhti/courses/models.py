@@ -13,28 +13,32 @@ class Promotion(models.Model):
 class Category(models.Model):
     title = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True, null=True, blank=True)
-    image = models.ImageField(upload_to='images/course_images/', blank=True, default="images/no_photo.jpg")
+    image = models.ImageField(
+        upload_to='images/course_images/', blank=True, default="images/no_photo.jpg")
 
     def __str__(self):
         return self.title
-
-
 
 
 class Course(models.Model):
     '''
     ('title', 'description', 'price', 'last_update', 'instructor')
     '''
-    category = models.ForeignKey(Category, related_name='courses', on_delete=models.CASCADE)
+    category = models.ForeignKey(
+        Category, related_name='courses', on_delete=models.CASCADE)
     # tags = models.ManyToManyField(Tag, blank=True)
-    instructor = models.ForeignKey(Instructor, blank=True, related_name='courses', on_delete=models.CASCADE)
-    students = models.ManyToManyField(Student, blank=True, related_name='courses')
+    instructor = models.ForeignKey(
+        Instructor, blank=True, related_name='courses', on_delete=models.CASCADE)
+    students = models.ManyToManyField(
+        Student, blank=True, related_name='courses')
     title = models.CharField(max_length=255)
     slug = models.CharField(max_length=255, unique=True, null=True, blank=True)
-    image = models.ImageField(upload_to='images/course_images/', blank=True, default="images/no_photo.jpg")
+    image = models.ImageField(
+        upload_to='images/course_images/', blank=True, default="images/no_photo.jpg")
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=9, decimal_places=2)  # 9999.99
-    rate = models.DecimalField(max_digits=2, decimal_places=1, default=0, blank=True)
+    rate = models.DecimalField(
+        max_digits=2, decimal_places=1, default=0, blank=True)
     rate_no = models.IntegerField(default=0, blank=True)
     # first time we create Course django stores the current datetime
     last_update = models.DateTimeField(auto_now=True)
@@ -64,66 +68,72 @@ class Course(models.Model):
 
     def update_rate(self):
         self.rate_no = len(self.rates)
-        self.rate = sum([rate_obj.rate for rate_obj in self.rates]) / self.rate_no
+        self.rate = sum(
+            [rate_obj.rate for rate_obj in self.rates]) / self.rate_no
 
     def update_capacity(self):
         self.capacity = self.max_students - self.students.cout()
-        
 
+    def can_enroll(self, student):
+        return True
 
 
 class Rate(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='rates')
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='rates')
+    course = models.ForeignKey(
+        Course, on_delete=models.CASCADE, related_name='rates')
+    student = models.ForeignKey(
+        Student, on_delete=models.CASCADE, related_name='rates')
     rate = models.DecimalField(max_digits=2, decimal_places=1, default=0)
 
     def __str__(self):
         return f"{self.course.title} {self.rate}"
 
 
-
 class Session(models.Model):
-    
+
     WeekNames = [
-        ('0', "شنبه"), 
-        ('1', "یکشنبه"), 
-        ('2', "دو‌شنبه"), 
-        ('3', "سه‌شنبه"), 
-        ('4', "چها‌ر‌شنبه"), 
-        ('5', "پنجشنبه"), 
+        ('0', "شنبه"),
+        ('1', "یکشنبه"),
+        ('2', "دو‌شنبه"),
+        ('3', "سه‌شنبه"),
+        ('4', "چها‌ر‌شنبه"),
+        ('5', "پنجشنبه"),
         ('6', "جمعه")
     ]
     MonthNames = [
-        ('1', "فروردین"), 
-        ('2', "اردیبهشت"), 
-        ('3', "خرداد"), 
-        ('4', "تیر"), 
+        ('1', "فروردین"),
+        ('2', "اردیبهشت"),
+        ('3', "خرداد"),
+        ('4', "تیر"),
         ('5', "مرداد"),
-        ('6', "شهریور"), 
-        ('7', "مهر"), 
-        ('8', "آبان"), 
-        ('9', "آذر"), 
-        ('10', "دی"), 
-        ('11', "بهمن"), 
+        ('6', "شهریور"),
+        ('7', "مهر"),
+        ('8', "آبان"),
+        ('9', "آذر"),
+        ('10', "دی"),
+        ('11', "بهمن"),
         ('12', "اسفند")
     ]
 
-    course = models.ForeignKey(Course, blank=True, on_delete=models.CASCADE, related_name='sessions')
+    course = models.ForeignKey(
+        Course, blank=True, on_delete=models.CASCADE, related_name='sessions')
     # title = models.CharField()
     date = models.DateField()
     day = models.IntegerField(blank=True)
     month = models.CharField(max_length=10, blank=True, choices=MonthNames)
     week_day = models.CharField(max_length=10, blank=True, choices=WeekNames)
     start_time = models.TimeField()
-    end_time = models.TimeField(blank = True)
+    end_time = models.TimeField(blank=True)
 
     def __str__(self):
         return f"{self.course.title} {self.date} {self.start_time}-{self.end_time}"
 
 
 class Comment(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='comments')
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='comments')
+    course = models.ForeignKey(
+        Course, on_delete=models.CASCADE, related_name='comments')
+    student = models.ForeignKey(
+        Student, on_delete=models.CASCADE, related_name='comments')
     created_date = models.DateTimeField(auto_now_add=True)
     text = models.TextField()
 
@@ -132,12 +142,12 @@ class Comment(models.Model):
 
 
 class Tag(models.Model):
-    course = models.ForeignKey(Course, blank=True, on_delete=models.CASCADE, related_name='tags')
+    course = models.ForeignKey(
+        Course, blank=True, on_delete=models.CASCADE, related_name='tags')
     name = models.CharField(max_length=255)
 
     def __str__(self):
         return f"{self.course.title} {self.name}"
-
 
 
 # class Chapter(models.Model):
@@ -153,7 +163,8 @@ class Tag(models.Model):
 
 
 class Goal(models.Model):
-    course = models.ForeignKey(Course, blank=True, related_name='goals' , on_delete=models.CASCADE)
+    course = models.ForeignKey(
+        Course, blank=True, related_name='goals', on_delete=models.CASCADE)
     text = models.TextField()
 
     def __str__(self):

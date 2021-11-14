@@ -11,16 +11,23 @@ class IsAdminOrReadOnly(BasePermission):
                     request.user.is_staff  # admin user
                     )
 
+
 class IsInstructorOrReadOnly(IsAuthenticated):
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             return True
         return super().has_permission(request, view) and bool(request.user.instructor)
 
+
 class IsStudent(IsAuthenticated):
     def has_permission(self, request, view):
-        return super().has_permission(request, view) and bool(request.user.student)
+        return super().has_permission(request, view) and \
+            request.user.has_role('student')
+        # bool(request.user.student)
+
 
 class IsInstructor(IsAuthenticated):
     def has_permission(self, request, view):
-        return super().has_permission(request, view) and bool(request.user.instructor)
+        return super().has_permission(request, view) and \
+            request.user.has_role('instructor')
+        # bool(request.user.instructor)
