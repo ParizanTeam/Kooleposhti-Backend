@@ -143,16 +143,18 @@ class CourseSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         instance.tags.all().delete()
-        tags_data = validated_data.pop('tags')
+        tags_data = validated_data.pop('tags', [])
         instance.goals.all().delete()
-        goals_data = validated_data.pop('goals')
+        goals_data = validated_data.pop('goals', [])
         instance.sessions.all().delete()
-        sessions_data = validated_data.pop('sessions')
+        sessions_data = validated_data.pop('sessions', [])
+        # if len(sessions_data):
         validated_data['start_date'] = sessions_data[0]['date']
         validated_data['end_date'] = sessions_data[-1]['date']
+        # else:
+
         capacity = instance.capacity + validated_data['max_students'] - instance.max_students
-        # if capacity < 0:
-        #     return
+        # if capacity >= 0, 'class remaining enrolls '
         validated_data['capacity'] = capacity
         course = super().update(instance, validated_data)
         for tag in tags_data:
