@@ -1,4 +1,6 @@
+from courses.serializers import CourseSerializer
 from rest_framework import serializers
+from accounts.instructor_serializer import InstructorProfileSerializer
 from courses.models import Course
 from .models import Student
 from rest_framework.serializers import raise_errors_on_nested_writes
@@ -16,9 +18,13 @@ class StudentSerializer(BaseUserSerializer):
 
 
 class StudentCourseSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Course
-        fields = ['id', 'title', ]
+    first_name = serializers.CharField(
+        source='user.first_name', read_only=True)
+    courses = CourseSerializer(many=True, read_only=True)
+
+    class Meta (BaseUserSerializer.Meta):
+        model = Instructor
+        fields = ['first_name', 'courses']
         # write_only_fields = ['id', ]
 
 
