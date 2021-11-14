@@ -19,3 +19,12 @@ class StudentCourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ['id', 'title', ]
+        # write_only_fields = ['id', ]
+
+
+class StudentEnrollLeaveCourseSerializer(serializers.ModelSerializer):
+    course_pk = serializers.IntegerField(write_only=True, source='id')
+
+    class Meta:
+        model = Course
+        fields = ['course_pk', ]

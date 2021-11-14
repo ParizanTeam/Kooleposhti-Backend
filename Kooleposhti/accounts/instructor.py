@@ -1,5 +1,6 @@
 from django.http.request import QueryDict
 from accounts.instructor_serializer import InstructorProfileSerializer
+from accounts.permissions import IsInstructor
 from courses.models import Course
 from django.contrib.auth.tokens import default_token_generator
 from django.urls import reverse
@@ -46,10 +47,11 @@ from django.db import utils
 class InstructorViewSet(views.APIView):
     queryset = Instructor.objects.all()
     # serializer_class = StudentSerializer
-    # permission_classes = [
-    #     IsAdminUser
-    #     # DjangoModelPermission
-    # ]
+    permission_classes = [
+        IsInstructor,
+        # IsAdminUser
+        # DjangoModelPermission
+    ]
 
     # The following policies may be set at either globally, or per-view.
     renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
@@ -812,9 +814,6 @@ class InstructorViewSet(views.APIView):
         data = self.metadata_class().determine_metadata(request, self)
         return Response(data, status=status.HTTP_200_OK)
 
-    def get_permissions(self):
-        return [AllowAny()]
-
     def get_instructor(self, request, *args, **kwargs):
         return get_object_or_404(Instructor, pk=request.user.instructor.pk)
 
@@ -855,7 +854,7 @@ class InstructorViewSet(views.APIView):
             return
         del request.data[field1]
 
-    @action(detail=False, methods=['GET', 'PUT'], permission_classes=IsAuthenticated)
+    @action(detail=False, methods=['GET', 'PUT'], permission_classes=[IsInstructor])
     def me(self, request):
         try:
             instructor = self.get_instructor(request)
@@ -878,7 +877,7 @@ class InstructorViewSet(views.APIView):
             return Response(serializer.data)
 
     @action(detail=False, methods=['GET'],
-            permission_classes=[IsAuthenticated],
+            permission_classes=[IsInstructor],
             url_name="classes", url_path="classes")
     def get_classes(self, request):
         try:

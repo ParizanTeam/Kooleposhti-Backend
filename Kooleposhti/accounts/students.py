@@ -1,9 +1,10 @@
+from accounts.permissions import IsStudent
 from courses.models import Course
 from django.contrib.auth.tokens import default_token_generator
 from django.urls import reverse
 from rest_framework.viewsets import ModelViewSet
 from accounts.models import Student
-from .student_serializers import StudentCourseSerializer, StudentSerializer
+from .student_serializers import StudentCourseSerializer, StudentEnrollLeaveCourseSerializer, StudentSerializer
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAdminUser, IsAuthenticated
@@ -42,10 +43,11 @@ import djoser.views
 class StudentViewSet(views.APIView):
     queryset = Student.objects.all()
     # serializer_class = StudentSerializer
-    # permission_classes = [
-    #     IsAdminUser
-    #     # DjangoModelPermission
-    # ]
+    permission_classes = [
+        IsStudent,
+        # IsAdminUser
+        # DjangoModelPermission
+    ]
 
     # The following policies may be set at either globally, or per-view.
     renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
@@ -165,6 +167,8 @@ class StudentViewSet(views.APIView):
             'partial_update': StudentSerializer,  # patch /<pk>
             'destroy': StudentSerializer,  # delete /<pk>
             'classes': StudentCourseSerializer,  # get /<pk>/classes
+            'enroll': StudentEnrollLeaveCourseSerializer,  # post enroll/
+            'leave': StudentEnrollLeaveCourseSerializer,  # post enroll/
         }
 
         return serializer_map.get(self.action, StudentSerializer)
@@ -533,11 +537,23 @@ class StudentViewSet(views.APIView):
             self._negotiator = self.content_negotiation_class()
         return self._negotiator
 
+    def general_exception(self, exception: Exception, request):
+        return Response(
+            data={
+                "message": str(exception)
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+            exception=True
+        )
+
     def get_exception_handler(self):
         """
         Returns the exception handler that this view uses.
         """
-        return self.settings.EXCEPTION_HANDLER
+        handler_map = {
+
+        }
+        return handler_map.get(self.action, self.general_exception)
 
     # API policy implementation methods
 
@@ -808,11 +824,6 @@ class StudentViewSet(views.APIView):
         data = self.metadata_class().determine_metadata(request, self)
         return Response(data, status=status.HTTP_200_OK)
 
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [AllowAny()]
-        return [IsAuthenticated()]
-
     def get_student(self, request, *args, **kwargs):
         return get_object_or_404(Student, pk=request.user.student.pk)
         try:
@@ -821,7 +832,7 @@ class StudentViewSet(views.APIView):
         except Student.DoesNotExist:
             return None, False
 
-    @action(detail=False, methods=['GET', 'PUT'], permission_classes=IsAuthenticated)
+    @action(detail=False, methods=['GET', 'PUT'], permission_classes=[IsStudent])
     def me(self, request):
         # student, is_created = Student.objects.get_or_create(pk=request.user.id)
         student = self.get_student(request)  # student, found
@@ -842,7 +853,7 @@ class StudentViewSet(views.APIView):
     #     try :
     #         course =
 
-    @action(detail=False, methods=['GET'], permission_classes=IsAuthenticated)
+    @action(detail=False, methods=['GET'], permission_classes=[IsStudent])
     def classes(self, request):
         if request.method != 'GET':
             return Response(data={'message': 'Method not allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -853,26 +864,39 @@ class StudentViewSet(views.APIView):
         serializer = StudentCourseSerializer(courses, many=True)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['POST'], permission_classes=IsAuthenticated, url_path='enroll/(?P<course_pk>[^/.]+)')
-    def enroll(self, request, *args, **kwargs):
-        if request.method != 'POST':
-            return Response(data={'message': 'Method not allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        student = self.get_student(request)
-        # if not found:
-        #     return Response(data={'message': 'Student does not exist'}, status=status.HTTP_404_NOT_FOUND)
-        course = get_object_or_404(Course, pk=kwargs['course_pk'])
-        if course.is_enrolled(student):
-            return Response(data={'message': 'Already enrolled'}, status=status.HTTP_400_BAD_REQUEST)
-        student.courses.add(course)
-        return Response(data={'message': 'Successfully enrolled'}, status=status.HTTP_200_OK)
+    def check_pk(self, request, *args, **kwargs):
+        if not 'course_pk' in request.data:
+            raise Exception('Course PK is not provided')
+        course_pk = request.data.get('course_pk')
+        if not isinstance(course_pk, int):
+            raise Exception('Course PK is in a wrong format')
+        return course_pk
 
-    @action(detail=False, methods=['POST'], permission_classes=IsAuthenticated, url_path='leave/(?P<course_pk>[^/.]+)')
-    def leave(self, request, *args, **kwargs):
+    def student_course(self, request, *args, **kwargs):
+        '''
+        course_pk is required in the body of the request
+        '''
         if request.method != 'POST':
-            return Response(data={'message': 'Method not allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            raise Exception('Method not allowed')
+        course_pk = self.check_pk(request, *args, **kwargs)
         student = self.get_student(request)
-        course = get_object_or_404(Course, pk=kwargs['course_pk'])
-        if not course.is_enrolled(student):
-            return Response(data={'message': 'Not enrolled'}, status=status.HTTP_400_BAD_REQUEST)
+        course = get_object_or_404(Course, pk=course_pk)
+        return student, course
+
+    # (?P<course_pk>[^/.]+)
+    @action(detail=False, methods=['POST'], permission_classes=[IsStudent], url_path='enroll')
+    def enroll(self, request, *args, **kwargs):
+        student, course = self.student_course(request, *args, **kwargs)
+        if course.is_enrolled(student):
+            raise Exception('Already enrolled')
+        if not course.can_enroll(student):
+            raise Exception('Cannot enroll')
+        student.courses.add(course)
+        return Response(data={'message': 'Successfully enrolled'}, status=status.HTTP_204_NO_CONTENT)
+
+    # (?P<course_pk>[^/.]+)
+    @action(detail=False, methods=['POST'], permission_classes=[IsStudent], url_path='leave')
+    def leave(self, request, *args, **kwargs):
+        student, course = self.student_course(request, *args, **kwargs)
         student.courses.remove(course)
-        return Response(data={'message': 'Successfully left'}, status=status.HTTP_200_OK)
+        return Response(data={'message': 'Successfully left'}, status=status.HTTP_204_NO_CONTENT)

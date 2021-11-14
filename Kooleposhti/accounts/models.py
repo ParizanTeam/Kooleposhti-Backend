@@ -29,7 +29,6 @@ class User(AbstractUser):
             ('cancel_order', 'Can cancel order')
         ]
 
-    @property
     def has_role(self, role):
         return hasattr(self, role)
 
