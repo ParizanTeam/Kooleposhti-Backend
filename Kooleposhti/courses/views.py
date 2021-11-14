@@ -72,7 +72,7 @@ class CourseViewSet(ModelViewSet):
         return Response({'left': True}, status=status.HTTP_200_OK)
 
 
-    @action(detail=True, permission_classes=[IsInstructor], 
+    @action(detail=True, permission_classes=[AllowAny], 
             url_name="get-students", url_path="students")
     def get_students(self, request, *args, **kwargs):
         course = self.get_object()
