@@ -16,7 +16,8 @@ class IsInstructorOrReadOnly(IsAuthenticated):
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             return True
-        return IsInstructor.has_permission(request=request, view=view)
+        return super().has_permission(request, view) and \
+            request.user.has_role('instructor')
         
     
 
