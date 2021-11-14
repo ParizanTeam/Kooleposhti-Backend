@@ -533,14 +533,29 @@ class InstructorViewSet(views.APIView):
             self._negotiator = self.content_negotiation_class()
         return self._negotiator
 
+    def general_exception_handler(self, exception: Exception, request):
+        response = self.settings.EXCEPTION_HANDLER(exception, request)
+        if not response is None:
+            return response
+        response = self.exception_handler_unique_constraint(exception, request)
+        if not response is None:
+            return response
+        return Response(
+            data={
+                "message": str(exception)
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+            exception=True
+        )
+
     def get_exception_handler(self):
         """
         Returns the exception handler that this view uses.
         """
         exception_map = {
-            'me': self.exception_handler_unique_constraint
+            # 'me': self.exception_handler_unique_constraint
         }
-        return exception_map.get(self.action, self.settings.EXCEPTION_HANDLER)
+        return exception_map.get(self.action, self.general_exception_handler)
 
     # API policy implementation methods
 
@@ -736,6 +751,7 @@ class InstructorViewSet(views.APIView):
     def exception_handler_unique_constraint(self, exc, context):
         if isinstance(exc, (utils.IntegrityError)):
             return Response(data={'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return None
 
     def handle_exception(self, exc):
         """
@@ -866,11 +882,14 @@ class InstructorViewSet(views.APIView):
             serializer = self.get_serializer(instance=instructor)
             return Response(serializer.data)
         elif request.method == 'PUT':
+            immutable = False
+            if hasattr(request.data, '_mutable'):
+                request.data._mutable = True
             self.delete_empty_field('password', request)
             self.delete_empty_field('image.image', request)
             self.delete_none_field('image.image', request)
             self.delete_nested_field_none('image', 'image', request)
-            self.delete_nested_field_none('image', 'image', request)
+            self.delete_nested_field_empty('image', 'image', request)
             serializer = self.get_serializer(instructor, data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()

@@ -16,7 +16,7 @@ ROLES = [
 
 class User(AbstractUser):
     email = models.EmailField(unique=True)
-    phone_no = models.CharField(max_length=20, null=True)
+    phone_no = models.CharField(max_length=11, null=True)
     first_name = models.CharField(max_length=255, null=True)
     last_name = models.CharField(max_length=255, null=True)
     birth_date = models.DateField(null=True)

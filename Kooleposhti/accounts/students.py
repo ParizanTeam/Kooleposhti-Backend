@@ -537,7 +537,18 @@ class StudentViewSet(views.APIView):
             self._negotiator = self.content_negotiation_class()
         return self._negotiator
 
-    def general_exception(self, exception: Exception, request):
+    def exception_handler_unique_constraint(self, exc, context):
+        if isinstance(exc, (utils.IntegrityError)):
+            return Response(data={'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return None
+
+    def general_exception_handler(self, exception: Exception, request):
+        response = self.settings.EXCEPTION_HANDLER(exception, request)
+        if not response is None:
+            return response
+        response = self.exception_handler_unique_constraint(exception, request)
+        if not response is None:
+            return response
         return Response(
             data={
                 "message": str(exception)
@@ -553,7 +564,7 @@ class StudentViewSet(views.APIView):
         handler_map = {
 
         }
-        return handler_map.get(self.action, self.general_exception)
+        return handler_map.get(self.action, self.general_exception_handler)
 
     # API policy implementation methods
 
