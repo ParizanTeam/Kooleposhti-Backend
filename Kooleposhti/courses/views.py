@@ -51,11 +51,11 @@ class CourseViewSet(ModelViewSet):
             permission_classes=[IsStudent])
     def enroll(self, request, *args, **kwargs):
         course = self.get_object()
-        if course.is_enrolled(request.user):
+        if course.is_enrolled(request.user.student):
             return Response('Already enrolled', status=status.HTTP_400_BAD_REQUEST)
         if course.capacity < 1:
             return Response("there's no enrollment available", status=status.HTTP_400_BAD_REQUEST)
-        course.students.add(request.user)
+        course.students.add(request.user.student)
         course.update_capacity()
         return Response({'enrolled': True}, status=status.HTTP_200_OK)
 
@@ -65,9 +65,9 @@ class CourseViewSet(ModelViewSet):
             url_path="leave")
     def leave(self, request: HttpRequest, *args, **kwargs):
         course = self.get_object()
-        if not course.is_enrolled(request.user):
+        if not course.is_enrolled(request.user.student):
             return Response('Not enrolled', status=status.HTTP_400_BAD_REQUEST)
-        course.students.remove(request.user)
+        course.students.remove(request.user.student)
         course.update_capacity()
         return Response({'left': True}, status=status.HTTP_200_OK)
 
@@ -76,7 +76,7 @@ class CourseViewSet(ModelViewSet):
             url_name="get-students", url_path="students")
     def get_students(self, request, *args, **kwargs):
         course = self.get_object()
-        serializer = self.get_serializer(course.students, many=True)
+        serializer = StudentSerializer(course.students, many=True)
         return Response(serializer.data)
 
 

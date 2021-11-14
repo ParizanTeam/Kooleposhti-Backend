@@ -38,7 +38,7 @@ class Course(models.Model):
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=9, decimal_places=2)  # 9999.99
     rate = models.DecimalField(
-        max_digits=2, decimal_places=1, default=0, blank=True)
+        max_digits=2, decimal_places=1, default=5, blank=True)
     rate_no = models.IntegerField(default=0, blank=True)
     # first time we create Course django stores the current datetime
     last_update = models.DateTimeField(auto_now=True)
@@ -72,7 +72,7 @@ class Course(models.Model):
             [rate_obj.rate for rate_obj in self.rates]) / self.rate_no
 
     def update_capacity(self):
-        self.capacity = self.max_students - self.students.cout()
+        self.capacity = self.max_students - self.students.count()
 
     def can_enroll(self, student):
         return True
