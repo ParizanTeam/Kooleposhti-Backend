@@ -15,22 +15,25 @@ class BaseUserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True, max_length=128, required=False)
     first_name = serializers.CharField(
-        source='user.first_name', required=False, allow_blank=True)
+        source='user.first_name', required=False, allow_blank=True, allow_null=True)
     last_name = serializers.CharField(
-        source='user.last_name', required=False, allow_blank=True)
+        source='user.last_name', required=False, allow_blank=True, allow_null=True)
     phone_no = serializers.CharField(
-        source='user.phone_no', required=False, allow_blank=True, max_length=11)
+        source='user.phone_no', required=False, max_length=11, allow_null=True, min_length=11)
     birth_date = serializers.DateField(
-        source='user.birth_date', required=False)
+        source='user.birth_date', required=False, allow_null=True)
     roles = serializers.ReadOnlyField(
-        source='user.get_user_roles', required=False)
-    image = ProfileImageSerializer(source='user.image', required=False)
+        source='user.get_user_roles', required=False, read_only=True)
+    image = ProfileImageSerializer(
+        source='user.image', required=False, allow_null=True)
+    color = serializers.CharField(
+        source='user.color', required=False, allow_null=True)
 
     class Meta:
         ref_name = None
         fields = ['id', 'username', 'email', 'password',
                   'first_name', 'last_name', 'phone_no', 'birth_date',
-                  'roles', 'image']
+                  'roles', 'image', 'color']
 
     def validate(self, attrs):
         if 'user' in attrs:
@@ -97,12 +100,12 @@ class BaseUserSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(BaseUserSerializer):
-    username = serializers.CharField(read_only=True, required=False)
-    email = serializers.EmailField(read_only=True, required=False)
-    first_name = serializers.CharField(required=False)
-    last_name = serializers.CharField(required=False)
-    phone_no = serializers.CharField(required=False)
-    birth_date = serializers.DateField(required=False)
+    # username = serializers.CharField(read_only=True, required=False)
+    # email = serializers.EmailField(read_only=True, required=False)
+    # first_name = serializers.CharField(required=False, allow_null=True)
+    # last_name = serializers.CharField(required=False, allow_null=True)
+    # phone_no = serializers.CharField(required=False, allow_null=True)
+    # birth_date = serializers.DateField(required=False, allow_null=True)
     roles = serializers.ReadOnlyField(source='get_user_roles', required=False)
     image = ProfileImageSerializer(required=False)
 

@@ -21,6 +21,7 @@ class User(AbstractUser):
     last_name = models.CharField(max_length=255, null=True)
     birth_date = models.DateField(null=True)
     image = models.OneToOneField(MyImage, on_delete=models.CASCADE, null=True)
+    color = models.CharField(max_length=255, null=True)
 
     class Meta:
         # model = User
