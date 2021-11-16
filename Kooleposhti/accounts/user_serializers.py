@@ -100,7 +100,7 @@ class BaseUserSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(BaseUserSerializer):
-    # username = serializers.CharField(read_only=True, required=False)
+    username = serializers.CharField(read_only=True, required=False)
     # email = serializers.EmailField(read_only=True, required=False)
     # first_name = serializers.CharField(required=False, allow_null=True)
     # last_name = serializers.CharField(required=False, allow_null=True)
