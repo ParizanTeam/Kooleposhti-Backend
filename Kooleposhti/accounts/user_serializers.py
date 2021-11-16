@@ -99,7 +99,7 @@ class BaseUserSerializer(serializers.ModelSerializer):
         return instance
 
 
-class UserSerializer(BaseUserSerializer):
+class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(read_only=True, required=False)
     # email = serializers.EmailField(read_only=True, required=False)
     # first_name = serializers.CharField(required=False, allow_null=True)
