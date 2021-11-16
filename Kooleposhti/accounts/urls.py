@@ -16,6 +16,9 @@ Including another URLconf
 from django.conf.urls import include
 from django.contrib import admin
 from django.urls import base, path
+
+from accounts.instructor import InstructorViewSet
+from accounts.user import UserViewSet
 from .views import *
 from .email import ActivationEmail
 from rest_framework.routers import DefaultRouter, SimpleRouter
@@ -26,11 +29,12 @@ from rest_framework_simplejwt import views
 
 
 router = routers.DefaultRouter()
-router.register('instructors', InstructorList, basename='accounts-instructor')
+router.register('instructors', InstructorViewSet,
+                basename='accounts-instructor')
 router.register('students', StudentViewSet, basename='accounts-student')
-router.register('users', UserResetPassword, basename='accounts-user')
+router.register('users', UserViewSet, basename='accounts-user')
 # urlpatterns = router.urls
-
+# pprint(router.urls)
 # pprint(router.urls)
 urlpatterns = [
     path('', include(router.urls)),

@@ -77,19 +77,18 @@ class UserCreateSerializer(BaseUserCreateSerializer):
 class InstructorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Instructor
-        fields = ('birth_date',)
+        fields = []
 
 
-class StudentSerializer(serializers.ModelSerializer):
-    user_id = serializers.IntegerField(read_only=True)
+# class StudentSerializer(serializers.ModelSerializer):
+#     user_id = serializers.IntegerField(read_only=True)
 
-    class Meta:
-        model = Student
-        fields = [
-            'id',
-            'user_id',
-            'birth_date',
-        ]
+#     class Meta:
+#         model = Student
+#         fields = [
+#             'id',
+#             'user_id',
+#         ]
 
 
 class UserSerializer(BaseUserSerializer):
@@ -165,7 +164,7 @@ class MyUserFunctionsMixin:
                 return user
         except User.DoesNotExist:
             if (conf.settings.PASSWORD_RESET_SHOW_EMAIL_NOT_FOUND or
-                        conf.settings.USERNAME_RESET_SHOW_EMAIL_NOT_FOUND
+                    conf.settings.USERNAME_RESET_SHOW_EMAIL_NOT_FOUND
                     ):
                 self.fail("email_not_found")
 
@@ -180,3 +179,11 @@ class MySendEmailResetSerializer(serializers.Serializer, MyUserFunctionsMixin):
 
         self.email_field = User.get_email_field_name()
         self.fields[self.email_field] = serializers.EmailField()
+
+
+def update_relation(instance, validated_data, relation):
+    assert relation in validated_data, 'user not found in validated_data'
+    instance = getattr(instance, relation)
+    for key, val in validated_data[relation].items():
+        setattr(instance, key, val)
+        instance.save()
