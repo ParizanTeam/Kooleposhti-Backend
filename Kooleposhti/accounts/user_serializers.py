@@ -109,6 +109,14 @@ class UserSerializer(serializers.ModelSerializer):
     roles = serializers.ReadOnlyField(source='get_user_roles', required=False)
     image = ProfileImageSerializer(required=False)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name in self.Meta.excluded_fields:
+            if not field_name in self.fields:
+                continue
+            self.fields.pop(field_name)
+
     class Meta (BaseUserSerializer.Meta):
         model = User
         fields = BaseUserSerializer.Meta.fields
+        excluded_fields = ['password']
