@@ -147,6 +147,8 @@ class BaseUserSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(read_only=True, required=False)
+    image_url = serializers.URLField(
+        write_only=True, required=False, allow_null=True)
     # email = serializers.EmailField(read_only=True, required=False)
     # first_name = serializers.CharField(required=False, allow_null=True)
     # last_name = serializers.CharField(required=False, allow_null=True)

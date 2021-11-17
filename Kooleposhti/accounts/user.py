@@ -54,7 +54,7 @@ class UserViewSet(views.APIView):
     parser_classes = api_settings.DEFAULT_PARSER_CLASSES
     authentication_classes = api_settings.DEFAULT_AUTHENTICATION_CLASSES
     throttle_classes = api_settings.DEFAULT_THROTTLE_CLASSES
-    permission_classes = api_settings.DEFAULT_PERMISSION_CLASSES
+    permission_classes = [IsAuthenticated]
     content_negotiation_class = api_settings.DEFAULT_CONTENT_NEGOTIATION_CLASS
     metadata_class = api_settings.DEFAULT_METADATA_CLASS
     versioning_class = api_settings.DEFAULT_VERSIONING_CLASS
