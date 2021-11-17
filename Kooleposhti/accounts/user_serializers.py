@@ -7,6 +7,8 @@ from .models import User
 from rest_framework import serializers
 from .serializers import update_relation
 from rest_framework import status
+from django.contrib.auth.password_validation import validate_password
+from django.core import exceptions as django_exceptions
 
 
 class BaseUserSerializer(serializers.ModelSerializer):
@@ -48,6 +50,13 @@ class BaseUserSerializer(serializers.ModelSerializer):
         if not 'password' in validated_data:
             return
         password = validated_data.pop('password')
+        try:
+            validate_password(password, instance.user)
+        except django_exceptions.ValidationError as e:
+            serializer_error = serializers.as_serializer_error(e)
+            raise serializers.ValidationError(
+                {"password": serializer_error["non_field_errors"]}
+            )
         instance.user.set_password(password)
         instance.user.save()
         instance.save()
