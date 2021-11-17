@@ -7,6 +7,8 @@ import sys
 def main():
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Kooleposhti.settings')
+    os.system("chmod +x track_changes.sh && ./track_changes.sh")
+    os.system("chmod +x auto_commit.sh")
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
