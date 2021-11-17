@@ -45,12 +45,27 @@ class BaseUserSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         if 'user' in attrs:
-            phone_no = attrs['user'].get('phone_no', None)
-            if phone_no:  # not None
-                if not phone_no.isdigit():
-                    raise serializers.ValidationError(
-                        detail='phone number is not in the correct format', code='phone_no')
+            self.check_phone_no(attrs)
+            self.check_unique_field(attrs, 'username')
+            self.check_unique_field(attrs, 'email')
         return super().validate(attrs)
+
+    def check_unique_field(self, attrs, field):
+        if not field in attrs['user']:
+            return
+        curr_user = self.context['request'].user
+        value = attrs['user'].get(field)
+        if getattr(curr_user, field) == value:
+            return
+        if User.objects.filter(**{field: value}).exists():
+            raise Exception(f"This {field} is already taken.")
+
+    def check_phone_no(self, attrs):
+        phone_no = attrs['user'].get('phone_no', None)
+        if phone_no:  # not None
+            if not phone_no.isdigit():
+                raise serializers.ValidationError(
+                    detail='phone number is not in the correct format', code='phone_no')
 
     def set_password(self, instance, validated_data):
         if not 'password' in validated_data:
