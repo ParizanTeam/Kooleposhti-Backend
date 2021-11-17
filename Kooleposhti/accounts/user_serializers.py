@@ -165,4 +165,4 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta (BaseUserSerializer.Meta):
         model = User
         fields = BaseUserSerializer.Meta.fields
-        excluded_fields = ['password']
+        excluded_fields = ['password', 'image_url']
