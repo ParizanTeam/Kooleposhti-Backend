@@ -813,8 +813,8 @@ class UserViewSet(views.APIView):
         return Response(data, status=status.HTTP_200_OK)
 
     def get_permissions(self):
-        if self.request.method == 'GET':
-            return [AllowAny()]
+        # if self.request.method == 'GET':
+        #     return [AllowAny()]
         return [IsAuthenticated()]
 
     @action(detail=False, methods=['GET', 'PUT'], permission_classes=IsAuthenticated)
