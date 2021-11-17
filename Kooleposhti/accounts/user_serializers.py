@@ -1,7 +1,10 @@
+from django.core.files.storage import Storage, default_storage
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.utils import model_meta
 from rest_framework.response import Response
+from images.models import MyImage
 from images.serializers import ProfileImageSerializer
 from .models import User
 from rest_framework import serializers
@@ -9,6 +12,7 @@ from .serializers import update_relation
 from rest_framework import status
 from django.contrib.auth.password_validation import validate_password
 from django.core import exceptions as django_exceptions
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 
 class BaseUserSerializer(serializers.ModelSerializer):
@@ -30,12 +34,14 @@ class BaseUserSerializer(serializers.ModelSerializer):
         source='user.image', required=False, allow_null=True)
     color = serializers.CharField(
         source='user.color', required=False, allow_null=True)
+    image_url = serializers.URLField(
+        write_only=True, required=False, allow_null=True)
 
     class Meta:
         ref_name = None
         fields = ['id', 'username', 'email', 'password',
                   'first_name', 'last_name', 'phone_no', 'birth_date',
-                  'roles', 'image', 'color']
+                  'roles', 'image', 'color', 'image_url']
 
     def validate(self, attrs):
         if 'user' in attrs:
@@ -61,10 +67,23 @@ class BaseUserSerializer(serializers.ModelSerializer):
         instance.user.save()
         instance.save()
 
-    def set_image(self, instance, validated_data):
+    def set_image(self, instance, validated_data, image_url=None):
         if not 'image' in validated_data:
             return
         image = validated_data.pop('image')
+        print(type(image))
+        # MyImage.objects.get(image=)
+        if not 'image' in image and image_url is None:
+            return
+        # if isinstance(image['image'], InMemoryUploadedFile) :
+        # if isinstance(image['image'], str):
+        if not image_url is None:
+            image_url = image_url.split(default_storage.base_url)[1]
+            tmp_image = MyImage.get_image_id(image_url)
+            if tmp_image is None:
+                raise serializers.ValidationError(
+                    detail='image url is not correct', code='image_url')
+            image['image'] = tmp_image
         image = ProfileImageSerializer(data=image)
         image.is_valid(raise_exception=True)
         image = image.save()
@@ -81,7 +100,8 @@ class BaseUserSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         if 'user' in validated_data:
             if 'image' in validated_data['user']:
-                self.set_image(instance, validated_data['user'])
+                self.set_image(
+                    instance, validated_data['user'], validated_data.get('image_url'))
             update_relation(instance, validated_data, 'user')
         self.set_password(instance, validated_data)
         info = model_meta.get_field_info(instance)
