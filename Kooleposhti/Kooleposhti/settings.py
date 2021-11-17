@@ -288,3 +288,5 @@ JALALI_DATE_DEFAULTS = {
         }
     },
 }
+
+skyroom_key = env.str('SKYROOM_KEY')
