@@ -68,27 +68,29 @@ class BaseUserSerializer(serializers.ModelSerializer):
         instance.save()
 
     def set_image(self, instance, validated_data, image_url=None):
-        if not 'image' in validated_data:
-            return
-        image = validated_data.pop('image')
-        print(type(image))
-        # MyImage.objects.get(image=)
-        if not 'image' in image and image_url is None:
-            return
-        # if isinstance(image['image'], InMemoryUploadedFile) :
-        # if isinstance(image['image'], str):
-        if not image_url is None:
+        image = None
+        if 'image' in validated_data:
+            image = validated_data.pop('image')
+            if not 'image' in image:
+                return
+            image = image.get('image')
+            image = ProfileImageSerializer(data=image)
+            image.is_valid(raise_exception=True)
+            image = image.save()
+        elif not image_url is None:
             image_url = image_url.split(default_storage.base_url)[1]
             tmp_image = MyImage.get_image_id(image_url)
             if tmp_image is None:
                 raise serializers.ValidationError(
                     detail='image url is not correct', code='image_url')
-            image['image'] = tmp_image
-        image = ProfileImageSerializer(data=image)
-        image.is_valid(raise_exception=True)
-        image = image.save()
+            image = tmp_image
+
         instance.user.image = image
         instance.save()
+
+        # MyImage.objects.get(image=)
+        # if isinstance(image['image'], InMemoryUploadedFile) :
+        # if isinstance(image['image'], str):
 
     def unique_constraint(self, validated_data, field):
         if not field in validated_data:
@@ -99,7 +101,7 @@ class BaseUserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         if 'user' in validated_data:
-            if 'image' in validated_data['user']:
+            if 'image' in validated_data['user'] or 'image_url' in validated_data:
                 self.set_image(
                     instance, validated_data['user'], validated_data.get('image_url'))
             update_relation(instance, validated_data, 'user')
