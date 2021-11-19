@@ -68,7 +68,7 @@ class Course(models.Model):
 
     def update_rate(self):
         self.rate_no = len(self.rates.all())
-        self.rate = sum([rate_obj.rate for rate_obj in self.rates]) / self.rate_no
+        self.rate = round(sum([rate_obj.rate for rate_obj in self.rates]) / self.rate_no, 1)
         self.save()
 
     def update_capacity(self):

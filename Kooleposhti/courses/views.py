@@ -18,12 +18,18 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
+from accounts.student_serializers import StudentSerializer
+from skyroom import *
+from Kooleposhti.settings import skyroom_key
+
+
+api = SkyroomAPI(skyroom_key)
 
 
 class SessionViewSet(ModelViewSet):
     serializer_class = SessionSerializer
-    # permission_classes = [IsInstructorOrReadOnly]
-    permission_classes = [AllowAny]
+    permission_classes = [IsInstructorOrReadOnly]
+    # permission_classes = [AllowAny]
 
     def get_queryset(self):
         return Session.objects.filter(course_id=self.kwargs.get('course_pk'))
@@ -46,18 +52,206 @@ class CourseViewSet(ModelViewSet):
     permission_classes = [IsInstructorOrReadOnly]
     # permission_classes = [AllowAny]
 
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        tags_data = data.pop('tags')
+        goals_data = data.pop('goals')
+        sessions_data = data.get('sessions')
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            course = self.perform_create(serializer)
+        except Exception as e: 
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+
+        for tag in tags_data:
+            # Tag.objects.create(course=course, **tag)
+            tag['course'] = course.pk
+            new_tag = TagSerializer(data=tag)
+            new_tag.is_valid(raise_exception=True)
+            new_tag.save()
+        for goal in goals_data:
+            goal['course'] = course.pk
+            new_goal = GoalSerializer(data=goal)
+            new_goal.is_valid(raise_exception=True)
+            new_goal.save()
+        for session in sessions_data:
+            new_session = SessionSerializer(data=session)
+            new_session.context['course'] = course.pk
+            new_session.is_valid(raise_exception=True)
+            new_session.save()
+        course = Course()
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+
+    def perform_create(self, serializer):
+        # create skyroom room and set the instructor operator
+        course = serializer.save()
+        params = {
+            "name": f"c{course.id}",
+            "title": course.title,
+            "description": course.description,
+            "session_duration": course.duration,
+            "max_users": course.max_students + 1,
+            "guest_login": False,
+            "op_login_first": True
+        }
+        try:
+            room_id = api.createRoom(params)
+            instructor = api.getUser({"username":course.instructor.user.username})
+            params = {           
+                'room_id': room_id,
+                'users': [ 
+                    {'user_id': instructor['id'], "access": 3}
+                ]
+            }
+            api.addRoomUsers(params)
+        except Exception as e:
+            course.delete()
+            raise e
+
+        return course
+
+
+
+    def update(self, request, *args, **kwargs):
+        data = request.data
+        tags_data = data.pop('tags', None)
+        goals_data = data.pop('goals', None)
+        sessions_data = data.get('sessions', None)
+        
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        
+        # if not just image
+        if len(data) > 1:
+            try:
+                course = self.perform_update(serializer)
+            except Exception as e: 
+                return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            instance._prefetched_objects_cache = {}
+
+        if tags_data:
+            self.tags.all().delete()   
+            for tag in tags_data:
+                tag['course'] = course.pk
+                new_tag = TagSerializer(data=tag)
+                new_tag.is_valid(raise_exception=True)
+                new_tag.save()
+        if goals_data:
+            course.goals.all().delete()
+            for goal in goals_data:
+                goal['course'] = course.pk
+                new_goal = GoalSerializer(data=goal)
+                new_goal.is_valid(raise_exception=True)
+                new_goal.save()
+        if sessions_data:
+            course.sessions.all().delete()
+            for session in sessions_data:
+                new_session = SessionSerializer(data=session)
+                new_session.context['course'] = course.pk
+                new_session.is_valid(raise_exception=True)
+                new_session.save()
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+    def perform_update(self, serializer):
+        course_old = self.get_object()
+        course = serializer.save()
+        # update skyroom room
+        try:
+            room = api.getRoom({"name": f"c{course.id}"})
+            params = {
+                "room_id": room['id'],
+                "title": course.title,
+                "description": course.description,
+                "session_duration": course.duration,
+                "max_users": course.max_students + 1
+            }
+            api.updateRoom(params)
+        except Exception as e:
+            course = course_old
+            course.save()
+            raise e
+            
+        return course
+
+
+
+
+    def perform_destroy(self, instance):
+        # delete skyroom room 
+        room = api.getRoom({"name": f"{instance.pk}"})
+        api.deleteRoom({"room_id": room['id']})
+        return super().perform_destroy(instance)
+    
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+
+        try:
+            self.perform_destroy(instance)
+        except Exception as e: 
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
+    def perform_add_student(self, course, student):
+        # create room user
+        room = api.getRoom({"name": f'c{course.pk}'})
+        room_student = api.getUser({"username": student.user.username})
+        params = {           
+            'room_id': room['id'],
+            'users': [{'user_id': room_student['id']}]
+        }
+        api.addRoomUsers(params)
+
+
 
     @action(detail=True, methods=['post'],
             permission_classes=[IsStudent])
     def enroll(self, request, *args, **kwargs):
         course = self.get_object()
-        if course.is_enrolled(request.user.student):
+        student = request.user.student
+        if course.is_enrolled(student):
             return Response('Already enrolled', status=status.HTTP_400_BAD_REQUEST)
         if course.capacity < 1:
             return Response("there's no enrollment available", status=status.HTTP_400_BAD_REQUEST)
-        course.students.add(request.user.student)
+
+        try:
+            self.perform_add_student(course, student)
+        except Exception as e: 
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+
+        course.students.add(student)
         course.update_capacity()
         return Response({'enrolled': True}, status=status.HTTP_200_OK)
+
+
+
+    def perform_remove_student(self, course, student):
+        # remove room user
+        room = api.getRoom({"name": f'c{course.pk}'})
+        room_student = api.getUser({"username": student.user.username})
+        params = {           
+            'room_id': room['id'],
+            'users': [room_student['id']]
+        }
+        api.removeRoomUsers(params)
+
 
     
     @action(detail=True, methods=['post'],
@@ -65,37 +259,19 @@ class CourseViewSet(ModelViewSet):
             url_path="leave")
     def leave(self, request: HttpRequest, *args, **kwargs):
         course = self.get_object()
-        if not course.is_enrolled(request.user.student):
-            return Response('Not enrolled', status=status.HTTP_400_BAD_REQUEST)
+        student = request.user.student
+        if not course.is_enrolled(student):
+            return Response('Not enrolled yet.', status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            self.perform_remove_student(course, student)
+        except Exception as e: 
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+
         course.students.remove(request.user.student)
         course.update_capacity()
         return Response({'left': True}, status=status.HTTP_200_OK)
 
-
-    @action(detail=True, permission_classes=[IsInstructor], 
-            url_name="get-students", url_path="students")
-    def get_students(self, request, *args, **kwargs):
-        course = self.get_object()
-        serializer = StudentSerializer(course.students, many=True)
-        return Response(serializer.data)
-
-    @action(detail=True, permission_classes=[AllowAny], 
-            url_name="can-enroll", url_path="can-enroll")
-    def can_enroll(self, request, *args, **kwargs):
-        course = self.get_object()
-        try:
-            return Response({'enroll': not course.is_enrolled(request.user.student)}, 
-                            status=status.HTTP_200_OK)
-        except:
-            return Response({'enroll': not request.user.is_authenticated}, status=status.HTTP_200_OK)
-
-
-    # @action(detail=True, permission_classes=[AllowAny], 
-    #         url_name="get-students", url_path="classes")
-    # def get_classes(self, request, *args, **kwargs):
-    #     course = self.get_object()
-    #     serializer = self.get_serializer(course.classes, many=True)
-    #     return Response(serializer.data)
 
 
     @action(detail=True, methods=['put'],
@@ -108,11 +284,37 @@ class CourseViewSet(ModelViewSet):
             student = get_object_or_404(Student, pk=sid)
             if not course.is_enrolled(student):
                 return Response('Not enrolled', status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                self.perform_remove_student(course, student)
+            except Exception as e: 
+                return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+            
             course.students.remove(student)
             course.update_capacity()
             return Response({'deleted': True})
         else:
             return Response("your'e not the course owner", status=status.HTTP_403_FORBIDDEN)
+
+
+
+    @action(detail=True, permission_classes=[IsInstructor], 
+            url_name="get-students", url_path="students")
+    def get_students(self, request, *args, **kwargs):
+        course = self.get_object()
+        serializer = StudentSerializer(course.students, many=True)
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+    @action(detail=True, permission_classes=[AllowAny], 
+            url_name="can-enroll", url_path="can-enroll")
+    def can_enroll(self, request, *args, **kwargs):
+        course = self.get_object()
+        try:
+            return Response({'enroll': not course.is_enrolled(request.user.student)}, 
+                            status=status.HTTP_200_OK)
+        except:
+            return Response({'enroll': not request.user.is_authenticated}, 
+                            status=status.HTTP_200_OK)
 
 
     @action(detail=True, methods=['post'],
@@ -124,6 +326,7 @@ class CourseViewSet(ModelViewSet):
                                         text=request.data['comment'])
             return Response('succssesfuly commented', status=status.HTTP_200_OK)
         return Response("you're not enrolled", status=status.HTTP_403_FORBIDDEN)
+
 
 
     @action(detail=True, methods=['post'],
@@ -172,12 +375,15 @@ class CategoryViewSet(ModelViewSet):
         return Response(serializer.data)
 
 
-# class TagViewSet(ModelViewSet):
-    # serializer_class = TagSerializer
-    # permission_classes = [AllowAny]
+class TagViewSet(ModelViewSet):
+    serializer_class = TagSerializer
+    permission_classes = [IsInstructorOrReadOnly]
 
-    # def get_queryset(self):
-    #     return Tag.objects.filter(course_id=self.kwargs.get('course_pk'))
+#     def get_queryset(self):
+#         return Tag.objects.filter(course_id=self.kwargs.get('course_pk'))
+        
+#     def get_serializer_context(self):
+#         return {'course': self.kwargs.get('course_pk')}
         
 
 
@@ -192,16 +398,6 @@ class CategoryViewSet(ModelViewSet):
 #     def get_serializer_context(self):
 #         return {'course_id': self.kwargs.get('course_pk')}
 
-
-
-# class ChapterViewSet(ModelViewSet):
-#     serializer_class = ChapterSerializer
-#     permission_classes = [IsAdminOrReadOnly]
-#     def get_queryset(self):
-#         return Chapter.objects.filter(course_id=self.kwargs.get('course_pk'))
-
-#     def get_serializer_context(self):
-#         return {'course_id': self.kwargs.get('course_pk')}
 
 
 class ReviewViweSet(ModelViewSet):

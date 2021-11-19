@@ -69,6 +69,8 @@ from rest_framework.reverse import reverse
 from .students import StudentViewSet
 # APIView
 from django.contrib.messages.storage import default_storage
+from skyroom import *
+from Kooleposhti.settings import skyroom_key
 
 
 # class InstructorList(ModelViewSet):
@@ -170,6 +172,12 @@ def sign_up_user(request: HttpRequest, *args, **kwargs):
         is_instructor = serializer_dict.get('is_instructor')
         serializer = UserCreateSerializer(data=serializer_dict)
         serializer.is_valid(raise_exception=True)
+
+        try:
+            skyroom_signup(request.data)
+        except Exception as e: 
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+            
         user = serializer.save()
         if is_instructor:
             Instructor.objects.create(user=user)
@@ -180,6 +188,19 @@ def sign_up_user(request: HttpRequest, *args, **kwargs):
         # del data['password2']
         return Response(status=status.HTTP_201_CREATED, data=serializer.data)
     return Response(status=status.HTTP_404_NOT_FOUND, data='Maybe your request method is not correct')
+
+
+def skyroom_signup(data):
+    # create skyroom user
+    print(data.get('username'))
+    params = {
+        'username': data.get('username'),
+        'password': data.get('password1'),
+        "nickname": data.get('username'),
+        'email': data.get('email')
+    }
+    api = SkyroomAPI(skyroom_key)
+    api.createUser(params)
 
 
 class MyTokenObtainPairView(TokenViewBase):
