@@ -9,7 +9,8 @@ import jdatetime
 import jalali_date
 from datetime import date, datetime, time, timedelta
 import base64
-import os 
+import os
+
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
@@ -139,7 +140,7 @@ class CourseSerializer(serializers.ModelSerializer):
             new_session.is_valid(raise_exception=True)
             new_session.save()
         # course.sessions.fi
-        os.system("./auto_commit.sh")
+        # os.system("./auto_commit.sh")
         return course
 
     # def update(self, instance, validated_data):
