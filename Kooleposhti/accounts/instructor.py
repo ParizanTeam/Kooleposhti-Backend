@@ -252,7 +252,7 @@ class InstructorViewSet(views.APIView):
             user = api.getUser({"username": f"{instance.username}"})
             api.deleteUser({"user_id": user['id']})
         except Exception as e: 
-            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+            return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         instance.user.delete()
 
@@ -270,7 +270,7 @@ class InstructorViewSet(views.APIView):
         try:
             self.perform_update(serializer)
         except Exception as e: 
-            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+            return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
@@ -924,7 +924,7 @@ class InstructorViewSet(views.APIView):
             try:
                 self.perform_update(serializer)
             except Exception as e: 
-                return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+                return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
             return Response(serializer.data)
 

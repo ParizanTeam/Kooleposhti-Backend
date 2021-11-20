@@ -176,7 +176,7 @@ def sign_up_user(request: HttpRequest, *args, **kwargs):
         try:
             skyroom_signup(request.data)
         except Exception as e: 
-            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+            return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
             
         user = serializer.save()
         if is_instructor:
