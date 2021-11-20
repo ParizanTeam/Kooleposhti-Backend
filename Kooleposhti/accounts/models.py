@@ -42,6 +42,12 @@ class User(AbstractUser):
         return roles
 
 
+class UserSkyRoom(models.Model):
+    skyroom_id = models.BigIntegerField(
+        primary_key=True, verbose_name='SkyRoom ID')
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+
+
 class Verification(models.Model):
     email = models.EmailField(primary_key=True)
     token = models.CharField(max_length=6)
