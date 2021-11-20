@@ -24,9 +24,9 @@ class Course(models.Model):
     '''
     ('title', 'description', 'price', 'last_update', 'instructor')
     '''
+    room_id = models.IntegerField(unique=True, blank=True, null=True)
     category = models.ForeignKey(
         Category, related_name='courses', on_delete=models.CASCADE)
-    # tags = models.ManyToManyField(Tag, blank=True)
     instructor = models.ForeignKey(
         Instructor, blank=True, related_name='courses', on_delete=models.CASCADE)
     students = models.ManyToManyField(
@@ -47,8 +47,6 @@ class Course(models.Model):
     # enrollment_end_date = models.DateTimeField()
     start_date = models.DateField(blank=True)
     end_date = models.DateField(blank=True)
-    # start_class = models.DateTimeField()
-    # end_class = models.DateTimeField()
     duration = models.IntegerField()
     promotions = models.ManyToManyField(Promotion, blank=True)
     min_students = models.IntegerField(blank=True, default=1)
@@ -118,7 +116,6 @@ class Session(models.Model):
 
     course = models.ForeignKey(
         Course, blank=True, on_delete=models.CASCADE, related_name='sessions')
-    # title = models.CharField()
     date = models.DateField()
     day = models.IntegerField(blank=True)
     month = models.CharField(max_length=10, blank=True, choices=MonthNames)
@@ -171,13 +168,6 @@ class Goal(models.Model):
     def __str__(self):
         return f"{self.course.title} {self.text}"
 
-
-# class Prerequisite(models.Model):
-#     course = models.ForeignKey(Course, blank=True, related_name='prerequisites' , on_delete=models.CASCADE)
-#     text = models.TextField()
-
-#     def __str__(self):
-#         return f"{self.course.title} {self.text}"
 
 
 class Order (models.Model):

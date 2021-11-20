@@ -101,10 +101,10 @@ class CourseViewSet(ModelViewSet):
             "op_login_first": True
         }
         try:
-            room_id = api.createRoom(params)
+            course.room_id = api.createRoom(params)
             instructor = api.getUser({"username":course.instructor.user.username})
             params = {           
-                'room_id': room_id,
+                'room_id': course.room_id,
                 'users': [ 
                     {'user_id': instructor['id'], "access": 3}
                 ]
@@ -170,9 +170,9 @@ class CourseViewSet(ModelViewSet):
         course = serializer.save()
         # update skyroom room
         try:
-            room = api.getRoom({"name": f"c{course.id}"})
+            # room = api.getRoom({"name": f"c{course.id}"})
             params = {
-                "room_id": room['id'],
+                "room_id": course.room_id,
                 "title": course.title,
                 "description": course.description,
                 "session_duration": course.duration,
@@ -191,8 +191,8 @@ class CourseViewSet(ModelViewSet):
 
     def perform_destroy(self, instance):
         # delete skyroom room 
-        room = api.getRoom({"name": f"c{instance.pk}"})
-        api.deleteRoom({"room_id": room['id']})
+        # room = api.getRoom({"name": f"c{instance.pk}"})
+        api.deleteRoom({"room_id": instance.room_id})
         return super().perform_destroy(instance)
     
 
@@ -210,10 +210,10 @@ class CourseViewSet(ModelViewSet):
 
     def perform_add_student(self, course, student):
         # create room user
-        room = api.getRoom({"name": f'c{course.pk}'})
+        # room = api.getRoom({"name": f'c{course.pk}'})
         room_student = api.getUser({"username": student.user.username})
         params = {           
-            'room_id': room['id'],
+            'room_id': course.room_id,
             'users': [{'user_id': room_student['id']}]
         }
         api.addRoomUsers(params)
@@ -243,10 +243,10 @@ class CourseViewSet(ModelViewSet):
 
     def perform_remove_student(self, course, student):
         # remove room user
-        room = api.getRoom({"name": f'c{course.pk}'})
+        # room = api.getRoom({"name": f'c{course.pk}'})
         room_student = api.getUser({"username": student.user.username})
         params = {           
-            'room_id': room['id'],
+            'room_id': course.room_id,
             'users': [room_student['id']]
         }
         api.removeRoomUsers(params)
@@ -324,9 +324,9 @@ class CourseViewSet(ModelViewSet):
         if (user.has_role('student') and course.is_enrolled(user.student)) \
         or (user.has_role('instructor') and course.is_owner(user.instructor)):            
             try:
-                room = api.getRoom({"name": f'c{course.pk}'})
+                # room = api.getRoom({"name": f'c{course.pk}'})
                 params = {           
-                    'room_id': room['id'],
+                    'room_id': course.room_id,
                     "language": "fa"
                 }
                 response = api.getRoomUrl(params)
