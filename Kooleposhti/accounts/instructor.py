@@ -247,14 +247,14 @@ class InstructorViewSet(views.APIView):
             self.perform_destroy(instance)
         except Exception as e: 
             return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-            
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def perform_destroy(self, instance):
         # delete skyroom user
-        api = SkyroomAPI(skyroom_key)
-        # user = api.getUser({"username": f"{instance.username}"})
-        api.deleteUser({"user_id": instance.user.userskyroom.skyroom_id})
+        # api = SkyroomAPI(skyroom_key)
+        # # user = api.getUser({"username": f"{instance.username}"})
+        # api.deleteUser({"user_id": instance.user.userskyroom.skyroom_id})
 
         instance.user.delete()
 
@@ -283,19 +283,19 @@ class InstructorViewSet(views.APIView):
 
     def perform_update(self, serializer):
         # update skyroom user
-        data = serializer.validated_data['user']
-        user = self.get_instructor(request).user
-        api = SkyroomAPI(skyroom_key)
-        # instructor = api.getUser({"username": f"{data.get('username', user.username)}"})
-        params = {
-            "user_id": user.userskyroom.skyroom_id,
-            'username': data.get('username', user.username),
-            "nickname": data.get('username', user.username),
-            'email': data.get('email', user.email),
-            "fname": data.get('first_name', user.first_name),
-            "lname": data.get('last_name', user.last_name)
-        }
-        api.updateUser(params)
+        # data = serializer.validated_data['user']
+        # user = self.get_instructor(request).user
+        # api = SkyroomAPI(skyroom_key)
+        # # instructor = api.getUser({"username": f"{data.get('username', user.username)}"})
+        # params = {
+        #     "user_id": user.userskyroom.skyroom_id,
+        #     'username': data.get('username', user.username),
+        #     "nickname": data.get('username', user.username),
+        #     'email': data.get('email', user.email),
+        #     "fname": data.get('first_name', user.first_name),
+        #     "lname": data.get('last_name', user.last_name)
+        # }
+        # api.updateUser(params)
         serializer.save()
 
     def partial_update(self, request, *args, **kwargs):
