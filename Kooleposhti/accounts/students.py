@@ -246,17 +246,19 @@ class StudentViewSet(views.APIView):
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        self.perform_destroy(instance)
+
+        try:
+            self.perform_destroy(instance)
+        except Exception as e: 
+            return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def perform_destroy(self, instance):
         # delete skyroom user
-        try:
-            api = SkyroomAPI(skyroom_key)
-            user = api.getUser({"username": f"{instance.username}"})
-            api.deleteUser({"user_id": user['id']})
-        except Exception as e: 
-            return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        api = SkyroomAPI(skyroom_key)
+        # user = api.getUser({"username": f"{instance.username}"})
+        api.deleteUser({"user_id": instance.user.userskyroom.skyroom_id})
 
         instance.user.delete()
 
@@ -288,9 +290,9 @@ class StudentViewSet(views.APIView):
         data = serializer.validated_data['user']
         user = self.get_student(request).user
         api = SkyroomAPI(skyroom_key)
-        student = api.getUser({"username": f"{data.get('username', user.username)}"})
+        # student = api.getUser({"username": f"{data.get('username', user.username)}"})
         params = {
-            "user_id": student['id'],
+            "user_id": user.userskyroom.skyroom_id,
             'username': data.get('username', user.username),
             "nickname": data.get('username', user.username),
             'email': data.get('email', user.email),

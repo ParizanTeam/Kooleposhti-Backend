@@ -15,7 +15,7 @@ from validate_email import validate_email
 from django.http.request import HttpRequest
 from django.urls import reverse
 import rest_framework
-from .models import User, Verification
+from .models import User, Verification, UserSkyRoom
 from django.shortcuts import render
 from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, UpdateModelMixin
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
@@ -174,11 +174,13 @@ def sign_up_user(request: HttpRequest, *args, **kwargs):
         serializer.is_valid(raise_exception=True)
 
         try:
-            skyroom_signup(request.data)
+            skyroom_id = skyroom_signup(request.data)
         except Exception as e: 
             return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
             
         user = serializer.save()
+        userskyroom = UserSkyRoom.objects.create(skyroom_id=skyroom_id, user=user)
+        
         if is_instructor:
             Instructor.objects.create(user=user)
         else:
@@ -192,7 +194,6 @@ def sign_up_user(request: HttpRequest, *args, **kwargs):
 
 def skyroom_signup(data):
     # create skyroom user
-    print(data.get('username'))
     params = {
         'username': data.get('username'),
         'password': data.get('password1'),
@@ -200,7 +201,7 @@ def skyroom_signup(data):
         'email': data.get('email')
     }
     api = SkyroomAPI(skyroom_key)
-    api.createUser(params)
+    return api.createUser(params)
 
 
 class MyTokenObtainPairView(TokenViewBase):

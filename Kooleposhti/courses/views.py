@@ -91,28 +91,28 @@ class CourseViewSet(ModelViewSet):
     def perform_create(self, serializer):
         # create skyroom room and set the instructor operator
         course = serializer.save()
-        params = {
-            "name": f"c{course.id}",
-            "title": course.title,
-            "description": course.description,
-            "session_duration": course.duration,
-            "max_users": course.max_students + 1,
-            "guest_login": False,
-            "op_login_first": True
-        }
-        try:
-            course.room_id = api.createRoom(params)
-            instructor = api.getUser({"username":course.instructor.user.username})
-            params = {           
-                'room_id': course.room_id,
-                'users': [ 
-                    {'user_id': instructor['id'], "access": 3}
-                ]
-            }
-            api.addRoomUsers(params)
-        except Exception as e:
-            course.delete()
-            raise e
+        # params = {
+        #     "name": f"c{course.id}",
+        #     "title": course.title,
+        #     "description": course.description,
+        #     "session_duration": course.duration,
+        #     "max_users": course.max_students + 1,
+        #     "guest_login": False,
+        #     "op_login_first": True
+        # }
+        # try:
+        #     course.room_id = api.createRoom(params)
+        #     instructor = api.getUser({"username":course.instructor.user.username})
+        #     params = {           
+        #         'room_id': course.room_id,
+        #         'users': [ 
+        #             {'user_id': instructor['id'], "access": 3}
+        #         ]
+        #     }
+        #     api.addRoomUsers(params)
+        # except Exception as e:
+        #     course.delete()
+        #     raise e
 
         return course
 
@@ -169,20 +169,20 @@ class CourseViewSet(ModelViewSet):
         course_old = self.get_object()
         course = serializer.save()
         # update skyroom room
-        try:
-            # room = api.getRoom({"name": f"c{course.id}"})
-            params = {
-                "room_id": course.room_id,
-                "title": course.title,
-                "description": course.description,
-                "session_duration": course.duration,
-                "max_users": course.max_students + 1
-            }
-            api.updateRoom(params)
-        except Exception as e:
-            course = course_old
-            course.save()
-            raise e
+        # try:
+        #     # room = api.getRoom({"name": f"c{course.id}"})
+        #     params = {
+        #         "room_id": course.room_id,
+        #         "title": course.title,
+        #         "description": course.description,
+        #         "session_duration": course.duration,
+        #         "max_users": course.max_students + 1
+        #     }
+        #     api.updateRoom(params)
+        # except Exception as e:
+        #     course = course_old
+        #     course.save()
+        #     raise e
             
         return course
 
@@ -192,7 +192,7 @@ class CourseViewSet(ModelViewSet):
     def perform_destroy(self, instance):
         # delete skyroom room 
         # room = api.getRoom({"name": f"c{instance.pk}"})
-        api.deleteRoom({"room_id": instance.room_id})
+        # api.deleteRoom({"room_id": instance.room_id})
         return super().perform_destroy(instance)
     
 
@@ -230,10 +230,10 @@ class CourseViewSet(ModelViewSet):
         if course.capacity < 1:
             return Response("there's no enrollment available", status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            self.perform_add_student(course, student)
-        except Exception as e: 
-            return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        # try:
+        #     self.perform_add_student(course, student)
+        # except Exception as e: 
+        #     return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         course.students.add(student)
         course.update_capacity()
@@ -262,10 +262,10 @@ class CourseViewSet(ModelViewSet):
         if not course.is_enrolled(student):
             return Response('Not enrolled yet.', status=status.HTTP_400_BAD_REQUEST)
         
-        try:
-            self.perform_remove_student(course, student)
-        except Exception as e: 
-            return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        # try:
+        #     self.perform_remove_student(course, student)
+        # except Exception as e: 
+        #     return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         course.students.remove(request.user.student)
         course.update_capacity()
@@ -284,10 +284,10 @@ class CourseViewSet(ModelViewSet):
             if not course.is_enrolled(student):
                 return Response('Not enrolled', status=status.HTTP_400_BAD_REQUEST)
 
-            try:
-                self.perform_remove_student(course, student)
-            except Exception as e: 
-                return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            # try:
+            #     self.perform_remove_student(course, student)
+            # except Exception as e: 
+            #     return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
             
             course.students.remove(student)
             course.update_capacity()
