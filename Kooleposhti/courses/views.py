@@ -285,8 +285,7 @@ class CourseViewSet(ModelViewSet):
             course.students.remove(student)
             course.update_capacity()
             return Response({'deleted': True})
-        else:
-            return Response("your'e not the course owner", status=status.HTTP_403_FORBIDDEN)
+        return Response("your'e not the course owner", status=status.HTTP_403_FORBIDDEN)
 
 
 
@@ -294,8 +293,10 @@ class CourseViewSet(ModelViewSet):
             url_name="get-students", url_path="students")
     def get_students(self, request, *args, **kwargs):
         course = self.get_object()
-        serializer = StudentSerializer(course.students, many=True)
-        return Response(status=status.HTTP_200_OK, data=serializer.data)
+        if(course.is_owner(request.user.instructor)):
+            serializer = StudentSerializer(course.students, many=True)
+            return Response(status=status.HTTP_200_OK, data=serializer.data)
+        return Response("your'e not the course owner", status=status.HTTP_403_FORBIDDEN)
 
 
 
