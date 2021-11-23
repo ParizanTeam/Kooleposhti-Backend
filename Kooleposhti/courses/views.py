@@ -102,11 +102,11 @@ class CourseViewSet(ModelViewSet):
         # }
         # try:
         #     course.room_id = api.createRoom(params)
-        #     instructor = api.getUser({"username":course.instructor.user.username})
+        #     course.save()
         #     params = {           
         #         'room_id': course.room_id,
         #         'users': [ 
-        #             {'user_id': instructor['id'], "access": 3}
+        #             {'user_id': course.instructor.user.userskyroom.skyroom_id, "access": 3}
         #         ]
         #     }
         #     api.addRoomUsers(params)
@@ -129,12 +129,10 @@ class CourseViewSet(ModelViewSet):
         serializer = self.get_serializer(instance, data=data, partial=partial)
         serializer.is_valid(raise_exception=True)
 
-        # if not just image
-        if len(data) > 1 or not 'image' in data:
-            try:
-                course = self.perform_update(serializer)
-            except Exception as e: 
-                return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            course = self.perform_update(serializer)
+        except Exception as e: 
+            return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         if getattr(instance, '_prefetched_objects_cache', None):
             instance._prefetched_objects_cache = {}
@@ -170,7 +168,6 @@ class CourseViewSet(ModelViewSet):
         course = serializer.save()
         # update skyroom room
         # try:
-        #     # room = api.getRoom({"name": f"c{course.id}"})
         #     params = {
         #         "room_id": course.room_id,
         #         "title": course.title,
@@ -188,10 +185,8 @@ class CourseViewSet(ModelViewSet):
 
 
 
-
     def perform_destroy(self, instance):
         # delete skyroom room 
-        # room = api.getRoom({"name": f"c{instance.pk}"})
         # api.deleteRoom({"room_id": instance.room_id})
         return super().perform_destroy(instance)
     
@@ -211,10 +206,10 @@ class CourseViewSet(ModelViewSet):
     def perform_add_student(self, course, student):
         # create room user
         # room = api.getRoom({"name": f'c{course.pk}'})
-        room_student = api.getUser({"username": student.user.username})
+        # room_student = api.getUser({"username": student.user.username})
         params = {           
             'room_id': course.room_id,
-            'users': [{'user_id': room_student['id']}]
+            'users': [{'user_id': student.user.userskyroom.skyroom_id}]
         }
         api.addRoomUsers(params)
 
@@ -243,11 +238,9 @@ class CourseViewSet(ModelViewSet):
 
     def perform_remove_student(self, course, student):
         # remove room user
-        # room = api.getRoom({"name": f'c{course.pk}'})
-        room_student = api.getUser({"username": student.user.username})
         params = {           
             'room_id': course.room_id,
-            'users': [room_student['id']]
+            'users': [student.user.userskyroom.skyroom_id]
         }
         api.removeRoomUsers(params)
 
@@ -304,6 +297,8 @@ class CourseViewSet(ModelViewSet):
         serializer = StudentSerializer(course.students, many=True)
         return Response(status=status.HTTP_200_OK, data=serializer.data)
 
+
+
     @action(detail=True, permission_classes=[AllowAny], 
             url_name="can-enroll", url_path="can-enroll")
     def can_enroll(self, request, *args, **kwargs):
@@ -324,7 +319,6 @@ class CourseViewSet(ModelViewSet):
         if (user.has_role('student') and course.is_enrolled(user.student)) \
         or (user.has_role('instructor') and course.is_owner(user.instructor)):            
             try:
-                # room = api.getRoom({"name": f'c{course.pk}'})
                 params = {           
                     'room_id': course.room_id,
                     "language": "fa"
@@ -359,17 +353,18 @@ class CourseViewSet(ModelViewSet):
         if course.is_enrolled(student):
             rate_data = request.data['rate']
             try:
-                rate_obj = Rate.objects.filter(course=course, student=student)
+                rate_obj = Rate.objects.get(course=course, student=student)
                 rate_obj.rate = rate_data
                 rate_obj.save()
-                return Response('you changed rour rate.', status=status.HTTP_200_OK)
+                course.update_rate()
+                return Response('you changed your rate.', status=status.HTTP_200_OK)
             except:
                 Rate.objects.create(course=course, student=student, rate=rate_data)
                 # course.rate = round((course.rate * course.rate_no + rate_data) / (course.rate_no + 1), 1)
                 # course.rate_no += 1
                 # course.save()
+                course.update_rate()
                 return Response('rated successfully', status=status.HTTP_200_OK)
-            course.update_rate()
         else:
             return Response({"you're not enrolled."}, status=status.HTTP_403_FORBIDDEN)
 

@@ -65,8 +65,9 @@ class Course(models.Model):
         return self.instructor == user
 
     def update_rate(self):
-        self.rate_no = len(self.rates.all())
-        self.rate = round(sum([rate_obj.rate for rate_obj in self.rates]) / self.rate_no, 1)
+        rates = self.rates.all()
+        self.rate_no = len(rates)
+        self.rate = round(sum([rate_obj.rate for rate_obj in rates]) / self.rate_no, 1)
         self.save()
 
     def update_capacity(self):
