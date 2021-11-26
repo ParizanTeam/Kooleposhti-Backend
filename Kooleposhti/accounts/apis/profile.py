@@ -73,7 +73,7 @@ class PublicProfile (MyGenericViewSet):
     def perform_update(self, serializer):
         serializer.save()
 
-    @action(detail=False, methods=['GET', ], url_path='username/(?P<username>[^/.]+)')
+    @action(detail=False, methods=['GET', ], url_path='public/(?P<username>[^/.]+)')
     def get_user_profile(self, request, username=None):
         if username is None:
             return Response({'error': 'username is required'}, status=status.HTTP_400_BAD_REQUEST)
