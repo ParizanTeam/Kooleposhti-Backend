@@ -1,11 +1,11 @@
 from courses.serializers import CourseSerializer
 from rest_framework import serializers
-from accounts.instructor_serializer import InstructorProfileSerializer
+from accounts.serializers.instructor_serializer import InstructorProfileSerializer
 from courses.models import Course
-from .models import Student
+from accounts.models import Student
 from rest_framework.serializers import raise_errors_on_nested_writes
 from rest_framework.utils import html, model_meta, representation
-from .models import Instructor, Tag
+from accounts.models import Instructor, Tag
 from rest_framework import serializers
 from .serializers import update_relation
 from .user_serializers import BaseUserSerializer

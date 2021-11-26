@@ -1,12 +1,12 @@
-from .email import PasswordChangedConfirmationEmail
+from accounts.email import PasswordChangedConfirmationEmail
 from django.utils.timezone import now
 from djoser import utils
 from django import conf
-from .email import PasswordResetEmail
+from accounts.email import PasswordResetEmail
 from djoser.compat import get_user_email
 from djoser.serializers import PasswordResetConfirmRetypeSerializer
-from accounts.serializers import MySendEmailResetSerializer
-from .user_serializers import UserSerializer
+from accounts.serializers.serializers import MySendEmailResetSerializer
+from accounts.serializers.user_serializers import UserSerializer
 from courses.models import Course
 from django.contrib.auth.tokens import default_token_generator
 from django.urls import reverse
@@ -43,7 +43,7 @@ from django.db.models.query import QuerySet
 from rest_framework import mixins, views
 from rest_framework.settings import api_settings
 import djoser.views
-from .models import User
+from accounts.models import User
 # import rest_framework.request
 
 
@@ -54,7 +54,7 @@ class UserViewSet(views.APIView):
     parser_classes = api_settings.DEFAULT_PARSER_CLASSES
     authentication_classes = api_settings.DEFAULT_AUTHENTICATION_CLASSES
     throttle_classes = api_settings.DEFAULT_THROTTLE_CLASSES
-    permission_classes = api_settings.DEFAULT_PERMISSION_CLASSES
+    permission_classes = [IsAuthenticated]
     content_negotiation_class = api_settings.DEFAULT_CONTENT_NEGOTIATION_CLASS
     metadata_class = api_settings.DEFAULT_METADATA_CLASS
     versioning_class = api_settings.DEFAULT_VERSIONING_CLASS
@@ -813,8 +813,8 @@ class UserViewSet(views.APIView):
         return Response(data, status=status.HTTP_200_OK)
 
     def get_permissions(self):
-        if self.request.method == 'GET':
-            return [AllowAny()]
+        # if self.request.method == 'GET':
+        #     return [AllowAny()]
         return [IsAuthenticated()]
 
     @action(detail=False, methods=['GET', 'PUT'], permission_classes=IsAuthenticated)

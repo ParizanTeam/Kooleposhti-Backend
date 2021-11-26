@@ -64,7 +64,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'jalali_date',
     'images',
-
+    'commands',
 ]
 
 MIDDLEWARE = [

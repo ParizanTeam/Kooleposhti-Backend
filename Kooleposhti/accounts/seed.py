@@ -1,3 +1,4 @@
+from images.models import MyImage
 from accounts.models import Instructor, Student, User, Tag
 from courses.models import Category, Course
 from django.utils.text import slugify
@@ -26,4 +27,13 @@ i.save()
 s = User.objects.create_user(
     username='mahdi101', password='mahdi101mahdi101', email='mahdi101@test.com')
 s = Student.objects.create(user=s)
+s.save()
+
+
+s = User.objects.get(username='mahdi')
+s.first_name = 'mahdi'
+s.last_name = 'javid'
+s.image = MyImage.objects.first()
+s.student.age = 15
+s.student.save()
 s.save()

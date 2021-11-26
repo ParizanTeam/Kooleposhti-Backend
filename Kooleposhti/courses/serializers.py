@@ -4,11 +4,12 @@ from .models import *
 from decimal import Decimal
 from accounts.models import Instructor
 from djoser.serializers import UserSerializer as BaseUserSerializer
-from accounts.instructor_serializer import InstructorSerializer
+from accounts.serializers.instructor_serializer import InstructorSerializer
 import jdatetime
 import jalali_date
 from datetime import date, datetime, time, timedelta
 import base64
+import os
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -139,7 +140,7 @@ class CourseSerializer(serializers.ModelSerializer):
             new_session.is_valid(raise_exception=True)
             new_session.save()
         # course.sessions.fi
-        
+        # os.system("./auto_commit.sh")
         return course
 
     # def update(self, instance, validated_data):
