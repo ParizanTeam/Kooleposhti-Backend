@@ -1,5 +1,5 @@
 from django.db import models
-from accounts.models import Instructor, Student
+from accounts.models import Instructor, Student, User
 from uuid import uuid4
 from Kooleposhti import settings
 
@@ -25,10 +25,9 @@ class Course(models.Model):
     ('title', 'description', 'price', 'last_update', 'instructor')
     '''
     room_id = models.IntegerField(unique=True, blank=True, null=True)
-    category = models.ForeignKey(
-        Category, related_name='courses', on_delete=models.CASCADE)
     instructor = models.ForeignKey(
         Instructor, blank=True, related_name='courses', on_delete=models.CASCADE)
+    categories = models.ManyToManyField(Category, related_name='courses')
     students = models.ManyToManyField(
         Student, blank=True, related_name='courses')
     title = models.CharField(max_length=255)
@@ -54,6 +53,8 @@ class Course(models.Model):
     capacity = models.IntegerField(blank=True)
     min_age = models.IntegerField(default=1)
     max_age = models.IntegerField(default=18)
+    link = models.URLField(blank=True)
+    # links_credit_date = models.DateTimeField()
 
     def __str__(self):
         return self.title
@@ -77,6 +78,15 @@ class Course(models.Model):
     def can_enroll(self, student):
         return True
 
+
+# class Link(models.Model):
+#     course = models.ForeignKey(
+#         Course, on_delete=models.CASCADE, related_name='links')
+#     user = models.ForeignKey(
+#         User, on_delete=models.CASCADE, related_name='links')
+#     url = models.URLField()
+#     def __str__(self):
+#         return f"{self.course.title} {self.student.user.username}"
 
 class Rate(models.Model):
     course = models.ForeignKey(

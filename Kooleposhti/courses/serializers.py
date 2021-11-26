@@ -73,7 +73,7 @@ class InstructorCourseSerializer(serializers.ModelSerializer):
 
 class CourseSerializer(serializers.ModelSerializer):
     instructor = InstructorSerializer(read_only=True)
-    # category = CategorySerializer()
+    # category = CategorySerializer(many=True)
     # students = StudentSerializer(many=True, read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
@@ -83,7 +83,7 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         # fields = '__all__'
-        fields = ('category', 'tags', 'goals', 'instructor', 'duration',
+        fields = ('categories', 'tags', 'goals', 'instructor', 'duration',
                   'title', 'slug', 'image', 'description', 'id',
                   'price', 'rate', 'rate_no', 'created_at', 'comments',
                   'duration', 'min_students', 'max_students',

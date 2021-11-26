@@ -173,13 +173,13 @@ def sign_up_user(request: HttpRequest, *args, **kwargs):
         serializer = UserCreateSerializer(data=serializer_dict)
         serializer.is_valid(raise_exception=True)
 
-        # try:
-        #     skyroom_id = skyroom_signup(request.data)
-        # except Exception as e: 
-        #     return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            skyroom_id = skyroom_signup(request.data)
+        except Exception as e: 
+            return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
             
         user = serializer.save()
-        # userskyroom = UserSkyRoom.objects.create(skyroom_id=skyroom_id, user=user)
+        userskyroom = UserSkyRoom.objects.create(skyroom_id=skyroom_id, user=user)
 
         if is_instructor:
             Instructor.objects.create(user=user)

@@ -91,28 +91,43 @@ class CourseViewSet(ModelViewSet):
     def perform_create(self, serializer):
         # create skyroom room and set the instructor operator
         course = serializer.save()
-        # params = {
-        #     "name": f"c{course.id}",
-        #     "title": course.title,
-        #     "description": course.description,
-        #     "session_duration": course.duration,
-        #     "max_users": course.max_students + 1,
-        #     "guest_login": False,
-        #     "op_login_first": True
-        # }
-        # try:
-        #     course.room_id = api.createRoom(params)
-        #     course.save()
-        #     params = {           
-        #         'room_id': course.room_id,
-        #         'users': [ 
-        #             {'user_id': course.instructor.user.userskyroom.skyroom_id, "access": 3}
-        #         ]
-        #     }
-        #     api.addRoomUsers(params)
-        # except Exception as e:
-        #     course.delete()
-        #     raise e
+        params = {
+            "name": f"c{course.id}",
+            "title": course.title,
+            "description": course.description,
+            "session_duration": course.duration,
+            "max_users": course.max_students + 1,
+            "guest_login": False,
+            "op_login_first": True
+        }
+        try:
+            course.room_id = api.createRoom(params)
+            params = {           
+                'room_id': course.room_id,
+                'users': [ 
+                    {'user_id': course.instructor.user.userskyroom.skyroom_id, "access": 3}
+                ]
+            }
+            api.addRoomUsers(params)
+            params = {           
+                    'room_id': course.room_id,
+                    "language": "fa"
+                }
+            course.link = api.getRoomUrl(params)
+            course.save()
+            # params = {
+            #     "room_id": course.room_id,
+            #     "user_id": course.instructor.id,
+            #     "nickname": course.instructor.user.username,
+            #     "access": 3,
+            #     "language": "fa",
+            #     "ttl": 604800  #a week
+            # }
+            # url = api.getLoginUrl(params)
+            # Link.objects.create(course=course, user=course.instructor.user, url=url)
+        except Exception as e:
+            course.delete()
+            raise e
 
         return course
 
@@ -167,19 +182,31 @@ class CourseViewSet(ModelViewSet):
         course_old = self.get_object()
         course = serializer.save()
         # update skyroom room
-        # try:
-        #     params = {
-        #         "room_id": course.room_id,
-        #         "title": course.title,
-        #         "description": course.description,
-        #         "session_duration": course.duration,
-        #         "max_users": course.max_students + 1
-        #     }
-        #     api.updateRoom(params)
-        # except Exception as e:
-        #     course = course_old
-        #     course.save()
-        #     raise e
+        try:
+            params = {
+                "room_id": course.room_id,
+                "title": course.title,
+                "description": course.description,
+                "session_duration": course.duration,
+                "max_users": course.max_students + 1
+            }
+            api.updateRoom(params)
+            # if course.links_credit_date < course.end_date:
+            #     for link in course.links:
+            #         params = {
+            #             "room_id": course.room_id,
+            #             "user_id": link.user.id,
+            #             "nickname": link.user.username,
+            #             "access": 1,
+            #             "language": "fa",
+            #             "ttl": 604800  #a week
+            #         }
+            #         link.url = api.getLoginUrl(params)
+            #         link.save()
+        except Exception as e:
+            course = course_old
+            course.save()
+            raise e
             
         return course
 
@@ -187,7 +214,7 @@ class CourseViewSet(ModelViewSet):
 
     def perform_destroy(self, instance):
         # delete skyroom room 
-        # api.deleteRoom({"room_id": instance.room_id})
+        api.deleteRoom({"room_id": instance.room_id})
         return super().perform_destroy(instance)
     
 
@@ -205,13 +232,21 @@ class CourseViewSet(ModelViewSet):
 
     def perform_add_student(self, course, student):
         # create room user
-        # room = api.getRoom({"name": f'c{course.pk}'})
-        # room_student = api.getUser({"username": student.user.username})
         params = {           
             'room_id': course.room_id,
             'users': [{'user_id': student.user.userskyroom.skyroom_id}]
         }
         api.addRoomUsers(params)
+        # params = {
+        #     "room_id": course.room_id,
+        #     "user_id": student.id,
+        #     "nickname": student.user.username,
+        #     "access": 1,
+        #     "language": "fa",
+        #     "ttl": 604800  #a week
+        # }
+        # url = api.getLoginUrl(params)
+        # Link.objects.create(course=course, user=student.user, url=url)
 
 
 
@@ -225,10 +260,10 @@ class CourseViewSet(ModelViewSet):
         if course.capacity < 1:
             return Response("there's no enrollment available", status=status.HTTP_400_BAD_REQUEST)
 
-        # try:
-        #     self.perform_add_student(course, student)
-        # except Exception as e: 
-        #     return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            self.perform_add_student(course, student)
+        except Exception as e: 
+            return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         course.students.add(student)
         course.update_capacity()
@@ -255,10 +290,10 @@ class CourseViewSet(ModelViewSet):
         if not course.is_enrolled(student):
             return Response('Not enrolled yet.', status=status.HTTP_400_BAD_REQUEST)
         
-        # try:
-        #     self.perform_remove_student(course, student)
-        # except Exception as e: 
-        #     return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            self.perform_remove_student(course, student)
+        except Exception as e: 
+            return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         course.students.remove(request.user.student)
         course.update_capacity()
@@ -277,10 +312,10 @@ class CourseViewSet(ModelViewSet):
             if not course.is_enrolled(student):
                 return Response('Not enrolled', status=status.HTTP_400_BAD_REQUEST)
 
-            # try:
-            #     self.perform_remove_student(course, student)
-            # except Exception as e: 
-            #     return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                self.perform_remove_student(course, student)
+            except Exception as e: 
+                return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
             
             course.students.remove(student)
             course.update_capacity()
@@ -319,15 +354,9 @@ class CourseViewSet(ModelViewSet):
         user = request.user
         if (user.has_role('student') and course.is_enrolled(user.student)) \
         or (user.has_role('instructor') and course.is_owner(user.instructor)):            
-            try:
-                params = {           
-                    'room_id': course.room_id,
-                    "language": "fa"
-                }
-                response = api.getRoomUrl(params)
-                return Response(response, status=status.HTTP_200_OK)
-            except Exception as e: 
-                return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+            link=course.links.get(user=user).url
+            return Response(link, status=status.HTTP_200_OK)
 
         return Response("you're not enrolled", status=status.HTTP_403_FORBIDDEN)
 
