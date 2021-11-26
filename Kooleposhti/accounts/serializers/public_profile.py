@@ -6,12 +6,12 @@ from courses.serializers import CourseSerializer
 
 class BasePublicProfileSerializer(serializers.ModelSerializer):
     bio = serializers.CharField(source='publicprofile.bio', required=False)
-    image = ProfileImageSerializer(required=False)
+    image = ProfileImageSerializer(required=False, read_only=True)
 
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'username', 'bio', 'image']
-        read_only_fields = ['first_name', 'last_name', 'username', 'image']
+        # read_only_fields = ['first_name', 'last_name', 'username', 'image']
 
 
 class StudentPublicProfileSerializer(BasePublicProfileSerializer):
@@ -30,5 +30,5 @@ class InstructorPublicProfileSerializer(BasePublicProfileSerializer):
 
     class Meta (BasePublicProfileSerializer.Meta):
         fields = BasePublicProfileSerializer.Meta.fields + ['rate', 'courses']
-        read_only_fields = BasePublicProfileSerializer.Meta.read_only_fields + \
-            ['rate', 'courses']
+        # read_only_fields = BasePublicProfileSerializer.Meta.read_only_fields + \
+        #     ['rate', 'courses']
