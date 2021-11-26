@@ -15,7 +15,7 @@ from validate_email import validate_email
 from django.http.request import HttpRequest
 from django.urls import reverse
 import rest_framework
-from .models import User, Verification
+from .models import User, Verification, UserSkyRoom
 from django.shortcuts import render
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from accounts.models import Instructor, Student
@@ -66,6 +66,8 @@ from rest_framework.reverse import reverse
 from accounts.apis.student import StudentViewSet
 # APIView
 from django.contrib.messages.storage import default_storage
+from skyroom import *
+from Kooleposhti.settings import skyroom_key
 
 
 # class InstructorList(ModelViewSet):
@@ -168,7 +170,15 @@ def sign_up_user(request: HttpRequest, *args, **kwargs):
         is_instructor = serializer_dict.get('is_instructor')
         serializer = UserCreateSerializer(data=serializer_dict)
         serializer.is_valid(raise_exception=True)
+
+        try:
+            skyroom_id = skyroom_signup(request.data)
+        except Exception as e: 
+            return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            
         user = serializer.save()
+        userskyroom = UserSkyRoom.objects.create(skyroom_id=skyroom_id, user=user)
+
         if is_instructor:
             Instructor.objects.create(user=user)
         else:
@@ -178,6 +188,18 @@ def sign_up_user(request: HttpRequest, *args, **kwargs):
         # del data['password2']
         return Response(status=status.HTTP_201_CREATED, data=serializer.data)
     return Response(status=status.HTTP_404_NOT_FOUND, data='Maybe your request method is not correct')
+
+
+def skyroom_signup(data):
+    # create skyroom user
+    params = {
+        'username': data.get('username'),
+        'password': data.get('password1'),
+        "nickname": data.get('username'),
+        'email': data.get('email')
+    }
+    api = SkyroomAPI(skyroom_key)
+    return api.createUser(params)
 
 
 class MyTokenObtainPairView(TokenViewBase):
