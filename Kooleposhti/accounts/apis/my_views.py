@@ -1,35 +1,6 @@
-from .email import PasswordChangedConfirmationEmail
-from django.utils.timezone import now
-from djoser import utils
-from django import conf
-from .email import PasswordResetEmail
-from djoser.compat import get_user_email
-from djoser.serializers import PasswordResetConfirmRetypeSerializer
-from accounts.serializers import MySendEmailResetSerializer
-from .user_serializers import UserSerializer
-from courses.models import Course
-from django.contrib.auth.tokens import default_token_generator
-from django.urls import reverse
-from rest_framework.viewsets import ModelViewSet
-from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.response import Response
-from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAdminUser, IsAuthenticated
-from rest_framework import permissions, status
-from rest_framework.test import RequestsClient
-from pprint import pprint
-from django.db.models.query import QuerySet
-from django.shortcuts import get_object_or_404
-from rest_framework import mixins, views
-from rest_framework.settings import api_settings
-from django.conf import settings
-from django.http.response import HttpResponseBase
-from django.utils.cache import cc_delim_re, patch_vary_headers
-from django.utils.encoding import smart_str
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework import exceptions, status
-from rest_framework.response import Response
-from rest_framework.schemas import DefaultSchema
-from rest_framework.settings import api_settings
+from rest_framework import mixins
+from rest_framework import generics
+from rest_framework import viewsets
 from collections import OrderedDict
 from functools import update_wrapper
 from inspect import getmembers
@@ -40,40 +11,36 @@ from rest_framework import generics, mixins, views
 from rest_framework.reverse import reverse
 from django.core.exceptions import ValidationError
 from django.db.models.query import QuerySet
+from django.http import Http404
+from django.shortcuts import get_object_or_404
 from rest_framework import mixins, views
 from rest_framework.settings import api_settings
-import djoser.views
-from .models import User
-# import rest_framework.request
+from django.conf import settings
+from django.core.exceptions import PermissionDenied
+from django.db import connection, models, transaction
+from django.http import Http404
+from django.http.response import HttpResponseBase
+from django.utils.cache import cc_delim_re, patch_vary_headers
+from django.utils.encoding import smart_str
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework import exceptions, status
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.schemas import DefaultSchema
+from rest_framework.settings import api_settings
+from rest_framework.utils import formatting
+from rest_framework import views
+
+import accounts
 
 
-class UserViewSet(views.APIView):
-    queryset = User.objects.all()
-    # The following policies may be set at either globally, or per-view.
-    renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
-    parser_classes = api_settings.DEFAULT_PARSER_CLASSES
-    authentication_classes = api_settings.DEFAULT_AUTHENTICATION_CLASSES
-    throttle_classes = api_settings.DEFAULT_THROTTLE_CLASSES
-    permission_classes = api_settings.DEFAULT_PERMISSION_CLASSES
-    content_negotiation_class = api_settings.DEFAULT_CONTENT_NEGOTIATION_CLASS
-    metadata_class = api_settings.DEFAULT_METADATA_CLASS
-    versioning_class = api_settings.DEFAULT_VERSIONING_CLASS
+def _is_extra_action(attr):
+    return hasattr(attr, 'mapping')
 
-    # Allow dependency injection of other settings to make testing easier.
-    settings = api_settings
-    token_generator = default_token_generator
 
-    schema = DefaultSchema()
-
-    """
-    Base class for all other generic views.
-    """
-    # You'll need to either set these attributes,
-    # or override `get_queryset()`/`get_serializer_class()`.
-    # If you are overriding a view method, it is important that you call
-    # `get_queryset()` instead of accessing the `queryset` property directly,
-    # as `queryset` will get evaluated only once, and those results are cached
-    # for all subsequent requests.
+class MyGenericViewSet(views.APIView):
+    queryset = None
+    serializer_class = None
 
     # If you want to use object lookups other than pk, set 'lookup_field'.
     # For more complex lookup requirements override `get_object()`.
@@ -85,6 +52,19 @@ class UserViewSet(views.APIView):
 
     # The style to use for queryset pagination.
     pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+
+    renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
+    parser_classes = api_settings.DEFAULT_PARSER_CLASSES
+    authentication_classes = api_settings.DEFAULT_AUTHENTICATION_CLASSES
+    throttle_classes = api_settings.DEFAULT_THROTTLE_CLASSES
+    permission_classes = api_settings.DEFAULT_PERMISSION_CLASSES
+    content_negotiation_class = api_settings.DEFAULT_CONTENT_NEGOTIATION_CLASS
+    metadata_class = api_settings.DEFAULT_METADATA_CLASS
+    versioning_class = api_settings.DEFAULT_VERSIONING_CLASS
+
+    settings = api_settings
+
+    schema = DefaultSchema()
 
     def get_queryset(self):
         """
@@ -160,18 +140,13 @@ class UserViewSet(views.APIView):
 
         (Eg. admins get full serialization, others get basic serialization)
         """
-        serializer_map = {
-            'list': UserSerializer,  # get /
-            'me': UserSerializer,  # get, put /me
-            'retrieve': UserSerializer,  # get /<pk>
-            'update': UserSerializer,  # put /<pk>
-            'partial_update': UserSerializer,  # patch /<pk>
-            'destroy': UserSerializer,  # delete /<pk>
-            'reset_password': MySendEmailResetSerializer,
-            'reset_password_confirm': PasswordResetConfirmRetypeSerializer
-        }
+        assert self.serializer_class is not None, (
+            "'%s' should either include a `serializer_class` attribute, "
+            "or override the `get_serializer_class()` method."
+            % self.__class__.__name__
+        )
 
-        return serializer_map.get(self.action, UserSerializer)
+        return self.serializer_class
 
     def get_serializer_context(self):
         """
@@ -223,88 +198,28 @@ class UserViewSet(views.APIView):
         assert self.paginator is not None
         return self.paginator.get_paginated_response(data)
 
-    """
-    List a queryset.
-    """
+    @property
+    def allowed_methods(self):
+        """
+        Wrap Django's private `_allowed_methods` interface in a public property.
+        """
+        return self._allowed_methods()
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
+    @property
+    def default_response_headers(self):
+        headers = {
+            'Allow': ', '.join(self.allowed_methods),
+        }
+        if len(self.renderer_classes) > 1:
+            headers['Vary'] = 'Accept'
+        return headers
 
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
-    """
-    Destroy a model instance.
-    """
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    def perform_destroy(self, instance):
-        instance.user.delete()
-
-    """
-    Update a model instance.
-    """
-
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(
-            instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-
-        if getattr(instance, '_prefetched_objects_cache', None):
-            # If 'prefetch_related' has been applied to a queryset, we need to
-            # forcibly invalidate the prefetch cache on the instance.
-            instance._prefetched_objects_cache = {}
-
-        return Response(serializer.data)
-
-    def perform_update(self, serializer):
-        serializer.save()
-
-    def partial_update(self, request, *args, **kwargs):
-        kwargs['partial'] = True
-        return self.update(request, *args, **kwargs)
-
-    """
-    Retrieve a model instance.
-    """
-
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
-
-    """
-    Create a model instance.
-
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-    def perform_create(self, serializer):
-        serializer.save()
-    """
-
-    def get_success_headers(self, data):
-        try:
-            return {'Location': str(data[api_settings.URL_FIELD_NAME])}
-        except (TypeError, KeyError):
-            return {}
+    def http_method_not_allowed(self, request, *args, **kwargs):
+        """
+        If `request.method` does not correspond to a handler method,
+        determine what kind of exception to raise.
+        """
+        raise exceptions.MethodNotAllowed(request.method)
 
     @classonlymethod
     def as_view(cls, actions=None, **initkwargs):
@@ -351,6 +266,15 @@ class UserViewSet(views.APIView):
             raise TypeError("%s() received both `name` and `suffix`, which are "
                             "mutually exclusive arguments." % (cls.__name__))
 
+        # def change_initkwargs(initkwargs):
+        #     """
+        #     accounts.apis.profile.PublicProfile doesn't need any id for put and patch requests
+        #     """
+        #     if cls is accounts.apis.profile.PublicProfile:
+        #         if 'put' in actions and 'patch' in actions:
+        #             initkwargs['detail'] = False
+        # initkwargs = change_initkwargs(initkwargs)
+
         def view(request, *args, **kwargs):
             self = cls(**initkwargs)
             # We also store the mapping of request methods to actions,
@@ -389,28 +313,80 @@ class UserViewSet(views.APIView):
         view.actions = actions
         return csrf_exempt(view)
 
-    @property
-    def allowed_methods(self):
+    def initialize_request_super(self, request, *args, **kwargs):
         """
-        Wrap Django's private `_allowed_methods` interface in a public property.
+        Returns the initial request object.
         """
-        return self._allowed_methods()
+        parser_context = self.get_parser_context(request)
 
-    @property
-    def default_response_headers(self):
-        headers = {
-            'Allow': ', '.join(self.allowed_methods),
-        }
-        if len(self.renderer_classes) > 1:
-            headers['Vary'] = 'Accept'
-        return headers
+        return Request(
+            request,
+            parsers=self.get_parsers(),
+            authenticators=self.get_authenticators(),
+            negotiator=self.get_content_negotiator(),
+            parser_context=parser_context
+        )
 
-    def http_method_not_allowed(self, request, *args, **kwargs):
+    def initialize_request(self, request, *args, **kwargs):
         """
-        If `request.method` does not correspond to a handler method,
-        determine what kind of exception to raise.
+        Set the `.action` attribute on the view, depending on the request method.
         """
-        raise exceptions.MethodNotAllowed(request.method)
+        request = self.initialize_request_super(request, *args, **kwargs)
+        method = request.method.lower()
+        if method == 'options':
+            # This is a special case as we always provide handling for the
+            # options method in the base `View` class.
+            # Unlike the other explicitly defined actions, 'metadata' is implicit.
+            self.action = 'metadata'
+        else:
+            self.action = self.action_map.get(method)
+        return request
+
+    def reverse_action(self, url_name, *args, **kwargs):
+        """
+        Reverse the action for the given `url_name`.
+        """
+        url_name = '%s-%s' % (self.basename, url_name)
+        kwargs.setdefault('request', self.request)
+
+        return reverse(url_name, *args, **kwargs)
+
+    @classmethod
+    def get_extra_actions(cls):
+        """
+        Get the methods that are marked as an extra ViewSet `@action`.
+        """
+        return [method for _, method in getmembers(cls, _is_extra_action)]
+
+    def get_extra_action_url_map(self):
+        """
+        Build a map of {names: urls} for the extra actions.
+
+        This method will noop if `detail` was not provided as a view initkwarg.
+        """
+        action_urls = OrderedDict()
+
+        # exit early if `detail` has not been provided
+        if self.detail is None:
+            return action_urls
+
+        # filter for the relevant extra actions
+        actions = [
+            action for action in self.get_extra_actions()
+            if action.detail == self.detail
+        ]
+
+        for action in actions:
+            try:
+                url_name = '%s-%s' % (self.basename, action.url_name)
+                url = reverse(url_name, self.args, self.kwargs,
+                              request=self.request)
+                view = self.__class__(**action.kwargs)
+                action_urls[view.get_view_name()] = url
+            except NoReverseMatch:
+                pass  # URL requires additional arguments, ignore
+
+        return action_urls
 
     def permission_denied(self, request, message=None):
         """
@@ -575,18 +551,18 @@ class UserViewSet(views.APIView):
         Raises an appropriate exception if the request is not permitted.
         """
         for permission in self.get_permissions():
-            if not permission.has_permission(request, self):
+            if not permission.has_permission(self=self, request=request, view=getattr(self, request.method.lower(), self.http_method_not_allowed)):
                 self.permission_denied(
                     request, message=getattr(permission, 'message', None)
                 )
 
-    def check_object_permissions(self, request, obj):
+    def check_object_permissions(self=None, request=None, obj=None):
         """
         Check if the request should be permitted for a given object.
         Raises an appropriate exception if the request is not permitted.
         """
         for permission in self.get_permissions():
-            if not permission.has_object_permission(request, self, obj):
+            if not permission.has_object_permission(request=request, self=self, view=getattr(self, request.method.lower(), self.http_method_not_allowed), obj=obj):
                 self.permission_denied(
                     request, message=getattr(permission, 'message', None)
                 )
@@ -623,67 +599,6 @@ class UserViewSet(views.APIView):
         return (scheme.determine_version(request, *args, **kwargs), scheme)
 
     # Dispatch methods
-
-    def initialize_request(self, request, *args, **kwargs):
-        """
-        Set the `.action` attribute on the view, depending on the request method.
-        """
-        request = super().initialize_request(request, *args, **kwargs)
-        method = request.method.lower()
-        if method == 'options':
-            # This is a special case as we always provide handling for the
-            # options method in the base `View` class.
-            # Unlike the other explicitly defined actions, 'metadata' is implicit.
-            self.action = 'metadata'
-        else:
-            self.action = self.action_map.get(method)
-        return request
-
-    def reverse_action(self, url_name, *args, **kwargs):
-        """
-        Reverse the action for the given `url_name`.
-        """
-        url_name = '%s-%s' % (self.basename, url_name)
-        kwargs.setdefault('request', self.request)
-
-        return reverse(url_name, *args, **kwargs)
-
-    @classmethod
-    def get_extra_actions(cls):
-        """
-        Get the methods that are marked as an extra ViewSet `@action`.
-        """
-        return [method for _, method in getmembers(cls, lambda attr: hasattr(attr, 'mapping'))]
-
-    def get_extra_action_url_map(self):
-        """
-        Build a map of {names: urls} for the extra actions.
-
-        This method will noop if `detail` was not provided as a view initkwarg.
-        """
-        action_urls = OrderedDict()
-
-        # exit early if `detail` has not been provided
-        if self.detail is None:
-            return action_urls
-
-        # filter for the relevant extra actions
-        actions = [
-            action for action in self.get_extra_actions()
-            if action.detail == self.detail
-        ]
-
-        for action in actions:
-            try:
-                url_name = '%s-%s' % (self.basename, action.url_name)
-                url = reverse(url_name, self.args, self.kwargs,
-                              request=self.request)
-                view = self.__class__(**action.kwargs)
-                action_urls[view.get_view_name()] = url
-            except NoReverseMatch:
-                pass  # URL requires additional arguments, ignore
-
-        return action_urls
 
     def initial(self, request, *args, **kwargs):
         """
@@ -811,67 +726,3 @@ class UserViewSet(views.APIView):
             return self.http_method_not_allowed(request, *args, **kwargs)
         data = self.metadata_class().determine_metadata(request, self)
         return Response(data, status=status.HTTP_200_OK)
-
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [AllowAny()]
-        return [IsAuthenticated()]
-
-    @action(detail=False, methods=['GET', 'PUT'], permission_classes=IsAuthenticated)
-    def me(self, request):
-        user = request.user
-        if request.method == 'GET':
-            serializer = self.get_serializer(instance=user)
-            return Response(serializer.data)
-        elif request.method == 'PUT':
-            serializer = self.get_serializer(
-                instance=user, data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data)
-
-    @action(["post"], detail=False)
-    def reset_password(self, request, *args, **kwargs):
-        '''
-        {
-            "email": "mahdijavid1380@yahoo.com"
-        }
-        '''
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.get_user()
-
-        if user:
-            context = {"user": user}
-            to = [get_user_email(user)]
-            PasswordResetEmail(request, context).send(to)
-
-        return Response(status=status.HTTP_202_ACCEPTED, data={
-            'url': conf.settings.PASSWORD_RESET_CONFIRM_URL.format(
-                        uid=utils.encode_uid(user.pk),
-                        token=default_token_generator.make_token(user)),
-        })
-
-    @action(["post"], detail=False)
-    def reset_password_confirm(self, request, *args, **kwargs):
-        '''
-        {
-            "uid": "",
-            "token": "",
-            "new_password": "",
-            "re_new_password": ""
-        }
-        '''
-        # serializer = PasswordResetConfirmRetypeSerializer(data=request.data)
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        serializer.user.set_password(serializer.data["new_password"])
-        if hasattr(serializer.user, "last_login"):
-            serializer.user.last_login = now()
-        serializer.user.save()
-
-        context = {"user": serializer.user}
-        to = [get_user_email(serializer.user)]
-        PasswordChangedConfirmationEmail(request, context).send(to)
-        return Response(status=status.HTTP_200_OK, data='password has been changed!')

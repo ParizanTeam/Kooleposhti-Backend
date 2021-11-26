@@ -1,8 +1,8 @@
-from celery import Celery
+from __future__ import absolute_import, unicode_literals
 
-app = Celery('tasks', broker='pyamqp://guest@localhost//')
+from celery import shared_task
 
 
-@app.task
+@shared_task
 def add(x, y):
     return x + y

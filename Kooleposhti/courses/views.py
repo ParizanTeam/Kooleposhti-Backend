@@ -18,7 +18,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
-from accounts.student_serializers import StudentSerializer
+from accounts.serializers.student_serializers import StudentSerializer
 from skyroom import *
 from Kooleposhti.settings import skyroom_key
 
@@ -33,10 +33,9 @@ class SessionViewSet(ModelViewSet):
 
     def get_queryset(self):
         return Session.objects.filter(course_id=self.kwargs.get('course_pk'))
-        
+
     def get_serializer_context(self):
         return {'course': self.kwargs.get('course_pk')}
-
 
 
 class CourseViewSet(ModelViewSet):
@@ -62,7 +61,7 @@ class CourseViewSet(ModelViewSet):
 
         try:
             course = self.perform_create(serializer)
-        except Exception as e: 
+        except Exception as e:
             return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         for tag in tags_data:
@@ -86,8 +85,6 @@ class CourseViewSet(ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-
-
     def perform_create(self, serializer):
         # create skyroom room and set the instructor operator
         course = serializer.save()
@@ -102,17 +99,17 @@ class CourseViewSet(ModelViewSet):
         }
         try:
             course.room_id = api.createRoom(params)
-            params = {           
+            params = {
                 'room_id': course.room_id,
-                'users': [ 
+                'users': [
                     {'user_id': course.instructor.user.userskyroom.skyroom_id, "access": 3}
                 ]
             }
             api.addRoomUsers(params)
-            params = {           
-                    'room_id': course.room_id,
-                    "language": "fa"
-                }
+            params = {
+                'room_id': course.room_id,
+                "language": "fa"
+            }
             course.link = api.getRoomUrl(params)
             course.save()
             # params = {
@@ -131,14 +128,12 @@ class CourseViewSet(ModelViewSet):
 
         return course
 
-
-
     def update(self, request, *args, **kwargs):
         data = request.data
         tags_data = data.pop('tags', None)
         goals_data = data.pop('goals', None)
         sessions_data = data.get('sessions', None)
-        
+
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=data, partial=partial)
@@ -146,14 +141,14 @@ class CourseViewSet(ModelViewSet):
 
         try:
             course = self.perform_update(serializer)
-        except Exception as e: 
+        except Exception as e:
             return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         if getattr(instance, '_prefetched_objects_cache', None):
             instance._prefetched_objects_cache = {}
 
         if tags_data:
-            self.tags.all().delete()   
+            self.tags.all().delete()
             for tag in tags_data:
                 tag['course'] = course.pk
                 new_tag = TagSerializer(data=tag)
@@ -173,10 +168,8 @@ class CourseViewSet(ModelViewSet):
                 new_session.context['course'] = course.pk
                 new_session.is_valid(raise_exception=True)
                 new_session.save()
-        
+
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
 
     def perform_update(self, serializer):
         course_old = self.get_object()
@@ -207,32 +200,27 @@ class CourseViewSet(ModelViewSet):
             course = course_old
             course.save()
             raise e
-            
+
         return course
 
-
-
     def perform_destroy(self, instance):
-        # delete skyroom room 
+        # delete skyroom room
         api.deleteRoom({"room_id": instance.room_id})
         return super().perform_destroy(instance)
-    
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
 
         try:
             self.perform_destroy(instance)
-        except Exception as e: 
+        except Exception as e:
             return Response({"SkyRoom": {"SkyRoom": str(e)}}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
-
     def perform_add_student(self, course, student):
         # create room user
-        params = {           
+        params = {
             'room_id': course.room_id,
             'users': [{'user_id': student.user.userskyroom.skyroom_id}]
         }
@@ -248,8 +236,6 @@ class CourseViewSet(ModelViewSet):
         # url = api.getLoginUrl(params)
         # Link.objects.create(course=course, user=student.user, url=url)
 
-
-
     @action(detail=True, methods=['post'],
             permission_classes=[IsStudent])
     def enroll(self, request, *args, **kwargs):
@@ -262,47 +248,41 @@ class CourseViewSet(ModelViewSet):
 
         try:
             self.perform_add_student(course, student)
-        except Exception as e: 
+        except Exception as e:
             return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         course.students.add(student)
         course.update_capacity()
         return Response({'enrolled': True}, status=status.HTTP_200_OK)
 
-
-
     def perform_remove_student(self, course, student):
         # remove room user
-        params = {           
+        params = {
             'room_id': course.room_id,
             'users': [student.user.userskyroom.skyroom_id]
         }
         api.removeRoomUsers(params)
 
-
-    
     @action(detail=True, methods=['post'],
-            permission_classes=[IsStudent], url_name="leave", 
+            permission_classes=[IsStudent], url_name="leave",
             url_path="leave")
     def leave(self, request: HttpRequest, *args, **kwargs):
         course = self.get_object()
         student = request.user.student
         if not course.is_enrolled(student):
             return Response('Not enrolled yet.', status=status.HTTP_400_BAD_REQUEST)
-        
+
         try:
             self.perform_remove_student(course, student)
-        except Exception as e: 
+        except Exception as e:
             return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         course.students.remove(request.user.student)
         course.update_capacity()
         return Response({'left': True}, status=status.HTTP_200_OK)
 
-
-
     @action(detail=True, methods=['put'],
-            permission_classes=[IsInstructor], url_name="delete-student", 
+            permission_classes=[IsInstructor], url_name="delete-student",
             url_path="delete-student/(?P<sid>[^/.]+)")
     def delete_student(self, request: HttpRequest, sid, *args, **kwargs):
         course = self.get_object()
@@ -314,17 +294,15 @@ class CourseViewSet(ModelViewSet):
 
             try:
                 self.perform_remove_student(course, student)
-            except Exception as e: 
+            except Exception as e:
                 return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-            
+
             course.students.remove(student)
             course.update_capacity()
             return Response({'deleted': True})
         return Response("your'e not the course owner", status=status.HTTP_403_FORBIDDEN)
 
-
-
-    @action(detail=True, permission_classes=[IsInstructor], 
+    @action(detail=True, permission_classes=[IsInstructor],
             url_name="get-students", url_path="students")
     def get_students(self, request, *args, **kwargs):
         course = self.get_object()
@@ -333,33 +311,28 @@ class CourseViewSet(ModelViewSet):
             return Response(status=status.HTTP_200_OK, data=serializer.data)
         return Response("your'e not the course owner", status=status.HTTP_403_FORBIDDEN)
 
-
-
-    @action(detail=True, permission_classes=[AllowAny], 
+    @action(detail=True, permission_classes=[AllowAny],
             url_name="can-enroll", url_path="can-enroll")
     def can_enroll(self, request, *args, **kwargs):
         course = self.get_object()
         try:
-            return Response({'enroll': not course.is_enrolled(request.user.student)}, 
+            return Response({'enroll': not course.is_enrolled(request.user.student)},
                             status=status.HTTP_200_OK)
         except:
-            return Response({'enroll': not request.user.is_authenticated}, 
+            return Response({'enroll': not request.user.is_authenticated},
                             status=status.HTTP_200_OK)
 
-
-    
     @action(detail=True, permission_classes=[IsAuthenticated])
     def link(self, request, *args, **kwargs):
         course = self.get_object()
         user = request.user
         if (user.has_role('student') and course.is_enrolled(user.student)) \
-        or (user.has_role('instructor') and course.is_owner(user.instructor)):            
+                or (user.has_role('instructor') and course.is_owner(user.instructor)):
 
-            link=course.links.get(user=user).url
+            link = course.links.get(user=user).url
             return Response(link, status=status.HTTP_200_OK)
 
         return Response("you're not enrolled", status=status.HTTP_403_FORBIDDEN)
-
 
     @action(detail=True, methods=['post'],
             permission_classes=[IsAuthenticated])
@@ -367,13 +340,11 @@ class CourseViewSet(ModelViewSet):
         course = self.get_object()
         user = request.user
         if (user.has_role('student') and course.is_enrolled(user.student)):
-        # or (user.has_role('instructor') and course.is_owner(user.instructor)):
-            Comment.objects.create(course=course, student=user.student, 
-                                        text=request.data['comment'])
+            # or (user.has_role('instructor') and course.is_owner(user.instructor)):
+            Comment.objects.create(course=course, student=user.student,
+                                   text=request.data['comment'])
             return Response('succssesfuly commented', status=status.HTTP_200_OK)
         return Response("you're not enrolled", status=status.HTTP_403_FORBIDDEN)
-
-
 
     @action(detail=True, methods=['post'],
             permission_classes=[IsStudent])
@@ -389,7 +360,8 @@ class CourseViewSet(ModelViewSet):
                 course.update_rate()
                 return Response('you changed your rate.', status=status.HTTP_200_OK)
             except:
-                Rate.objects.create(course=course, student=student, rate=rate_data)
+                Rate.objects.create(
+                    course=course, student=student, rate=rate_data)
                 # course.rate = round((course.rate * course.rate_no + rate_data) / (course.rate_no + 1), 1)
                 # course.rate_no += 1
                 # course.save()
@@ -397,7 +369,6 @@ class CourseViewSet(ModelViewSet):
                 return Response('rated successfully', status=status.HTTP_200_OK)
         else:
             return Response({"you're not enrolled."}, status=status.HTTP_403_FORBIDDEN)
-
 
 
 # class CommentViewSet(ModelViewSet):
@@ -428,10 +399,9 @@ class CategoryViewSet(ModelViewSet):
 
 #     def get_queryset(self):
 #         return Tag.objects.filter(course_id=self.kwargs.get('course_pk'))
-        
+
 #     def get_serializer_context(self):
 #         return {'course': self.kwargs.get('course_pk')}
-        
 
 
 # class GoalViewSet(ModelViewSet):
@@ -441,10 +411,9 @@ class CategoryViewSet(ModelViewSet):
 
 #     def get_queryset(self):
 #         return Goal.objects.filter(course_id=self.kwargs.get('course_pk'))
-        
+
 #     def get_serializer_context(self):
 #         return {'course_id': self.kwargs.get('course_pk')}
-
 
 
 class ReviewViweSet(ModelViewSet):
@@ -484,6 +453,7 @@ class ShoppingCartItemViewSet(ModelViewSet):
     #         serializer.is_valid(raise_exception=True)
     #         serializer.save()
     #         return Response(serializer.validated_data)
+
 
     # @api_view()
     # def course_detail(request, pk):

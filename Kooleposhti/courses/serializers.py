@@ -4,11 +4,12 @@ from .models import *
 from decimal import Decimal
 from accounts.models import Instructor
 from djoser.serializers import UserSerializer as BaseUserSerializer
-from accounts.instructor_serializer import InstructorSerializer
+from accounts.serializers.instructor_serializer import InstructorSerializer
 import jdatetime
 import jalali_date
 from datetime import date, datetime, time, timedelta
 import base64
+import os
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -103,9 +104,9 @@ class CourseSerializer(serializers.ModelSerializer):
         validated_data['start_date'] = sessions_data[0]['date']
         validated_data['end_date'] = sessions_data[-1]['date']
         validated_data['capacity'] = validated_data['max_students']
-        
+
         return super().create(validated_data)
-        
+
         # instructor = request.user.instructor
         # sessions_data = validated_data.pop('sessions')
         # start_date = sessions_data[0]['date']
@@ -114,13 +115,14 @@ class CourseSerializer(serializers.ModelSerializer):
         # validated_data['course'] = Course.objects.create(instructor=instructor, start_date=start_date, end_date=end_date,
         #                                capacity=capacity, **validated_data)
 
-
     def update(self, instance, validated_data):
         sessions_data = validated_data.pop('sessions', [])
         if len(sessions_data):
             validated_data['start_date'] = sessions_data[0]['date']
             validated_data['end_date'] = sessions_data[-1]['date']
-        capacity = instance.capacity + validated_data.get('max_students', instance.max_students) - instance.max_students
+        capacity = instance.capacity + \
+            validated_data.get(
+                'max_students', instance.max_students) - instance.max_students
         if capacity < 0:
             self.fail("course remaining capacity should not be negative")
         validated_data['capacity'] = capacity
