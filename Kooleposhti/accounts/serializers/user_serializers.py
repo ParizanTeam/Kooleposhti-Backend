@@ -84,11 +84,10 @@ class BaseUserSerializer(serializers.ModelSerializer):
 
     def set_image(self, instance, validated_data, image_url=None):
         image = None
-        if 'image' in validated_data:
+        if 'image' in validated_data and \
+                'image' in validated_data['image']:
             image = validated_data.pop('image')
-            if not 'image' in image:
-                return
-            image = image.get('image')
+            # image = image.get('image')
             image = ProfileImageSerializer(data=image)
             image.is_valid(raise_exception=True)
             image = image.save()
@@ -99,6 +98,8 @@ class BaseUserSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     detail='image url is not correct', code='image_url')
             image = tmp_image
+            if 'image' in validated_data:
+                del validated_data['image']
 
         instance.user.image = image
         instance.save()

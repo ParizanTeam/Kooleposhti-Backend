@@ -164,6 +164,7 @@ def sign_up_user(request: HttpRequest, *args, **kwargs):
             # 'last_name': request.data.get('last_name'),
             'is_instructor': request.data.get('is_instructor', False),
         }
+
         is_instructor = serializer_dict.get('is_instructor')
         serializer = UserCreateSerializer(data=serializer_dict)
         serializer.is_valid(raise_exception=True)
