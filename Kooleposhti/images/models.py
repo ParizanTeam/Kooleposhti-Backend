@@ -1,7 +1,7 @@
 from django.db import models
 import os
 import uuid
-from django import conf
+from django.conf import settings
 from django.core.files.storage import Storage, default_storage
 
 # Create your models here.
@@ -21,6 +21,8 @@ class MyImage(models.Model):
     name = models.CharField(max_length=100, blank=True)
     description = models.TextField(max_length=500, null=True)
     upload_date = models.DateTimeField(auto_now_add=True)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='image')
 
     def __str__(self):
         return self.name

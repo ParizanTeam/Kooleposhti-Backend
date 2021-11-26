@@ -1,12 +1,12 @@
-from .email import PasswordChangedConfirmationEmail
+from accounts.email import PasswordChangedConfirmationEmail
 from django.utils.timezone import now
 from djoser import utils
 from django import conf
-from .email import PasswordResetEmail
+from accounts.email import PasswordResetEmail
 from djoser.compat import get_user_email
 from djoser.serializers import PasswordResetConfirmRetypeSerializer
-from accounts.serializers import MySendEmailResetSerializer
-from .user_serializers import UserSerializer
+from accounts.serializers.serializers import MySendEmailResetSerializer
+from accounts.serializers.user_serializers import UserSerializer
 from courses.models import Course
 from django.contrib.auth.tokens import default_token_generator
 from django.urls import reverse
@@ -43,7 +43,7 @@ from django.db.models.query import QuerySet
 from rest_framework import mixins, views
 from rest_framework.settings import api_settings
 import djoser.views
-from .models import User
+from accounts.models import User
 # import rest_framework.request
 
 

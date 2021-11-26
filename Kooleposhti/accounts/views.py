@@ -1,5 +1,5 @@
 from rest_framework.views import APIView
-from .serializers import MySendEmailResetSerializer, UserSerializer
+from accounts.serializers.serializers import MySendEmailResetSerializer, UserSerializer
 from .email import PasswordChangedConfirmationEmail
 from django.contrib.auth.tokens import default_token_generator
 from djoser import utils
@@ -9,7 +9,7 @@ from djoser.serializers import SendEmailResetSerializer
 from djoser.compat import get_user_email
 from django.utils.timezone import now
 from rest_framework_simplejwt.views import TokenViewBase
-from .serializers import UserCreateSerializer
+from accounts.serializers.serializers import UserCreateSerializer
 # from . signals import user_created
 from validate_email import validate_email
 from django.http.request import HttpRequest
@@ -17,11 +17,8 @@ from django.urls import reverse
 import rest_framework
 from .models import User, Verification
 from django.shortcuts import render
-from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, UpdateModelMixin
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from accounts.models import Instructor, Student
-from .serializers import InstructorSerializer
-from rest_framework.generics import ListAPIView
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAdminUser, IsAuthenticated
@@ -66,7 +63,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from rest_framework import generics, mixins, views
 from rest_framework.reverse import reverse
-from .students import StudentViewSet
+from accounts.apis.student import StudentViewSet
 # APIView
 from django.contrib.messages.storage import default_storage
 

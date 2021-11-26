@@ -6,9 +6,9 @@ from rest_framework.utils import model_meta
 from rest_framework.response import Response
 from images.models import MyImage
 from images.serializers import ProfileImageSerializer
-from .models import User
+from accounts.models import User
 from rest_framework import serializers
-from .serializers import update_relation
+from accounts.serializers.serializers import update_relation
 from rest_framework import status
 from django.contrib.auth.password_validation import validate_password
 from django.core import exceptions as django_exceptions

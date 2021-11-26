@@ -17,8 +17,8 @@ from django.conf.urls import include
 from django.contrib import admin
 from django.urls import base, path
 
-from accounts.instructor import InstructorViewSet
-from accounts.user import UserViewSet
+from accounts.apis.instructor import InstructorViewSet
+from accounts.apis.user import UserViewSet
 from .views import *
 from .email import ActivationEmail
 from rest_framework.routers import DefaultRouter, SimpleRouter
@@ -26,6 +26,7 @@ from rest_framework_nested import routers
 from pprint import pprint
 from django.urls import re_path
 from rest_framework_simplejwt import views
+from accounts.apis.profile import PublicProfile
 
 
 router = routers.DefaultRouter()
@@ -33,6 +34,7 @@ router.register('instructors', InstructorViewSet,
                 basename='accounts-instructor')
 router.register('students', StudentViewSet, basename='accounts-student')
 router.register('users', UserViewSet, basename='accounts-user')
+router.register('profile', PublicProfile)
 # urlpatterns = router.urls
 # pprint(router.urls)
 # pprint(router.urls)
