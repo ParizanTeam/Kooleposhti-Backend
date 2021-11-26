@@ -1,7 +1,9 @@
-from accounts.models import User
+from accounts.models import PublicProfile, User
 from rest_framework import serializers
 from images.serializers import ProfileImageSerializer
 from courses.serializers import CourseSerializer
+from accounts.serializers.serializers import update_relation
+from rest_framework.utils import model_meta
 
 
 class BasePublicProfileSerializer(serializers.ModelSerializer):
@@ -11,7 +13,17 @@ class BasePublicProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'username', 'bio', 'image']
-        # read_only_fields = ['first_name', 'last_name', 'username', 'image']
+        read_only_fields = ['first_name', 'last_name', 'username', 'image']
+
+    def update(self, instance, validated_data):
+        if 'publicprofile' in validated_data:
+            if not hasattr(instance, 'publicprofile'):
+                instance.publicprofile = PublicProfile.objects.create(
+                    user=instance)
+            update_relation(instance, validated_data, 'publicprofile')
+        info = model_meta.get_field_info(instance)
+        instance.save()
+        return instance
 
 
 class StudentPublicProfileSerializer(BasePublicProfileSerializer):
@@ -21,6 +33,11 @@ class StudentPublicProfileSerializer(BasePublicProfileSerializer):
     class Meta (BasePublicProfileSerializer.Meta):
         fields = BasePublicProfileSerializer.Meta.fields + ['age']
 
+    def update(self, instance, validated_data):
+        if 'student' in validated_data:
+            update_relation(instance, validated_data, 'student')
+        return super().update(instance, validated_data)
+
 
 class InstructorPublicProfileSerializer(BasePublicProfileSerializer):
     rate = serializers.IntegerField(
@@ -28,7 +45,10 @@ class InstructorPublicProfileSerializer(BasePublicProfileSerializer):
     courses = CourseSerializer(
         source='instructor.courses', many=True, required=False, read_only=True)
 
+    def update(self, instance, validated_data):
+        return super().update(instance, validated_data)
+
     class Meta (BasePublicProfileSerializer.Meta):
         fields = BasePublicProfileSerializer.Meta.fields + ['rate', 'courses']
-        # read_only_fields = BasePublicProfileSerializer.Meta.read_only_fields + \
-        #     ['rate', 'courses']
+        read_only_fields = BasePublicProfileSerializer.Meta.read_only_fields + \
+            ['rate', 'courses']

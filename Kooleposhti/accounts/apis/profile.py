@@ -26,33 +26,42 @@ class PublicProfile (MyGenericViewSet):
         return serializer_class(*args, **kwargs)
 
     def get_serializer_class(self, *args, **kwargs):
-        request = kwargs.get('request')
         instance = kwargs.get('instance')
+        serializer_class = BasePublicProfileSerializer
         if self.action == 'get_user_profile' or \
                 self.action == 'update_user_profile':
             if instance is None:
-                return None
+                return serializer_class
             if instance.has_role('student'):
-                return StudentPublicProfileSerializer
+                serializer_class = StudentPublicProfileSerializer
             elif instance.has_role('instructor'):
-                return InstructorPublicProfileSerializer
+                serializer_class = InstructorPublicProfileSerializer
         elif self.action == 'list':
-            return BasePublicProfileSerializer
-        return None
+            serializer_class = BasePublicProfileSerializer
+        return serializer_class
 
     """
     Update a model instance.
     """
     @action(detail=False, methods=['PUT', 'GET', ], url_path='update-profile')
     def update_user_profile(self, request, *args, **kwargs):
+        instance = request.user
         if request.method == 'PATCH':
             kwargs['partial'] = True
-        partial = kwargs.pop('partial', False)
-        instance = request.user
-        serializer = self.get_serializer(
-            instance=instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
+        if request.method == 'PUT':
+            partial = kwargs.pop('partial', False)
+            serializer = self.get_serializer(
+                instance=instance, data=request.data, partial=partial)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+        elif request.method == 'GET':
+            serializer = self.get_serializer(instance=instance)
+            return Response(
+                data={
+                    "data": serializer.data,
+                    "message": "Profile fetched successfully"
+                }, status=status.HTTP_200_OK
+            )
 
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
