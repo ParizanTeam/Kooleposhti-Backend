@@ -4,7 +4,7 @@ from courses.models import Course
 from django.contrib.auth.tokens import default_token_generator
 from django.urls import reverse
 from rest_framework.viewsets import ModelViewSet
-from accounts.models import Student
+from accounts.models import Student, UserSkyRoom
 from ..serializers.student_serializers import StudentCourseSerializer, StudentEnrollLeaveCourseSerializer, StudentSerializer
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
@@ -249,18 +249,20 @@ class StudentViewSet(views.APIView):
         instance = self.get_object()
 
         try:
-            self.perform_destroy(instance)
+            self.delete_user(instance)
         except Exception as e: 
             return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+        self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def perform_destroy(self, instance):
+        instance.user.delete()
+
+    def delete_user(self, instance):
         # delete skyroom user
         api = SkyroomAPI(skyroom_key)
         api.deleteUser({"user_id": instance.user.userskyroom.skyroom_id})
-
-        instance.user.delete()
 
     """
     Update a model instance.
@@ -274,10 +276,11 @@ class StudentViewSet(views.APIView):
         serializer.is_valid(raise_exception=True)
 
         try:
-            self.perform_update(request, serializer)
+            self.update_user(request, serializer)
         except Exception as e: 
             return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+        self.perform_update(serializer)
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
             # forcibly invalidate the prefetch cache on the instance.
@@ -285,21 +288,37 @@ class StudentViewSet(views.APIView):
 
         return Response(serializer.data)
 
-    def perform_update(self, request, serializer):
+    def perform_update(self, serializer):
+        serializer.save()
+
+    def update_user(self, request, serializer):
         # update skyroom user
         data = serializer.validated_data['user']
         user = self.get_student(request).user
         api = SkyroomAPI(skyroom_key)
-        params = {
-            "user_id": user.userskyroom.skyroom_id,
-            'username': data.get('username', user.username),
-            "nickname": data.get('username', user.username),
-            'email': data.get('email', user.email),
-            "fname": data.get('first_name', user.first_name),
-            "lname": data.get('last_name', user.last_name)
-        }
-        api.updateUser(params)
-        serializer.save()
+        if user.username == data.get('username', user.username):
+            params = {
+                "user_id": int(user.userskyroom.skyroom_id),
+                'password': data.get('password'),
+                'email': data.get('email', user.email),
+                "fname": data.get('first_name', user.first_name),
+                "lname": data.get('last_name', user.last_name)
+            }
+            api.updateUser(params)
+        else:
+            api.deleteUser({"user_id": user.userskyroom.skyroom_id})
+            user.userskyroom.delete()
+            params = {
+                'username': data.get('username', user.username),
+                'password': data.get('password'),
+                "nickname": data.get('username', user.username),
+                'email': data.get('email', user.email),
+                "fname": data.get('first_name', user.first_name),
+                "lname": data.get('last_name', user.last_name)
+            }
+            skyroom_id = api.createUser(params)
+            UserSkyRoom.objects.create(skyroom_id=skyroom_id, user=user)
+
 
     def partial_update(self, request, *args, **kwargs):
         kwargs['partial'] = True
@@ -888,10 +907,11 @@ class StudentViewSet(views.APIView):
             serializer.is_valid(raise_exception=True)
             
             try:
-                self.perform_update(request, serializer)
+                self.update_user(request, serializer)
             except Exception as e: 
                 return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+            self.perform_update(serializer)
             return Response(serializer.data)
 
     # def get_course(self, request, *args, **kwargs) :
