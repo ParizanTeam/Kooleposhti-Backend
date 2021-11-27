@@ -79,16 +79,15 @@ class CourseSerializer(serializers.ModelSerializer):
     comments = CommentSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
     goals = GoalSerializer(many=True, read_only=True)
-    sessions = SessionSerializer(many=True)
+    sessions = SessionSerializer(many=True, read_only=True)
 
     class Meta:
         model = Course
-        # fields = '__all__'
-        fields = ('categories', 'tags', 'goals', 'instructor', 'duration',
-                  'title', 'slug', 'image', 'description', 'id',
-                  'price', 'rate', 'rate_no', 'created_at', 'comments',
-                  'duration', 'min_students', 'max_students',
-                  'min_age', 'max_age', 'sessions', 'capacity')
+        fields = ('id', 'created_at', 'categories', 'instructor',
+                  'duration', 'title', 'image', 'description', 'start_date',
+                  'end_date', 'price', 'rate', 'rate_no', 'link', 'min_students', 
+                  'max_students', 'capacity', 'min_age', 'max_age',
+                  'tags', 'goals', 'sessions', 'comments')
     # instructor = serializers.HyperlinkedRelatedField(
     #     queryset=Instructor.objects.all(), view_name='instructor-detail')
         new_price = serializers.SerializerMethodField(
@@ -99,12 +98,8 @@ class CourseSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         request = self.context.get("request")
-        sessions_data = validated_data.pop('sessions')
         validated_data['instructor'] = request.user.instructor
-        validated_data['start_date'] = sessions_data[0]['date']
-        validated_data['end_date'] = sessions_data[-1]['date']
         validated_data['capacity'] = validated_data['max_students']
-
         return super().create(validated_data)
 
         # instructor = request.user.instructor
@@ -116,17 +111,12 @@ class CourseSerializer(serializers.ModelSerializer):
         #                                capacity=capacity, **validated_data)
 
     def update(self, instance, validated_data):
-        sessions_data = validated_data.pop('sessions', [])
-        if len(sessions_data):
-            validated_data['start_date'] = sessions_data[0]['date']
-            validated_data['end_date'] = sessions_data[-1]['date']
         capacity = instance.capacity + \
             validated_data.get(
                 'max_students', instance.max_students) - instance.max_students
         if capacity < 0:
             self.fail("course remaining capacity should not be negative")
         validated_data['capacity'] = capacity
-
         return super().update(instance, validated_data)
 
 
