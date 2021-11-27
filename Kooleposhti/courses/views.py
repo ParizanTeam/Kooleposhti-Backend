@@ -52,10 +52,13 @@ class CourseViewSet(ModelViewSet):
 	# permission_classes = [AllowAny]
 
 	def create(self, request, *args, **kwargs):
-		data = request.data
+		data = request.data.copy()
 		tags_data = data.pop('tags', [])
 		goals_data = data.pop('goals', [])
-		sessions_data = data.get('sessions')
+		sessions_data = data.pop('sessions', [])
+		if len(sessions_data):
+			data['start_date'] = sessions_data[0]['date']
+			data['end_date'] = sessions_data[-1]['date']
 		serializer = self.get_serializer(data=data)
 		serializer.is_valid(raise_exception=True)
 		course = serializer.save()
@@ -129,10 +132,13 @@ class CourseViewSet(ModelViewSet):
 	def update(self, request, *args, **kwargs):
 		course_old = self.get_object()
 		if course_old.is_owner(request.user.instructor):
-			data = request.data
+			data = request.data.copy()
 			tags_data = data.pop('tags', None)
 			goals_data = data.pop('goals', None)
-			sessions_data = data.get('sessions', None)
+			sessions_data = data.pop('sessions', None)
+			if sessions_data:
+				data['start_date'] = sessions_data[0]['date']
+				data['end_date'] = sessions_data[-1]['date']
 
 			partial = kwargs.pop('partial', False)
 			instance = self.get_object()
@@ -315,14 +321,16 @@ class CourseViewSet(ModelViewSet):
 
 
 
-	@action(detail=True, permission_classes=[IsInstructor],
+	@action(detail=True, permission_classes=[IsAuthenticated],
 			url_name="get-students", url_path="students")
 	def get_students(self, request, *args, **kwargs):
 		course = self.get_object()
-		if course.is_owner(request.user.instructor):
+		user = request.user
+		if (user.has_role('student') and course.is_enrolled(user.student)) \
+				or (user.has_role('instructor') and course.is_owner(user.instructor)):
 			serializer = StudentSerializer(course.students, many=True)
 			return Response(status=status.HTTP_200_OK, data=serializer.data)
-		return Response("your'e not the course owner", status=status.HTTP_403_FORBIDDEN)
+		return Response("your don't have permission to perform this action", status=status.HTTP_403_FORBIDDEN)
 
 
 
@@ -336,6 +344,19 @@ class CourseViewSet(ModelViewSet):
 		except:
 			return Response({'enroll': not request.user.is_authenticated},
 							status=status.HTTP_200_OK)
+
+		
+	@action(detail=True, permission_classes=[AllowAny],
+			url_name="role", url_path="role")
+	def get_role(self, request, *args, **kwargs):
+		user = request.user
+		course = self.get_object()
+		role = 'anonymous'
+		if user.is_authenticated and user.has_role('student') and course.is_enrolled(user.student):
+			role = 'student'
+		if user.is_authenticated and user.has_role('instructor') and course.is_owner(user.instructor):
+			role = 'teacher'
+		return Response({"role": role}, status=status.HTTP_200_OK)
 
 
 	@action(detail=True, permission_classes=[IsAuthenticated])
