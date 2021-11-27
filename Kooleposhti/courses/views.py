@@ -52,10 +52,13 @@ class CourseViewSet(ModelViewSet):
 	# permission_classes = [AllowAny]
 
 	def create(self, request, *args, **kwargs):
-		data = request.data
+		data = request.data.copy()
 		tags_data = data.pop('tags', [])
 		goals_data = data.pop('goals', [])
-		sessions_data = data.get('sessions')
+		sessions_data = data.pop('sessions', [])
+		if len(sessions_data):
+			data['start_date'] = sessions_data[0]['date']
+			data['end_date'] = sessions_data[-1]['date']
 		serializer = self.get_serializer(data=data)
 		serializer.is_valid(raise_exception=True)
 		course = serializer.save()
@@ -129,10 +132,13 @@ class CourseViewSet(ModelViewSet):
 	def update(self, request, *args, **kwargs):
 		course_old = self.get_object()
 		if course_old.is_owner(request.user.instructor):
-			data = request.data
+			data = request.data.copy()
 			tags_data = data.pop('tags', None)
 			goals_data = data.pop('goals', None)
-			sessions_data = data.get('sessions', None)
+			sessions_data = data.pop('sessions', None)
+			if sessions_data:
+				data['start_date'] = sessions_data[0]['date']
+				data['end_date'] = sessions_data[-1]['date']
 
 			partial = kwargs.pop('partial', False)
 			instance = self.get_object()
