@@ -42,8 +42,6 @@ class Course(models.Model):
     # first time we create Course django stores the current datetime
     last_update = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    # enrollment_start_date = models.DateTimeField()
-    # enrollment_end_date = models.DateTimeField()
     start_date = models.DateField(blank=True)
     end_date = models.DateField(blank=True)
     duration = models.IntegerField()

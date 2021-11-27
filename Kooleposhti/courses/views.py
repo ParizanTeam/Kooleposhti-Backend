@@ -49,7 +49,6 @@ class CourseViewSet(ModelViewSet):
 	ordering_fields = ['price', 'last_update']  # -prince, last_update
 	pagination_class = DefaultPagination  # can be moved to settings
 	permission_classes = [IsInstructorOrReadOnly]
-	# permission_classes = [AllowAny]
 
 	def create(self, request, *args, **kwargs):
 		data = request.data.copy()
