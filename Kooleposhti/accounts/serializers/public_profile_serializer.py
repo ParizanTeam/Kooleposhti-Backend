@@ -20,6 +20,8 @@ class BasePublicProfileSerializer(serializers.ModelSerializer):
             if not hasattr(instance, 'publicprofile'):
                 instance.publicprofile = PublicProfile.objects.create(
                     user=instance)
+                instance.publicprofile.save()
+                instance.save()
             update_relation(instance, validated_data, 'publicprofile')
         info = model_meta.get_field_info(instance)
         instance.save()
@@ -28,10 +30,12 @@ class BasePublicProfileSerializer(serializers.ModelSerializer):
 
 class StudentPublicProfileSerializer(BasePublicProfileSerializer):
     age = serializers.IntegerField(
-        source='student.age', min_value=0, max_value=18, required=False)
+        source='student.age', min_value=0, max_value=18, required=False, read_only=False)
 
     class Meta (BasePublicProfileSerializer.Meta):
-        fields = BasePublicProfileSerializer.Meta.fields + ['age']
+        # fields = BasePublicProfileSerializer.Meta.fields + ['age']
+        fields = ['first_name', 'last_name', 'username', 'bio', 'image', 'age']
+        read_only_fields = BasePublicProfileSerializer.Meta.read_only_fields
 
     def update(self, instance, validated_data):
         if 'student' in validated_data:

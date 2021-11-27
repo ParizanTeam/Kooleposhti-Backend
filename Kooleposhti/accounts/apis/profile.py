@@ -7,7 +7,7 @@ from rest_framework.decorators import action, permission_classes
 from rest_framework import status
 from accounts.models import User
 from accounts.permissions import IsInstructor, IsStudent
-from accounts.serializers.public_profile import BasePublicProfileSerializer, InstructorPublicProfileSerializer, StudentPublicProfileSerializer
+from accounts.serializers.public_profile_serializer import BasePublicProfileSerializer, InstructorPublicProfileSerializer, StudentPublicProfileSerializer
 from rest_framework import mixins
 
 
