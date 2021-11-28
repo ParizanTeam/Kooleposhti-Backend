@@ -15,19 +15,22 @@ import os
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = '__all__'
+        fields = ['course', 'name']
+        extra_kwargs = {'course': {'write_only': True}}
 
 
 class GoalSerializer(serializers.ModelSerializer):
     class Meta:
         model = Goal
-        fields = '__all__'
+        fields = ['course', 'text']
+        extra_kwargs = {'course': {'write_only': True}}
 
 
 class SessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Session
-        fields = '__all__'
+        fields = ['date', 'day', 'month', 'week_day', 'start_time', 'end_time']
+        read_only_fields = ['day', 'month', 'week_day', 'end_time']
 
     def create(self, validated_data):
         # course = validated_data.pop('course')
@@ -56,14 +59,6 @@ class CommentSerializer(serializers.ModelSerializer):
     #     return Comment.objects.create(student=student, **validated_data)
 
 
-class CategorySerializer(serializers.ModelSerializer):
-    # courses = CourseSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Category
-        fields = '__all__'
-        # fields = ['title', 'slug', 'image', 'courses']
-
 
 class InstructorCourseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -74,13 +69,12 @@ class InstructorCourseSerializer(serializers.ModelSerializer):
 
 class CourseSerializer(serializers.ModelSerializer):
     instructor = InstructorSerializer(read_only=True)
-    # category = CategorySerializer(many=True)
-    # students = StudentSerializer(many=True, read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
     goals = GoalSerializer(many=True, read_only=True)
     sessions = SessionSerializer(many=True, read_only=True)
-
+    # instructor = serializers.HyperlinkedRelatedField(
+    #     queryset=Instructor.objects.all(), view_name='instructor-detail')
     class Meta:
         model = Course
         fields = ('id', 'created_at', 'categories', 'instructor',
@@ -88,8 +82,9 @@ class CourseSerializer(serializers.ModelSerializer):
                   'end_date', 'price', 'rate', 'rate_no', 'link', 'min_students', 
                   'max_students', 'capacity', 'min_age', 'max_age',
                   'tags', 'goals', 'sessions', 'comments')
-    # instructor = serializers.HyperlinkedRelatedField(
-    #     queryset=Instructor.objects.all(), view_name='instructor-detail')
+        read_only_fields = ('id', 'created_at', 'instructor', 'link', 
+                            'rate', 'rate_no', 'capacity')
+    
         new_price = serializers.SerializerMethodField(
             method_name='calculate_new_price')
 
@@ -102,13 +97,6 @@ class CourseSerializer(serializers.ModelSerializer):
         validated_data['capacity'] = validated_data['max_students']
         return super().create(validated_data)
 
-        # instructor = request.user.instructor
-        # sessions_data = validated_data.pop('sessions')
-        # start_date = sessions_data[0]['date']
-        # end_date = sessions_data[-1]['date']
-        # capacity = validated_data['max_students']
-        # validated_data['course'] = Course.objects.create(instructor=instructor, start_date=start_date, end_date=end_date,
-        #                                capacity=capacity, **validated_data)
 
     def update(self, instance, validated_data):
         capacity = instance.capacity + \
@@ -118,6 +106,16 @@ class CourseSerializer(serializers.ModelSerializer):
             self.fail("course remaining capacity should not be negative")
         validated_data['capacity'] = capacity
         return super().update(instance, validated_data)
+
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    # courses = CourseSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Category
+        fields = ['id', 'title', 'courses']
+
 
 
 class ReviewSerializer(serializers.ModelSerializer):
