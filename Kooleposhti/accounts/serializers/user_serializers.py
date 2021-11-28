@@ -102,7 +102,7 @@ class BaseUserSerializer(serializers.ModelSerializer):
                 del validated_data['image']
 
         # image.user = instance.user
-        if not instance.user.image is None:
+        if hasattr(instance.user, 'image'):
             instance.user.image.delete()
         instance.user.image = image
         instance.user.image.save()
