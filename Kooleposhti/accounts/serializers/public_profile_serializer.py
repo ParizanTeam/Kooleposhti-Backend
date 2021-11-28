@@ -7,7 +7,8 @@ from rest_framework.utils import model_meta
 
 
 class BasePublicProfileSerializer(serializers.ModelSerializer):
-    bio = serializers.CharField(source='publicprofile.bio', required=False)
+    bio = serializers.CharField(
+        source='publicprofile.bio', required=False, allow_null=True, allow_blank=True)
     image = ProfileImageSerializer(required=False, read_only=True)
 
     class Meta:
