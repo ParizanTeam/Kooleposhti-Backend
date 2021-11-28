@@ -101,8 +101,12 @@ class BaseUserSerializer(serializers.ModelSerializer):
             if 'image' in validated_data:
                 del validated_data['image']
 
-        image.user = instance.user
-        image.save()
+        # image.user = instance.user
+        if not instance.user.image is None:
+            instance.user.image.delete()
+        instance.user.image = image
+        instance.user.image.save()
+        instance.user.save()
         instance.save()
         # instance.user.image = image
         # instance.save()
