@@ -14,7 +14,7 @@ class Category(models.Model):
     title = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True, null=True, blank=True)
     image = models.ImageField(
-        upload_to='images/course_images/', blank=True, default="images/no_photo.jpg")
+        upload_to='images/course_images/', blank=True, null=True)
 
     def __str__(self):
         return self.title
@@ -33,7 +33,7 @@ class Course(models.Model):
     title = models.CharField(max_length=255)
     slug = models.CharField(max_length=255, unique=True, null=True, blank=True)
     image = models.ImageField(
-        upload_to='images/course_images/', blank=True, default="images/no_photo.jpg")
+        upload_to='images/course_images/', blank=True, null=True)
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=9, decimal_places=2)  # 9999.99
     rate = models.DecimalField(

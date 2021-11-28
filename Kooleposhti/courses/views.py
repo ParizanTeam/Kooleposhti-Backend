@@ -52,6 +52,8 @@ class CourseViewSet(ModelViewSet):
 
 	def create(self, request, *args, **kwargs):
 		data = request.data.copy()
+		print(request.data)
+		print('\n', data)
 		tags_data = data.pop('tags', [])
 		goals_data = data.pop('goals', [])
 		sessions_data = data.pop('sessions', [])
@@ -228,6 +230,8 @@ class CourseViewSet(ModelViewSet):
 
 		return Response("your'e not the course owner", status=status.HTTP_403_FORBIDDEN)
 
+
+
 	def perform_add_student(self, course, student):
 		# create room user
 		params = {
@@ -266,6 +270,8 @@ class CourseViewSet(ModelViewSet):
 		course.students.add(student)
 		course.update_capacity()
 		return Response({'enrolled': True}, status=status.HTTP_200_OK)
+
+
 
 	def perform_remove_student(self, course, student):
 		# remove room user
