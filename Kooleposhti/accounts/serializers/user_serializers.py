@@ -103,7 +103,7 @@ class BaseUserSerializer(serializers.ModelSerializer):
 
         instance.user.image = image
         instance.save()
-        instance.user.save()
+        instance.user.image.save()
 
         # MyImage.objects.get(image=)
         # if isinstance(image['image'], InMemoryUploadedFile) :
