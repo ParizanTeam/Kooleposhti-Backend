@@ -101,8 +101,16 @@ class BaseUserSerializer(serializers.ModelSerializer):
             if 'image' in validated_data:
                 del validated_data['image']
 
+        # image.user = instance.user
+        if hasattr(instance.user, 'image'):
+            instance.user.image.delete()
         instance.user.image = image
+        instance.user.image.save()
+        instance.user.save()
         instance.save()
+        # instance.user.image = image
+        # instance.save()
+        # instance.user.image.save()
 
         # MyImage.objects.get(image=)
         # if isinstance(image['image'], InMemoryUploadedFile) :

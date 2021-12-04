@@ -245,7 +245,7 @@ class InstructorViewSet(views.APIView):
 
         try:
             self.delete_user(instance)
-        except Exception as e: 
+        except Exception as e:
             return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         self.perform_destroy(instance)
@@ -269,10 +269,10 @@ class InstructorViewSet(views.APIView):
         serializer = self.get_serializer(
             instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
-        
+
         try:
             self.update_user(request, serializer)
-        except Exception as e: 
+        except Exception as e:
             return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         self.perform_update(serializer)
@@ -931,7 +931,7 @@ class InstructorViewSet(views.APIView):
             immutable = False
             if hasattr(request.data, '_mutable'):
                 request.data._mutable = True
-            password = request.data['password']
+            password = request.data.get('password')
             self.delete_empty_field('password', request)
             self.delete_empty_field('image.image', request)
             self.delete_none_field('image.image', request)
@@ -942,7 +942,7 @@ class InstructorViewSet(views.APIView):
 
             try:
                 self.update_user(request, serializer, password)
-            except Exception as e: 
+            except Exception as e:
                 return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
             self.perform_update(serializer)
