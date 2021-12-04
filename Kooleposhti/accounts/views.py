@@ -1,5 +1,5 @@
 from rest_framework.views import APIView
-from .serializers import MySendEmailResetSerializer, UserSerializer
+from accounts.serializers.serializers import MySendEmailResetSerializer, UserSerializer
 from .email import PasswordChangedConfirmationEmail
 from django.contrib.auth.tokens import default_token_generator
 from djoser import utils
@@ -9,19 +9,16 @@ from djoser.serializers import SendEmailResetSerializer
 from djoser.compat import get_user_email
 from django.utils.timezone import now
 from rest_framework_simplejwt.views import TokenViewBase
-from .serializers import UserCreateSerializer
+from accounts.serializers.serializers import UserCreateSerializer
 # from . signals import user_created
 from validate_email import validate_email
 from django.http.request import HttpRequest
 from django.urls import reverse
 import rest_framework
-from .models import User, Verification
+from .models import User, Verification, UserSkyRoom
 from django.shortcuts import render
-from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, UpdateModelMixin
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from accounts.models import Instructor, Student
-from .serializers import InstructorSerializer
-from rest_framework.generics import ListAPIView
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAdminUser, IsAuthenticated
@@ -66,9 +63,11 @@ from django.views.decorators.csrf import csrf_exempt
 
 from rest_framework import generics, mixins, views
 from rest_framework.reverse import reverse
-from .students import StudentViewSet
+from accounts.apis.student import StudentViewSet
 # APIView
 from django.contrib.messages.storage import default_storage
+from skyroom import *
+from Kooleposhti.settings import skyroom_key
 
 
 # class InstructorList(ModelViewSet):
@@ -167,10 +166,19 @@ def sign_up_user(request: HttpRequest, *args, **kwargs):
             # 'last_name': request.data.get('last_name'),
             'is_instructor': request.data.get('is_instructor', False),
         }
+
         is_instructor = serializer_dict.get('is_instructor')
         serializer = UserCreateSerializer(data=serializer_dict)
         serializer.is_valid(raise_exception=True)
+
+        try:
+            skyroom_id = skyroom_signup(request.data)
+        except Exception as e: 
+            return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            
         user = serializer.save()
+        userskyroom = UserSkyRoom.objects.create(skyroom_id=skyroom_id, user=user)
+
         if is_instructor:
             Instructor.objects.create(user=user)
         else:
@@ -180,6 +188,18 @@ def sign_up_user(request: HttpRequest, *args, **kwargs):
         # del data['password2']
         return Response(status=status.HTTP_201_CREATED, data=serializer.data)
     return Response(status=status.HTTP_404_NOT_FOUND, data='Maybe your request method is not correct')
+
+
+def skyroom_signup(data):
+    # create skyroom user
+    params = {
+        'username': data.get('username'),
+        'password': data.get('password1'),
+        "nickname": data.get('username'),
+        'email': data.get('email')
+    }
+    api = SkyroomAPI(skyroom_key)
+    return api.createUser(params)
 
 
 class MyTokenObtainPairView(TokenViewBase):

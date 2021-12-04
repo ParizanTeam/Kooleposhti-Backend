@@ -1,10 +1,16 @@
-from accounts.permissions import IsStudent
+from accounts.email import PasswordChangedConfirmationEmail
+from django.utils.timezone import now
+from djoser import utils
+from django import conf
+from accounts.email import PasswordResetEmail
+from djoser.compat import get_user_email
+from djoser.serializers import PasswordResetConfirmRetypeSerializer
+from accounts.serializers.serializers import MySendEmailResetSerializer
+from accounts.serializers.user_serializers import UserSerializer
 from courses.models import Course
 from django.contrib.auth.tokens import default_token_generator
 from django.urls import reverse
 from rest_framework.viewsets import ModelViewSet
-from accounts.models import Student
-from .student_serializers import StudentCourseSerializer, StudentEnrollLeaveCourseSerializer, StudentSerializer
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAdminUser, IsAuthenticated
@@ -37,30 +43,25 @@ from django.db.models.query import QuerySet
 from rest_framework import mixins, views
 from rest_framework.settings import api_settings
 import djoser.views
+from accounts.models import User
 # import rest_framework.request
 
 
-class StudentViewSet(views.APIView):
-    queryset = Student.objects.all()
-    # serializer_class = StudentSerializer
-    permission_classes = [
-        IsStudent,
-        # IsAdminUser
-        # DjangoModelPermission
-    ]
-
+class UserViewSet(views.APIView):
+    queryset = User.objects.all()
     # The following policies may be set at either globally, or per-view.
     renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
     parser_classes = api_settings.DEFAULT_PARSER_CLASSES
     authentication_classes = api_settings.DEFAULT_AUTHENTICATION_CLASSES
     throttle_classes = api_settings.DEFAULT_THROTTLE_CLASSES
-    permission_classes = api_settings.DEFAULT_PERMISSION_CLASSES
+    permission_classes = [IsAuthenticated]
     content_negotiation_class = api_settings.DEFAULT_CONTENT_NEGOTIATION_CLASS
     metadata_class = api_settings.DEFAULT_METADATA_CLASS
     versioning_class = api_settings.DEFAULT_VERSIONING_CLASS
 
     # Allow dependency injection of other settings to make testing easier.
     settings = api_settings
+    token_generator = default_token_generator
 
     schema = DefaultSchema()
 
@@ -160,18 +161,17 @@ class StudentViewSet(views.APIView):
         (Eg. admins get full serialization, others get basic serialization)
         """
         serializer_map = {
-            'list': StudentSerializer,  # get /
-            'me': StudentSerializer,  # get, put /me
-            'retrieve': StudentSerializer,  # get /<pk>
-            'update': StudentSerializer,  # put /<pk>
-            'partial_update': StudentSerializer,  # patch /<pk>
-            'destroy': StudentSerializer,  # delete /<pk>
-            'classes': StudentCourseSerializer,  # get /<pk>/classes
-            'enroll': StudentEnrollLeaveCourseSerializer,  # post enroll/
-            'leave': StudentEnrollLeaveCourseSerializer,  # post enroll/
+            'list': UserSerializer,  # get /
+            'me': UserSerializer,  # get, put /me
+            'retrieve': UserSerializer,  # get /<pk>
+            'update': UserSerializer,  # put /<pk>
+            'partial_update': UserSerializer,  # patch /<pk>
+            'destroy': UserSerializer,  # delete /<pk>
+            'reset_password': MySendEmailResetSerializer,
+            'reset_password_confirm': PasswordResetConfirmRetypeSerializer
         }
 
-        return serializer_map.get(self.action, StudentSerializer)
+        return serializer_map.get(self.action, UserSerializer)
 
     def get_serializer_context(self):
         """
@@ -537,34 +537,11 @@ class StudentViewSet(views.APIView):
             self._negotiator = self.content_negotiation_class()
         return self._negotiator
 
-    def exception_handler_unique_constraint(self, exc, context):
-        if isinstance(exc, (utils.IntegrityError)):
-            return Response(data={'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
-        return None
-
-    def general_exception_handler(self, exception: Exception, request):
-        response = self.settings.EXCEPTION_HANDLER(exception, request)
-        if not response is None:
-            return response
-        response = self.exception_handler_unique_constraint(exception, request)
-        if not response is None:
-            return response
-        return Response(
-            data={
-                "message": str(exception)
-            },
-            status=status.HTTP_400_BAD_REQUEST,
-            exception=True
-        )
-
     def get_exception_handler(self):
         """
         Returns the exception handler that this view uses.
         """
-        handler_map = {
-
-        }
-        return handler_map.get(self.action, self.general_exception_handler)
+        return self.settings.EXCEPTION_HANDLER
 
     # API policy implementation methods
 
@@ -835,79 +812,66 @@ class StudentViewSet(views.APIView):
         data = self.metadata_class().determine_metadata(request, self)
         return Response(data, status=status.HTTP_200_OK)
 
-    def get_student(self, request, *args, **kwargs):
-        return get_object_or_404(Student, pk=request.user.student.pk)
-        try:
-            student = Student.objects.get(pk=request.user.student.id)
-            return student, True
-        except Student.DoesNotExist:
-            return None, False
+    def get_permissions(self):
+        # if self.request.method == 'GET':
+        #     return [AllowAny()]
+        return [IsAuthenticated()]
 
-    @action(detail=False, methods=['GET', 'PUT'], permission_classes=[IsStudent])
+    @action(detail=False, methods=['GET', 'PUT'], permission_classes=IsAuthenticated)
     def me(self, request):
-        # student, is_created = Student.objects.get_or_create(pk=request.user.id)
-        student = self.get_student(request)  # student, found
-        # if not found:
-        #     return Response(data={'message': 'Student does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        user = request.user
         if request.method == 'GET':
-            # Anonymous User : not logged in
-            serializer = self.get_serializer(instance=student)
+            serializer = self.get_serializer(instance=user)
             return Response(serializer.data)
         elif request.method == 'PUT':
             serializer = self.get_serializer(
-                instance=student, data=request.data)
+                instance=user, data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data)
 
-    # def get_course(self, request, *args, **kwargs) :
-    #     try :
-    #         course =
-
-    @action(detail=False, methods=['GET'], permission_classes=[IsStudent])
-    def classes(self, request):
-        if request.method != 'GET':
-            return Response(data={'message': 'Method not allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        student = self.get_student(request)
-        # if not found:
-        #     return Response(data={'message': 'Student does not exist'}, status=status.HTTP_404_NOT_FOUND)
-        # courses = student.courses.all()
-        serializer = StudentCourseSerializer(instance=student)
-        return Response(serializer.data)
-
-    def check_pk(self, request, *args, **kwargs):
-        if not 'course_pk' in request.data:
-            raise Exception('Course PK is not provided')
-        course_pk = request.data.get('course_pk')
-        if not isinstance(course_pk, int):
-            raise Exception('Course PK is in a wrong format')
-        return course_pk
-
-    def student_course(self, request, *args, **kwargs):
+    @action(["post"], detail=False)
+    def reset_password(self, request, *args, **kwargs):
         '''
-        course_pk is required in the body of the request
+        {
+            "email": "mahdijavid1380@yahoo.com"
+        }
         '''
-        if request.method != 'POST':
-            raise Exception('Method not allowed')
-        course_pk = self.check_pk(request, *args, **kwargs)
-        student = self.get_student(request)
-        course = get_object_or_404(Course, pk=course_pk)
-        return student, course
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.get_user()
 
-    # (?P<course_pk>[^/.]+)
-    @action(detail=False, methods=['POST'], permission_classes=[IsStudent], url_path='enroll')
-    def enroll(self, request, *args, **kwargs):
-        student, course = self.student_course(request, *args, **kwargs)
-        if course.is_enrolled(student):
-            raise Exception('Already enrolled')
-        if not course.can_enroll(student):
-            raise Exception('Cannot enroll')
-        student.courses.add(course)
-        return Response(data={'message': 'Successfully enrolled'}, status=status.HTTP_204_NO_CONTENT)
+        if user:
+            context = {"user": user}
+            to = [get_user_email(user)]
+            PasswordResetEmail(request, context).send(to)
 
-    # (?P<course_pk>[^/.]+)
-    @action(detail=False, methods=['POST'], permission_classes=[IsStudent], url_path='leave')
-    def leave(self, request, *args, **kwargs):
-        student, course = self.student_course(request, *args, **kwargs)
-        student.courses.remove(course)
-        return Response(data={'message': 'Successfully left'}, status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_202_ACCEPTED, data={
+            'url': conf.settings.PASSWORD_RESET_CONFIRM_URL.format(
+                        uid=utils.encode_uid(user.pk),
+                        token=default_token_generator.make_token(user)),
+        })
+
+    @action(["post"], detail=False)
+    def reset_password_confirm(self, request, *args, **kwargs):
+        '''
+        {
+            "uid": "",
+            "token": "",
+            "new_password": "",
+            "re_new_password": ""
+        }
+        '''
+        # serializer = PasswordResetConfirmRetypeSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.user.set_password(serializer.data["new_password"])
+        if hasattr(serializer.user, "last_login"):
+            serializer.user.last_login = now()
+        serializer.user.save()
+
+        context = {"user": serializer.user}
+        to = [get_user_email(serializer.user)]
+        PasswordChangedConfirmationEmail(request, context).send(to)
+        return Response(status=status.HTTP_200_OK, data='password has been changed!')

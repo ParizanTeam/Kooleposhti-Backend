@@ -4,40 +4,33 @@ from .models import *
 from decimal import Decimal
 from accounts.models import Instructor
 from djoser.serializers import UserSerializer as BaseUserSerializer
-from accounts.instructor_serializer import InstructorSerializer
+from accounts.serializers.instructor_serializer import InstructorSerializer
 import jdatetime
 import jalali_date
 from datetime import date, datetime, time, timedelta
 import base64
+import os
 
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = '__all__'
+        fields = ['course', 'name']
+        extra_kwargs = {'course': {'write_only': True}}
 
 
 class GoalSerializer(serializers.ModelSerializer):
     class Meta:
         model = Goal
-        fields = '__all__'
-
-# class PrerequisiteSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Prerequisite
-#         fields = '__all__'
-
-
-# class ChapterSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Chapter
-#         fields = '__all__'
+        fields = ['course', 'text']
+        extra_kwargs = {'course': {'write_only': True}}
 
 
 class SessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Session
-        fields = '__all__'
+        fields = ['date', 'day', 'month', 'week_day', 'start_time', 'end_time']
+        read_only_fields = ['day', 'month', 'week_day', 'end_time']
 
     def create(self, validated_data):
         # course = validated_data.pop('course')
@@ -55,6 +48,31 @@ class SessionSerializer(serializers.ModelSerializer):
                                       week_day=week_day, end_time=end_time, **validated_data)
 
 
+
+class AssignmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Assignment
+        fields = '__all__'
+
+    def create(self, validated_data):
+        course_pk = self.context['course']
+        course = Course.objects.get(pk=course_pk)
+        number = len(course.assignments.all()) + 1
+        return Session.objects.create(course=course, number=number, **validated_data)
+
+
+class HomeworkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Homework
+        fields = '__all__'
+
+    def create(self, validated_data):
+        assignment_pk = self.context['assignment']
+        assignment = Assignment.objects.get(pk=assignment_pk)
+        return Session.objects.create(assignment=assignment, **validated_data)
+
+
+
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
@@ -66,14 +84,6 @@ class CommentSerializer(serializers.ModelSerializer):
     #     return Comment.objects.create(student=student, **validated_data)
 
 
-class CategorySerializer(serializers.ModelSerializer):
-    # courses = CourseSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Category
-        fields = '__all__'
-        # fields = ['title', 'slug', 'image', 'courses']
-
 
 class InstructorCourseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -84,25 +94,22 @@ class InstructorCourseSerializer(serializers.ModelSerializer):
 
 class CourseSerializer(serializers.ModelSerializer):
     instructor = InstructorSerializer(read_only=True)
-    # category = CategorySerializer()
-    # chapters = ChapterSerializer(many=True)
-    # students = StudentSerializer(many=True, read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
-    tags = TagSerializer(many=True)
-    goals = GoalSerializer(many=True)
-    # prerequisites = PrerequisiteSerializer(many=True)
-    sessions = SessionSerializer(many=True)
-
-    class Meta:
-        model = Course
-        # fields = '__all__'
-        fields = ('category', 'tags', 'goals', 'instructor', 'duration',
-                  'title', 'slug', 'image', 'description', 'id',
-                  'price', 'rate', 'rate_no', 'created_at', 'comments',
-                  'duration', 'min_students', 'max_students',
-                  'min_age', 'max_age', 'sessions', 'capacity')
+    tags = TagSerializer(many=True, read_only=True)
+    goals = GoalSerializer(many=True, read_only=True)
+    sessions = SessionSerializer(many=True, read_only=True)
     # instructor = serializers.HyperlinkedRelatedField(
     #     queryset=Instructor.objects.all(), view_name='instructor-detail')
+    class Meta:
+        model = Course
+        fields = ('id', 'created_at', 'categories', 'instructor',
+                  'duration', 'title', 'image', 'description', 'start_date',
+                  'end_date', 'price', 'rate', 'rate_no', 'link', 'min_students', 
+                  'max_students', 'capacity', 'min_age', 'max_age',
+                  'tags', 'goals', 'sessions', 'comments')
+        read_only_fields = ('id', 'created_at', 'instructor', 'link', 
+                            'rate', 'rate_no', 'capacity')
+    
         new_price = serializers.SerializerMethodField(
             method_name='calculate_new_price')
 
@@ -111,68 +118,29 @@ class CourseSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         request = self.context.get("request")
-        instructor = request.user.instructor
-        tags_data = validated_data.pop('tags')
-        goals_data = validated_data.pop('goals')
-        # prerequisites_data = validated_data.pop('prerequisites')
-        # chapters_data = validated_data.pop('chapters')
-        sessions_data = validated_data.pop('sessions')
-        start_date = sessions_data[0]['date']
-        end_date = sessions_data[-1]['date']
-        capacity = validated_data['max_students']
-        # start_date = jdatetime.date(start.year, start.month, start.day).togregorian()
-        # end_date = jdatetime.date(end.year, end.month, end.day).togregorian()
-        course = Course.objects.create(instructor=instructor, start_date=start_date, end_date=end_date,
-                                       capacity=capacity, **validated_data)
-        for tag in tags_data:
-            Tag.objects.create(course=course, **tag)
-        for goal in goals_data:
-            Goal.objects.create(course=course, **goal)
-        # for prerequisite in prerequisites_data:
-        #     Prerequisite.objects.create(course=course, **prerequisite)
-        # for chapter in chapters_data:
-        #     Chapter.objects.create(course=course, **chapter)
-        for session in sessions_data:
-            # session['course'] = course.pk
-            new_session = SessionSerializer(data=session)
-            new_session.context['course'] = course.pk
-            new_session.is_valid(raise_exception=True)
-            new_session.save()
-        # course.sessions.fi
-        
-        return course
+        validated_data['instructor'] = request.user.instructor
+        validated_data['capacity'] = validated_data['max_students']
+        return super().create(validated_data)
 
-    # def update(self, instance, validated_data):
-    #     tags_data = validated_data.pop('tags', [])
-    #     goals_data = validated_data.pop('goals', [])
-    #     sessions_data = validated_data.pop('sessions', [])
-    #     if len(sessions_data):
-    #         validated_data['start_date'] = sessions_data[0]['date']
-    #         validated_data['end_date'] = sessions_data[-1]['date']
-    #     capacity = instance.capacity + validated_data.get('max_students', instance.max_students) - instance.max_students
-    #     if capacity >= 0:
-    #         self.fail("course remaining capacity should not be negative")
-    #     validated_data['capacity'] = capacity
-    #     course = super().update(instance, validated_data)
-    #     if len(tags_data):
-    #         course.tags.all().delete()
-    #         for tag in tags_data:
-    #             Tag.objects.create(course=course, **tag)
-    #     if len(goals_data):
-    #         course.goals.all().delete()
-    #         for goal in goals_data:
-    #             Goal.objects.create(course=course, **goal)
-    #     if len(sessions_data):
-    #         course.sessions.all().delete()
-    #         for session in sessions_data:
-    #             new_session = SessionSerializer(data=session)
-    #             new_session.context['course'] = course.pk
-    #             new_session.is_valid(raise_exception=True)
-    #             new_session.save()
 
-    #     return course
+    def update(self, instance, validated_data):
+        capacity = instance.capacity + \
+            validated_data.get(
+                'max_students', instance.max_students) - instance.max_students
+        if capacity < 0:
+            self.fail("course remaining capacity should not be negative")
+        validated_data['capacity'] = capacity
+        return super().update(instance, validated_data)
 
-        return course
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    # courses = CourseSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Category
+        fields = ['id', 'title', 'courses']
+
 
 
 class ReviewSerializer(serializers.ModelSerializer):

@@ -1,5 +1,5 @@
 from django.db import models
-from accounts.models import Instructor, Student
+from accounts.models import Instructor, Student, User
 from uuid import uuid4
 from Kooleposhti import settings
 
@@ -14,7 +14,7 @@ class Category(models.Model):
     title = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True, null=True, blank=True)
     image = models.ImageField(
-        upload_to='images/course_images/', blank=True, default="images/no_photo.jpg")
+        upload_to='images/course_images/', blank=True, null=True)
 
     def __str__(self):
         return self.title
@@ -24,17 +24,16 @@ class Course(models.Model):
     '''
     ('title', 'description', 'price', 'last_update', 'instructor')
     '''
-    category = models.ForeignKey(
-        Category, related_name='courses', on_delete=models.CASCADE)
-    # tags = models.ManyToManyField(Tag, blank=True)
+    room_id = models.IntegerField(unique=True, blank=True, null=True)
     instructor = models.ForeignKey(
         Instructor, blank=True, related_name='courses', on_delete=models.CASCADE)
+    categories = models.ManyToManyField(Category, related_name='courses')
     students = models.ManyToManyField(
         Student, blank=True, related_name='courses')
     title = models.CharField(max_length=255)
     slug = models.CharField(max_length=255, unique=True, null=True, blank=True)
     image = models.ImageField(
-        upload_to='images/course_images/', blank=True, default="images/no_photo.jpg")
+        upload_to='images/course_images/', blank=True, null=True)
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=9, decimal_places=2)  # 9999.99
     rate = models.DecimalField(
@@ -43,12 +42,8 @@ class Course(models.Model):
     # first time we create Course django stores the current datetime
     last_update = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    # enrollment_start_date = models.DateTimeField()
-    # enrollment_end_date = models.DateTimeField()
     start_date = models.DateField(blank=True)
     end_date = models.DateField(blank=True)
-    # start_class = models.DateTimeField()
-    # end_class = models.DateTimeField()
     duration = models.IntegerField()
     promotions = models.ManyToManyField(Promotion, blank=True)
     min_students = models.IntegerField(blank=True, default=1)
@@ -56,6 +51,8 @@ class Course(models.Model):
     capacity = models.IntegerField(blank=True)
     min_age = models.IntegerField(default=1)
     max_age = models.IntegerField(default=18)
+    link = models.URLField(blank=True)
+    # links_credit_date = models.DateTimeField()
 
     def __str__(self):
         return self.title
@@ -67,8 +64,9 @@ class Course(models.Model):
         return self.instructor == user
 
     def update_rate(self):
-        self.rate_no = len(self.rates.all())
-        self.rate = sum([rate_obj.rate for rate_obj in self.rates]) / self.rate_no
+        rates = self.rates.all()
+        self.rate_no = len(rates)
+        self.rate = round(sum([rate_obj.rate for rate_obj in rates]) / self.rate_no, 1)
         self.save()
 
     def update_capacity(self):
@@ -78,6 +76,15 @@ class Course(models.Model):
     def can_enroll(self, student):
         return True
 
+
+# class Link(models.Model):
+#     course = models.ForeignKey(
+#         Course, on_delete=models.CASCADE, related_name='links')
+#     user = models.ForeignKey(
+#         User, on_delete=models.CASCADE, related_name='links')
+#     url = models.URLField()
+#     def __str__(self):
+#         return f"{self.course.title} {self.student.user.username}"
 
 class Rate(models.Model):
     course = models.ForeignKey(
@@ -118,7 +125,6 @@ class Session(models.Model):
 
     course = models.ForeignKey(
         Course, blank=True, on_delete=models.CASCADE, related_name='sessions')
-    # title = models.CharField()
     date = models.DateField()
     day = models.IntegerField(blank=True)
     month = models.CharField(max_length=10, blank=True, choices=MonthNames)
@@ -151,16 +157,34 @@ class Tag(models.Model):
         return f"{self.course.title} {self.name}"
 
 
-# class Chapter(models.Model):
-#     course = models.ForeignKey(Course, blank=True, on_delete=models.CASCADE, related_name='chapters')
-#     name = models.CharField(max_length=255)
-#     number = models.IntegerField(blank=True)
-#     # description = models.TextField(blank=True)
-#     # slug = models.SlugField(max_length=255, unique=True)
-#     # created_date = models.DateTimeField(auto_now_add=True)
+class Assignment(models.Model):
+    course = models.ForeignKey(
+        Course, on_delete=models.CASCADE, related_name='assignments')
+    title = models.CharField(max_length=255)
+    number = models.IntegerField(blank=True)
+    question = models.TextField()
+    created_date = models.DateTimeField(auto_now_add=True)
+    start_date = models.DateField()
+    start_time = models.TimeField()
+    end_date = models.DateField()
+    end_time = models.TimeField()
 
-#     def __str__(self):
-#         return f"{self.course.title} {self.name}"
+    def __str__(self):
+        return f"{self.course.title} {self.title}"
+
+
+class Homework(models.Model):
+    assignment = models.ForeignKey(
+        Assignment, on_delete=models.CASCADE, related_name='homeworks')
+    student = models.ForeignKey(
+        Student, on_delete=models.CASCADE, related_name='homeworks')
+    submited_date = models.DateTimeField(auto_now_add=True)
+    answer = models.TextField()
+    file = models.FileField()
+
+    def __str__(self):
+        return f"{self.assignment.course.title}  \
+            {self.assignment.title} {self.student.user.username}"
 
 
 class Goal(models.Model):
@@ -171,13 +195,6 @@ class Goal(models.Model):
     def __str__(self):
         return f"{self.course.title} {self.text}"
 
-
-# class Prerequisite(models.Model):
-#     course = models.ForeignKey(Course, blank=True, related_name='prerequisites' , on_delete=models.CASCADE)
-#     text = models.TextField()
-
-#     def __str__(self):
-#         return f"{self.course.title} {self.text}"
 
 
 class Order (models.Model):

@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.contrib import admin
 from django import forms
@@ -15,12 +16,15 @@ ROLES = [
 
 
 class User(AbstractUser):
+    '''
+    instructor, student, userskyroom, publicprofile
+    '''
     email = models.EmailField(unique=True)
     phone_no = models.CharField(max_length=11, null=True)
     first_name = models.CharField(max_length=255, null=True)
     last_name = models.CharField(max_length=255, null=True)
     birth_date = models.DateField(null=True)
-    image = models.OneToOneField(MyImage, on_delete=models.CASCADE, null=True)
+    # image = models.OneToOneField(MyImage, on_delete=models.CASCADE, null=True)
     color = models.CharField(max_length=255, null=True)
 
     class Meta:
@@ -42,6 +46,12 @@ class User(AbstractUser):
         return roles
 
 
+class UserSkyRoom(models.Model):
+    skyroom_id = models.BigIntegerField(
+        primary_key=True, verbose_name='SkyRoom ID')
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+
+
 class Verification(models.Model):
     email = models.EmailField(primary_key=True)
     token = models.CharField(max_length=6)
@@ -52,7 +62,7 @@ class Tag (models.Model):
     name = models.CharField(max_length=255, null=False,
                             blank=False, unique=True)
 
-    def __str__(self) -> str:
+    def __str__(self):
         return self.name
 
 
@@ -63,6 +73,8 @@ class Instructor(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     tags = models.ManyToManyField(Tag)
+    rate = models.IntegerField(null=True, validators=[
+                               MinValueValidator(0), MaxValueValidator(5)])
     # phone = models.CharField(max_length=11)
 
     def __str__(self):
@@ -74,13 +86,14 @@ class Instructor(models.Model):
 
 # class StudentManager(models.Manager) :
 
-
 class Student(models.Model):
     '''
     fields = ('first_name', 'last_name', 'email', 'phone', 'birth_date')
     '''
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    age = models.IntegerField(null=True, validators=[
+                              MinValueValidator(0), MaxValueValidator(18)])
     # phone = models.CharField(max_length=11)
 
     def __str__(self):
@@ -93,3 +106,15 @@ class Student(models.Model):
     @admin.display(ordering='user__last_name')
     def last_name(self):
         return self.user.last_name
+
+
+class PublicProfile(models.Model):
+    '''
+    location, bio, rate
+    '''
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    bio = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return f'{self.user.first_name} {self.user.last_name}'

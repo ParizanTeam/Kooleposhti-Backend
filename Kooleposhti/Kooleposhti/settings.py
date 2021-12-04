@@ -64,7 +64,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'jalali_date',
     'images',
-
+    'commands',
 ]
 
 MIDDLEWARE = [
@@ -288,3 +288,5 @@ JALALI_DATE_DEFAULTS = {
         }
     },
 }
+
+skyroom_key = env.str('SKYROOM_KEY')
