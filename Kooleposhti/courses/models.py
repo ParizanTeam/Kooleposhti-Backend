@@ -157,16 +157,34 @@ class Tag(models.Model):
         return f"{self.course.title} {self.name}"
 
 
-# class Chapter(models.Model):
-#     course = models.ForeignKey(Course, blank=True, on_delete=models.CASCADE, related_name='chapters')
-#     name = models.CharField(max_length=255)
-#     number = models.IntegerField(blank=True)
-#     # description = models.TextField(blank=True)
-#     # slug = models.SlugField(max_length=255, unique=True)
-#     # created_date = models.DateTimeField(auto_now_add=True)
+class Assignment(models.Model):
+    course = models.ForeignKey(
+        Course, on_delete=models.CASCADE, related_name='assignments')
+    title = models.CharField(max_length=255)
+    number = models.IntegerField(blank=True)
+    question = models.TextField()
+    created_date = models.DateTimeField(auto_now_add=True)
+    start_date = models.DateField()
+    start_time = models.TimeField()
+    end_date = models.DateField()
+    end_time = models.TimeField()
 
-#     def __str__(self):
-#         return f"{self.course.title} {self.name}"
+    def __str__(self):
+        return f"{self.course.title} {self.title}"
+
+
+class Homework(models.Model):
+    assignment = models.ForeignKey(
+        Assignment, on_delete=models.CASCADE, related_name='homeworks')
+    student = models.ForeignKey(
+        Student, on_delete=models.CASCADE, related_name='homeworks')
+    submited_date = models.DateTimeField(auto_now_add=True)
+    answer = models.TextField()
+    file = models.FileField()
+
+    def __str__(self):
+        return f"{self.assignment.course.title}  \
+            {self.assignment.title} {self.student.user.username}"
 
 
 class Goal(models.Model):

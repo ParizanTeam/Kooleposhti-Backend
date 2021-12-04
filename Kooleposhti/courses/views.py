@@ -38,6 +38,29 @@ class SessionViewSet(ModelViewSet):
 		return {'course': self.kwargs.get('course_pk')}
 
 
+
+class AssignmentViewSet(ModelViewSet):
+	serializer_class = AssignmentSerializer
+	permission_classes = [IsInstructorOrReadOnly]
+
+	def get_queryset(self):
+		return Assignment.objects.filter(course_id=self.kwargs.get('course_pk'))
+
+	def get_serializer_context(self):
+		return {'course': self.kwargs.get('course_pk')}
+
+
+class HomeworkViewSet(ModelViewSet):
+	serializer_class = HomeworkSerializer
+	permission_classes = [IsAuthenticated]
+
+	def get_queryset(self):
+		return Homework.objects.filter(assingment_id=self.kwargs.get('assignment_pk'))
+
+	def get_serializer_context(self):
+		return {'assignment': self.kwargs.get('assignment_pk')}
+
+
 class CourseViewSet(ModelViewSet):
 	# queryset = Course.objects.select_related('instructor').all()
 	queryset = Course.objects.all()

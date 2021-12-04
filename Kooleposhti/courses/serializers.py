@@ -48,6 +48,31 @@ class SessionSerializer(serializers.ModelSerializer):
                                       week_day=week_day, end_time=end_time, **validated_data)
 
 
+
+class AssignmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Assignment
+        fields = '__all__'
+
+    def create(self, validated_data):
+        course_pk = self.context['course']
+        course = Course.objects.get(pk=course_pk)
+        number = len(course.assignments.all()) + 1
+        return Session.objects.create(course=course, number=number, **validated_data)
+
+
+class HomeworkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Homework
+        fields = '__all__'
+
+    def create(self, validated_data):
+        assignment_pk = self.context['assignment']
+        assignment = Assignment.objects.get(pk=assignment_pk)
+        return Session.objects.create(assignment=assignment, **validated_data)
+
+
+
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
