@@ -105,12 +105,20 @@ WSGI_APPLICATION = 'Kooleposhti.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 DATABASES = {
-    'default': {
+    # 'default': {  # kooleposhti
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     'NAME': 'dcnob3lebr55o2',
+    #     'USER': 'hzgvghwtcuhwbt',
+    #     'PASSWORD': env.str('DB_PASSWORD'),
+    #     'HOST': 'ec2-35-171-90-188.compute-1.amazonaws.com',
+    #     'PORT': '5432',
+    # },
+    'default': {  # kooleposhti
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'dcnob3lebr55o2',
-        'USER': 'hzgvghwtcuhwbt',
+        'NAME': 'kooleposhtidb',
+        'USER': 'ubuntu',
         'PASSWORD': env.str('DB_PASSWORD'),
-        'HOST': 'ec2-35-171-90-188.compute-1.amazonaws.com',
+        'HOST': 'localhost',
         'PORT': '5432',
     },
     'TEST': {
@@ -290,3 +298,13 @@ JALALI_DATE_DEFAULTS = {
 }
 
 skyroom_key = env.str('SKYROOM_KEY')
+
+
+DELETE_UNSTAGED_USERS_AFTER_DAYS = 3
+
+CELERY_BEAT_SCHEDULE = {
+    'scheduled_task': {
+        'task': 'accounts.tasks.remove_unstaged_users_task',
+        'schedule': timedelta(days=DELETE_UNSTAGED_USERS_AFTER_DAYS),
+    },
+}
