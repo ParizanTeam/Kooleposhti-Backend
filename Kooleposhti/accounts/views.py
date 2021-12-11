@@ -67,7 +67,7 @@ from accounts.apis.student import StudentViewSet
 # APIView
 from django.contrib.messages.storage import default_storage
 from skyroom import *
-from Kooleposhti.settings import skyroom_key
+from Kooleposhti.settings import SKYROOM_KEY
 
 
 # class InstructorList(ModelViewSet):
@@ -198,7 +198,7 @@ def skyroom_signup(data):
         "nickname": data.get('username'),
         'email': data.get('email')
     }
-    api = SkyroomAPI(skyroom_key)
+    api = SkyroomAPI(SKYROOM_KEY)
     return api.createUser(params)
 
 

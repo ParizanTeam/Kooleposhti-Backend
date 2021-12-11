@@ -48,6 +48,44 @@ class SessionSerializer(serializers.ModelSerializer):
                                       week_day=week_day, end_time=end_time, **validated_data)
 
 
+
+class AssignmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Assignment
+        # fields = ["course", "title", "question", "start_date", 
+        #         "start_time", "end_date", "end_time"]
+        fields = '__all__'
+        read_only_fields = ['created_date', 'number']
+
+    def create(self, validated_data):
+        course = validated_data.get('course', None)
+        number = len(course.assignments.all()) + 1
+        return Assignment.objects.create(number=number, **validated_data)
+
+
+class HomeworkSerializer(serializers.ModelSerializer):
+    # feedback = FeedbackSerializer(read_only=True)
+    class Meta:
+        model = Homework
+        fields = '__all__'
+        read_only_fields = ['assignment', 'submited_date', 'grade']
+
+    def create(self, validated_data):
+        assignment = self.context['assignment']
+        return Homework.objects.create(assignment_id=assignment, **validated_data)
+
+
+class FeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Feedback
+        fields = '__all__'
+        read_only_fields = ['created_date', 'last_update', 'homework']
+
+    def create(self, validated_data):
+        homework = self.context['homework']
+        return Feedback.objects.create(homework_id=homework, **validated_data)
+
+
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment

@@ -27,6 +27,7 @@ router = routers.DefaultRouter()
 router.register('courses', CourseViewSet, basename=None)
 router.register('carts', ShoppingCartViewSet)
 router.register('categories', CategoryViewSet)
+router.register('assignments', AssignmentViewSet)
 # pprint(router.urls)
 
 courses_router = routers.NestedDefaultRouter(
@@ -34,16 +35,22 @@ courses_router = routers.NestedDefaultRouter(
 courses_router.register('reviews', ReviewViweSet, basename='course-reviews')
 courses_router.register('sessions', SessionViewSet, basename='course-sessions')
 
+assignments_router = routers.NestedDefaultRouter(
+    parent_router=router, parent_prefix='assignments', lookup='assignment')  # assignment_pk
+assignments_router.register('submit', HomeworkViewSet, basename='homeworks')
+
+homework_router = routers.NestedDefaultRouter(
+    parent_router=assignments_router, parent_prefix='submit', lookup='homework')  # homework_pk
+homework_router.register('feedback', FeedbackViewSet, basename='feedback')
 
 carts_router = routers.NestedDefaultRouter(
     parent_router=router, parent_prefix='carts', lookup='cart')
 carts_router.register('items', ShoppingCartItemViewSet, basename='cart-items')
-# urlpatterns = router.urls
 
 urlpatterns = [
     path('', include(router.urls)),
     path('', include(courses_router.urls)),
     path('', include(carts_router.urls)),
-    # path('', CourseList.as_view()),
-    # path('<int:pk>/', course_detail),
+    path('', include(assignments_router.urls)),
+    path('', include(homework_router.urls)),
 ]
