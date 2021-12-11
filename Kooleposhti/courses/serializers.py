@@ -3,6 +3,7 @@ from rest_framework.viewsets import ModelViewSet
 from .models import *
 from decimal import Decimal
 from accounts.models import Instructor
+from images.serializers import HomeworkImageSerializer
 from djoser.serializers import UserSerializer as BaseUserSerializer
 from accounts.serializers.instructor_serializer import InstructorSerializer
 import jdatetime
@@ -63,8 +64,17 @@ class AssignmentSerializer(serializers.ModelSerializer):
         return Assignment.objects.create(number=number, **validated_data)
 
 
+class StudentHomeworkSerializer(serializers.ModelSerializer):
+    image =HomeworkImageSerializer(
+        source='user.image', read_only=True)
+    class Meta:
+        model = Student
+        fields = ['id', 'first_name', 'last_name', 'image',]
+
+
 class HomeworkSerializer(serializers.ModelSerializer):
     # feedback = FeedbackSerializer(read_only=True)
+    student = StudentHomeworkSerializer(read_only=True)
     class Meta:
         model = Homework
         fields = '__all__'
@@ -103,6 +113,7 @@ class InstructorCourseSerializer(serializers.ModelSerializer):
         model = Course
         fields = ['id', 'title', 'image', 'start_date',
                   'end_date', 'max_students']
+
 
 
 class CourseSerializer(serializers.ModelSerializer):
