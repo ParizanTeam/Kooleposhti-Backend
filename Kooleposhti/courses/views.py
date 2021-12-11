@@ -321,7 +321,7 @@ class CourseViewSet(ModelViewSet):
 	def create_room(self, course):
 		# create skyroom room and set the instructor operator
 		params = {
-			"name": f"c{course.id}",
+			"name": f"class{course.id}",
 			"title": course.title,
 			"description": course.description,
 			"session_duration": course.duration,
