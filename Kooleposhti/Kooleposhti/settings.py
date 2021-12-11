@@ -297,9 +297,6 @@ JALALI_DATE_DEFAULTS = {
     },
 }
 
-skyroom_key = env.str('SKYROOM_KEY')
-
-
 DELETE_UNSTAGED_USERS_AFTER_DAYS = 3
 
 CELERY_BEAT_SCHEDULE = {
@@ -308,3 +305,5 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': timedelta(days=DELETE_UNSTAGED_USERS_AFTER_DAYS),
     },
 }
+
+SKYROOM_KEY = env.str('SKYROOM_KEY')

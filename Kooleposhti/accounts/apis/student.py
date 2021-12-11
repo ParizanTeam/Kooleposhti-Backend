@@ -1,6 +1,7 @@
 from django.db import utils
 from accounts.permissions import IsStudent
 from courses.models import Course
+from courses.serializers import AssignmentSerializer
 from django.contrib.auth.tokens import default_token_generator
 from django.urls import reverse
 from rest_framework.viewsets import ModelViewSet
@@ -39,7 +40,7 @@ from rest_framework import mixins, views
 from rest_framework.settings import api_settings
 import djoser.views
 from skyroom import *
-from Kooleposhti.settings import skyroom_key
+from Kooleposhti.settings import SKYROOM_KEY
 # import rest_framework.request
 
 
@@ -261,7 +262,7 @@ class StudentViewSet(views.APIView):
 
     def delete_user(self, instance):
         # delete skyroom user
-        api = SkyroomAPI(skyroom_key)
+        api = SkyroomAPI(SKYROOM_KEY)
         api.deleteUser({"user_id": instance.user.userskyroom.skyroom_id})
 
     """
@@ -295,7 +296,7 @@ class StudentViewSet(views.APIView):
         # update skyroom user
         data = serializer.validated_data['user']
         user = self.get_student(request).user
-        api = SkyroomAPI(skyroom_key)
+        api = SkyroomAPI(SKYROOM_KEY)
         if user.username == data.get('username', user.username):
             params = {
                 "user_id": int(user.userskyroom.skyroom_id),
@@ -965,3 +966,19 @@ class StudentViewSet(views.APIView):
         student, course = self.student_course(request, *args, **kwargs)
         student.courses.remove(course)
         return Response(data={'message': 'Successfully left'}, status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, permission_classes=[IsStudent])
+    def assignments(self, request):
+        student = self.get_student(request)
+        courses = student.courses.all()
+        assignments = list()
+        for course in courses:
+            for assignment in course.assignments.all():
+                if not assignment.homeworks.filter(student=student).exists():
+                    assignments.append(assignment)
+
+        # assignments = [assignment for assignment in 
+        # [course.assignments.all() for course in courses] 
+        # if not assignment.homeworks.filter(student=student).exists()]
+        serializer = AssignmentSerializer(assignments, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
