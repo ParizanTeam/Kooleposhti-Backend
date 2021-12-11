@@ -106,22 +106,22 @@ WSGI_APPLICATION = 'Kooleposhti.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 DATABASES = {
-    # 'default': {  # kooleposhti
-    #     'ENGINE': 'django.db.backends.postgresql',
-    #     'NAME': 'dcnob3lebr55o2',
-    #     'USER': 'hzgvghwtcuhwbt',
-    #     'PASSWORD': env.str('DB_PASSWORD'),
-    #     'HOST': 'ec2-35-171-90-188.compute-1.amazonaws.com',
-    #     'PORT': '5432',
-    # },
     'default': {  # kooleposhti
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'kooleposhtidb',
-        'USER': 'ubuntu',
+        'NAME': 'dcnob3lebr55o2',
+        'USER': 'hzgvghwtcuhwbt',
         'PASSWORD': env.str('DB_PASSWORD'),
-        'HOST': 'kooleposhti.ml',
+        'HOST': 'ec2-35-171-90-188.compute-1.amazonaws.com',
         'PORT': '5432',
     },
+    # 'default': {  # kooleposhti
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     'NAME': 'kooleposhtidb',
+    #     'USER': 'ubuntu',
+    #     'PASSWORD': env.str('DB_PASSWORD'),
+    #     'HOST': 'kooleposhti.ml',
+    #     'PORT': '5432',
+    # },
     'TEST': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'test_db.sqlite3'),
