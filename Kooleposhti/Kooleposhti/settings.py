@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'jalali_date',
     'images',
     'commands',
+    'dbbackup',
 ]
 
 MIDDLEWARE = [
@@ -105,22 +106,22 @@ WSGI_APPLICATION = 'Kooleposhti.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 DATABASES = {
-    # 'default': {  # kooleposhti
-    #     'ENGINE': 'django.db.backends.postgresql',
-    #     'NAME': 'dcnob3lebr55o2',
-    #     'USER': 'hzgvghwtcuhwbt',
-    #     'PASSWORD': env.str('DB_PASSWORD'),
-    #     'HOST': 'ec2-35-171-90-188.compute-1.amazonaws.com',
-    #     'PORT': '5432',
-    # },
     'default': {  # kooleposhti
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'kooleposhtidb',
-        'USER': 'ubuntu',
+        'NAME': 'dcnob3lebr55o2',
+        'USER': 'hzgvghwtcuhwbt',
         'PASSWORD': env.str('DB_PASSWORD'),
-        'HOST': 'kooleposhti.ml',
+        'HOST': 'ec2-35-171-90-188.compute-1.amazonaws.com',
         'PORT': '5432',
     },
+    # 'default': {  # kooleposhti
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     'NAME': 'kooleposhtidb',
+    #     'USER': 'ubuntu',
+    #     'PASSWORD': env.str('DB_PASSWORD'),
+    #     'HOST': 'kooleposhti.ml',
+    #     'PORT': '5432',
+    # },
     'TEST': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'test_db.sqlite3'),
@@ -170,6 +171,14 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [str(BASE_DIR.joinpath('static'))]
 STATIC_ROOT = str(BASE_DIR.joinpath('staticfiles'))
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+DBBACKUP_STORAGE = STATICFILES_STORAGE
+DBBACKUP_STORAGE_OPTIONS = {
+    'location': os.path.join(BASE_DIR, 'backup')
+}
+DBBACKUP_FILENAME_TEMPLATE = '{datetime}-{databasename}.{extension}'
+DBBACKUP_MEDIA_FILENAME_TEMPLATE = '{datetime}-media.{extension}'
+
+
 # MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # MEDIA_URL = '/media/'
 
