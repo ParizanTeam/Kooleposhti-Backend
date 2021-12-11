@@ -118,7 +118,7 @@ DATABASES = {
         'NAME': 'kooleposhtidb',
         'USER': 'ubuntu',
         'PASSWORD': env.str('DB_PASSWORD'),
-        'HOST': 'localhost',
+        'HOST': 'kooleposhti.ml',
         'PORT': '5432',
     },
     'TEST': {
