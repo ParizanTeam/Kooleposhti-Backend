@@ -11,26 +11,6 @@ class IsAdminOrReadOnly(BasePermission):
                     request.user.is_staff  # admin user
                     )
 
-
-# class IsInstructorOrReadOnly(BasePermission):
-#     def has_permission(self, request, view):
-#         if request.method in permissions.SAFE_METHODS:
-#             return True
-#         # return super(IsAuthenticated, IsInstructorOrReadOnly).has_permission(self, request, view) and \
-#         return request.user.has_role('instructor')
-
-
-# class IsStudent(BasePermission):
-#     def has_permission(self, request, view):
-#         # return super(IsAuthenticated, IsStudent).has_permission(self, request, view) and \
-#         return request.user.has_role('student')
-
-
-# class IsInstructor(BasePermission):
-#     def has_permission(self, request, view):
-#         # return super(IsAuthenticated, IsInstructor).has_permission(self, request, view) and \
-#         return request.user.has_role('instructor')
-
 class IsInstructorOrReadOnly(IsAuthenticated):
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
@@ -49,3 +29,20 @@ class IsInstructor(IsAuthenticated):
         return super().has_permission(request, view) and \
             request.user.has_role('instructor')
 
+class IsStudentOrInstructorReadOnly(IsAuthenticated):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return super().has_permission(request, view)
+        return super().has_permission(request, view) and \
+            request.user.has_role('student')
+
+class IsInstructorOrStudentReadOnly(IsAuthenticated):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return super().has_permission(request, view)
+        return super().has_permission(request, view) and \
+            request.user.has_role('instructor')
+
+class AllowNoOne(IsAuthenticated):
+    def has_permission(self, request, view):
+        return False
