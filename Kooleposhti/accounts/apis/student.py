@@ -1,7 +1,7 @@
 from django.db import utils
 from accounts.permissions import IsStudent
 from courses.models import Course
-from courses.serializers import AssignmentSerializer
+from courses.serializers import AssignmentStudentSerializer
 from django.contrib.auth.tokens import default_token_generator
 from django.urls import reverse
 from rest_framework.viewsets import ModelViewSet
@@ -41,6 +41,8 @@ from rest_framework.settings import api_settings
 import djoser.views
 from skyroom import *
 from Kooleposhti.settings import SKYROOM_KEY
+import datetime
+import jdatetime
 # import rest_framework.request
 
 
@@ -973,12 +975,21 @@ class StudentViewSet(views.APIView):
         courses = student.courses.all()
         assignments = list()
         for course in courses:
+            # new_assignments = course.assignments.filter(end_date__lt=jdatetime.datetime.now().date())
+            # print(jdatetime.datetime.now().date())
             for assignment in course.assignments.all():
-                if not assignment.homeworks.filter(student=student).exists():
+                # print(datetime.datetime.combine(assignment.end_date, assignment.end_time), jdatetime.datetime.now(),
+                # assignment.end_date < jdatetime.date.today() or (assignment.end_date == jdatetime.date.today().day and assignment.end_time < jdatetime.datetime.today().time()))
+                if not assignment.sent(student):
+                #  and \
+                # (datetime.datetime.combine(assignment.end_date, assignment.end_time) \
+                # <= jdatetime.datetime.now())
                     assignments.append(assignment)
-
+        assignments.sort(
+            key=lambda a:datetime.datetime.combine(a.end_date, a.end_time))
+        
         # assignments = [assignment for assignment in 
         # [course.assignments.all() for course in courses] 
         # if not assignment.homeworks.filter(student=student).exists()]
-        serializer = AssignmentSerializer(assignments, many=True)
+        serializer = AssignmentStudentSerializer(assignments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
