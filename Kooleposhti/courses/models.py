@@ -178,6 +178,9 @@ class Assignment(models.Model):
     def is_course_student(self, user):
         return self.course.is_enrolled(user)
 
+    def sent(self, user):
+        return self.homeworks.filter(student=user).exists()
+
 class Homework(models.Model):
     assignment = models.ForeignKey(
         Assignment, on_delete=models.CASCADE, related_name='homeworks')
