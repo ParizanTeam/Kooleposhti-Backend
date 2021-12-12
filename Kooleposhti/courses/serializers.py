@@ -64,17 +64,17 @@ class AssignmentSerializer(serializers.ModelSerializer):
         return Assignment.objects.create(number=number, **validated_data)
 
 
-class StudentHomeworkSerializer(serializers.ModelSerializer):
-    image =HomeworkImageSerializer(
-        source='user.image', read_only=True)
-    class Meta:
-        model = Student
-        fields = ['id', 'first_name', 'last_name', 'image',]
+# class StudentHomeworkSerializer(serializers.ModelSerializer):
+#     image =HomeworkImageSerializer(
+#         source='user.image', read_only=True)
+#     class Meta:
+#         model = Student
+#         fields = ['id', 'first_name', 'last_name', 'image',]
 
 
 class HomeworkSerializer(serializers.ModelSerializer):
     # feedback = FeedbackSerializer(read_only=True)
-    student = StudentHomeworkSerializer(read_only=True)
+    # student = StudentHomeworkSerializer(read_only=True)
     class Meta:
         model = Homework
         fields = '__all__'
