@@ -4,7 +4,9 @@ git checkout deploy
 
 git add .
 
-NOW=$( date + '+%F_%H:%M:%S' )
+NOW=`date +%F_%H:%M:%S`
+
+echo $NOW
 
 git commit -m "new deploy at $NOW"
 
