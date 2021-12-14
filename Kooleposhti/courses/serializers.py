@@ -64,17 +64,32 @@ class AssignmentSerializer(serializers.ModelSerializer):
         return Assignment.objects.create(number=number, **validated_data)
 
 
-class StudentHomeworkSerializer(serializers.ModelSerializer):
-    image =HomeworkImageSerializer(
-        source='user.image', read_only=True)
+# class StudentHomeworkSerializer(serializers.ModelSerializer):
+#     image =HomeworkImageSerializer(
+#         source='user.image', read_only=True)
+#     class Meta:
+#         model = Student
+#         fields = ['id', 'first_name', 'last_name', 'image',]
+
+
+class CourseTitleSerializer(serializers.ModelSerializer):
+
     class Meta:
-        model = Student
-        fields = ['id', 'first_name', 'last_name', 'image',]
+        model = Course
+        fields = ['id', 'title']
+
+
+class AssignmentStudentSerializer(serializers.ModelSerializer):
+    course = CourseTitleSerializer(read_only=True)
+    class Meta:
+        model = Assignment
+        fields = ["id", "course", "title", "end_date", "end_time"]
+
 
 
 class HomeworkSerializer(serializers.ModelSerializer):
     # feedback = FeedbackSerializer(read_only=True)
-    student = StudentHomeworkSerializer(read_only=True)
+    # student = StudentHomeworkSerializer(read_only=True)
     class Meta:
         model = Homework
         fields = '__all__'
@@ -155,6 +170,7 @@ class CourseSerializer(serializers.ModelSerializer):
             self.fail("course remaining capacity should not be negative")
         validated_data['capacity'] = capacity
         return super().update(instance, validated_data)
+
 
 
 
