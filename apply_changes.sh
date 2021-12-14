@@ -8,6 +8,8 @@ NOW=$( date + '+%F_%H:%M:%S' )
 
 git commit -m "new deploy at $NOW"
 
+git push
+
 git pull
 
 cd Kooleposhti
