@@ -16,7 +16,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.urls.conf import include
-from .views import *
+from .api.views import *
+from .api.course import *
+from .api.assignment import *
+from .api.comment import CommentViewSet
 from rest_framework.routers import SimpleRouter, DefaultRouter
 from rest_framework_nested import routers
 from pprint import pprint
