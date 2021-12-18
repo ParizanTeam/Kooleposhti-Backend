@@ -330,8 +330,7 @@ class CourseViewSet(ModelViewSet):
 	def get_students(self, request, *args, **kwargs):
 		course = self.get_object()
 		user = request.user
-		if (user.has_role('student') and course.is_enrolled(user.student)) \
-				or (user.has_role('instructor') and course.is_owner(user.instructor)):
+		if course.is_course_user(user):
 			serializer = StudentSerializer(course.students, many=True)
 			return Response(status=status.HTTP_200_OK, data=serializer.data)
 		return Response("your don't have permission to perform this action", status=status.HTTP_403_FORBIDDEN)
@@ -367,28 +366,11 @@ class CourseViewSet(ModelViewSet):
 	def link(self, request, *args, **kwargs):
 		course = self.get_object()
 		user = request.user
-		if (user.has_role('student') and course.is_enrolled(user.student)) \
-				or (user.has_role('instructor') and course.is_owner(user.instructor)):
-
+		if course.is_course_user(user):
 			link = course.links.get(user=user).url
 			return Response(link, status=status.HTTP_200_OK)
 
 		return Response("you're not enrolled", status=status.HTTP_403_FORBIDDEN)
-
-
-
-	@action(detail=True, methods=['post'],
-			permission_classes=[IsAuthenticated])
-	def comment(self, request, *args, **kwargs):
-		course = self.get_object()
-		user = request.user
-		if (user.has_role('student') and course.is_enrolled(user.student)):
-			# or (user.has_role('instructor') and course.is_owner(user.instructor)):
-			Comment.objects.create(course=course, student=user.student,
-								   text=request.data['comment'])
-			return Response('succssesfuly commented', status=status.HTTP_200_OK)
-		return Response("you're not enrolled", status=status.HTTP_403_FORBIDDEN)
-
 
 
 	@action(detail=True, methods=['post'],
@@ -420,23 +402,33 @@ class CourseViewSet(ModelViewSet):
 	def assignments(self, request, *args, **kwargs):
 		course = self.get_object()
 		user = request.user
-		if (user.has_role('student') and course.is_enrolled(user.student)) \
-		or (user.has_role('instructor') and course.is_owner(user.instructor)):
+		if course.is_course_user(user):
 			serializer = AssignmentSerializer(course.assignments, many=True)
 			print(serializer.data)
 			return Response(serializer.data, status=status.HTTP_200_OK)
 		return Response({"you do not have permission to see this course assignments."}, 
 						status=status.HTTP_403_FORBIDDEN)
 
+	# @action(detail=True, methods=['post'],
+	# 		permission_classes=[IsAuthenticated])
+	# def comment(self, request, *args, **kwargs):
+	# 	course = self.get_object()
+	# 	user = request.user
+	# 	if course.is_course_user(user):
+	# 		Comment.objects.create(course=course, student=user.student,
+	# 							   text=request.data['comment'])
+	# 		return Response('succssesfuly commented', status=status.HTTP_200_OK)
+	# 	return Response("you're not enrolled", status=status.HTTP_403_FORBIDDEN)
 
 
-# class CategoryViewSet(ModelViewSet):
-# 	queryset = Category.objects.all()
-# 	serializer_class = CategorySerializer
-# 	permission_classes = [IsAdminOrReadOnly]
 
-	# @action(detail=True, url_path="courses")
-	# def get_courses(self, request, *args, **kwargs):
-	# 	category = self.get_object()
-	# 	serializer = self.get_serializer(category.courses, many=True)
-	# 	return Response(serializer.data, status=status.HTTP_200_OK)
+class CategoryViewSet(ModelViewSet):
+	queryset = Category.objects.all()
+	serializer_class = CategorySerializer
+	permission_classes = [IsAdminOrReadOnly]
+
+	@action(detail=True, url_path="courses")
+	def get_courses(self, request, *args, **kwargs):
+		category = self.get_object()
+		serializer = self.get_serializer(category.courses, many=True)
+		return Response(serializer.data, status=status.HTTP_200_OK)

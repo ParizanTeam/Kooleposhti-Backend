@@ -1,12 +1,12 @@
 from rest_framework.response import Response
 from accounts.permissions import *
 from ..models import Assignment, Homework, Feedback, Course
-from ..serializers import AssignmentSerializer, HomeworkSerializer,\
-FeedbackSerializer, HomeworkImageSerializer
+from ..serializers import AssignmentSerializer,HomeworkSerializer,FeedbackSerializer
 from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.shortcuts import get_object_or_404
 
 
 
@@ -15,21 +15,13 @@ class AssignmentViewSet(ModelViewSet):
 	serializer_class = AssignmentSerializer
 	permission_classes = [IsInstructorOrStudentReadOnly]
 
-	# def get_queryset(self):
-	# 	return Assignment.objects.filter(course_id=self.kwargs.get('course_pk'))
-
-	# def get_serializer_context(self):
-	# 	return {'course': self.kwargs.get('course_pk')}
-
 
 	def retrieve(self, request, *args, **kwargs):
 		assignment = self.get_object()
 		user = request.user
-		if (user.has_role('student') and assignment.is_course_student(user.student)) \
-		or (user.has_role('instructor') and  assignment.is_course_owner(user.instructor)):
+		if assignment.is_course_user(user):
 			return super().retrieve(request, *args, **kwargs)
 		return Response('you are not enrolled.',status=status.HTTP_403_FORBIDDEN)
-
 
 	def create(self, request, *args, **kwargs):
 		instructor = request.user.instructor
@@ -44,10 +36,8 @@ class AssignmentViewSet(ModelViewSet):
 	def update(self, request, *args, **kwargs):
 		return self.perform_action(request, 'update')
 
-
 	def destroy(self, request, *args, **kwargs):
 		return self.perform_action(request, 'destroy')
-
 
 	def perform_action(self, request, action, *args, **kwargs):
 		instructor = request.user.instructor
@@ -90,8 +80,7 @@ class HomeworkViewSet(ModelViewSet):
 	def retrieve(self, request, *args, **kwargs):
 		homework = self.get_object()
 		user = request.user
-		if (user.has_role('student') and homework.is_owner(user.student)) \
-		or (user.has_role('instructor') and homework.is_course_owner(user.instructor)):
+		if homework.can_see(user):
 			return super().retrieve(request, *args, **kwargs)
 		return Response('you do not have permission to see this homework.',
 							              status=status.HTTP_403_FORBIDDEN)
@@ -101,15 +90,16 @@ class HomeworkViewSet(ModelViewSet):
 		data = request.data.copy()
 		student = request.user.student
 		assignment_pk = self.kwargs.get('assignment_pk')
-		try:
-			assignment = Assignment.objects.get(pk=assignment_pk)
-		except:
-			return Response('assignment Not found', status=status.HTTP_404_NOT_FOUND)
+		assignment = get_object_or_404(Assignment.objects, pk=assignment_pk)
+		# try:
+		# 	assignment = Assignment.objects.get(pk=assignment_pk)
+		# except:
+		# 	return Response('assignment Not found', status=status.HTTP_404_NOT_FOUND)
 		if not assignment.is_course_student(student):
 			return Response('Not enrolled yet!', status=status.HTTP_403_FORBIDDEN)
 		if not data['answer'] and not data['file']:
 			return Response('please submit an answer.', status=status.HTTP_400_BAD_REQUEST)
-		if assignment.homeworks.filter(student=student).exists():
+		if assignment.sent(student):
 			return Response('you already submited an answer.', 
 							status=status.HTTP_400_BAD_REQUEST)
 		data['student'] = student.pk
@@ -123,10 +113,8 @@ class HomeworkViewSet(ModelViewSet):
 	def update(self, request, *args, **kwargs):
 		return self.perform_action(request, 'update')
 
-
 	def destroy(self, request, *args, **kwargs):
 		return self.perform_action(request, 'destroy')
-
 
 	def perform_action(self, request, action, *args, **kwargs):
 		student = request.user.student
@@ -156,12 +144,8 @@ class HomeworkViewSet(ModelViewSet):
 	def me(self, request, *args, **kwargs):
 		student = request.user.student
 		assignment_pk = self.kwargs.get('assignment_pk')
-		try:
-			assignment = Assignment.objects.get(pk=assignment_pk)
-		except:
-			return Response('assignment Not found.', 
-							status=status.HTTP_404_NOT_FOUND)
-		if not assignment.course.is_enrolled(student):
+		assignment = get_object_or_404(Assignment.objects, pk=assignment_pk)
+		if not assignment.is_course_student(student):
 			return Response('you are not enrolled.', 
 							status=status.HTTP_403_FORBIDDEN)		
 		homework = assignment.homeworks.filter(student=student).first()
@@ -177,20 +161,6 @@ class FeedbackViewSet(ModelViewSet):
 	serializer_class = FeedbackSerializer
 	permission_classes = [IsInstructorOrStudentReadOnly]
 
-	# @action(detail=False, url_path="/",
-	# methods=['get', 'post', 'patch', 'delete'],
-	# permission_classes=[IsInstructorOrStudentReadOnly])
-	# def feedback(self, request, *args, **kwargs):
-	# 	if request.method == 'get':
-	# 		return self.retrieve(request)
-	# 	if request.method == 'post':
-	# 		return self.create(request)
-	# 	if request.method == 'patch':
-	# 		return self.perform_action(request, 'update')
-	# 	if request.method == 'delete':
-	# 		return self.perform_action(request, 'destroy')
-			
-
 	def get_queryset(self):
 		return Feedback.objects \
 		.filter(homework_id=self.kwargs.get('homework_pk'))
@@ -201,8 +171,7 @@ class FeedbackViewSet(ModelViewSet):
 	def retrieve(self, request, *args, **kwargs):
 		feedback = self.get_object()
 		user = request.user
-		if (user.has_role('student') and feedback.is_mine(user.student)) \
-		or (user.has_role('instructor') and feedback.is_owner(user.instructor)):
+		if feedback.can_see(user):
 			return super().retrieve(request, *args, **kwargs)
 		return Response('you are not enrolled.',status=status.HTTP_403_FORBIDDEN)		
 
@@ -210,11 +179,7 @@ class FeedbackViewSet(ModelViewSet):
 	def create(self, request, *args, **kwargs):
 		instructor = request.user.instructor
 		homework_pk = self.kwargs.get('homework_pk')
-		try:
-			homework = Homework.objects.get(pk=homework_pk)
-		except:
-			return Response('homework Not found', status=status.HTTP_404_NOT_FOUND)
-		print(homework.answer)
+		homework = get_object_or_404(Homework.objects, pk=homework_pk)
 		if not homework.is_course_owner(instructor):
 			return Response('you are not the course owner.', 
 							status=status.HTTP_403_FORBIDDEN)

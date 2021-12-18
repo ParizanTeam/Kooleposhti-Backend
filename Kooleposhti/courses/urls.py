@@ -19,7 +19,7 @@ from django.urls.conf import include
 from .api.views import *
 from .api.course import *
 from .api.assignment import *
-from .api.comment import CommentViewSet
+from .api.comment import *
 from rest_framework.routers import SimpleRouter, DefaultRouter
 from rest_framework_nested import routers
 from pprint import pprint
@@ -39,6 +39,10 @@ courses_router.register('reviews', ReviewViweSet, basename='course-reviews')
 courses_router.register('sessions', SessionViewSet, basename='course-sessions')
 courses_router.register('comments', CommentViewSet, basename='course-comments')
 
+comments_router = routers.NestedDefaultRouter(
+    parent_router=courses_router, parent_prefix='comments', lookup='parent')  # comment_pk
+comments_router.register('reply', ReplytViewSet, basename='reply')
+
 assignments_router = routers.NestedDefaultRouter(
     parent_router=router, parent_prefix='assignments', lookup='assignment')  # assignment_pk
 assignments_router.register('submit', HomeworkViewSet, basename='homeworks')
@@ -57,4 +61,5 @@ urlpatterns = [
     path('', include(carts_router.urls)),
     path('', include(assignments_router.urls)),
     path('', include(homework_router.urls)),
+    path('', include(comments_router.urls)),
 ]
