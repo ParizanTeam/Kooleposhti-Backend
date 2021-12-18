@@ -53,7 +53,8 @@ class CommentViewSet(ModelViewSet):
 
 	# def get_serializer_class(self):
 	# 	serializer_map = {
-    #         'reply': ReplySerializer,
+    #         'list': CommentReplySerializer,
+	# 		'retrive': CommentReplySerializer,
     #     }
 	# 	return serializer_map.get(self.action, CommentSerializer)
 
