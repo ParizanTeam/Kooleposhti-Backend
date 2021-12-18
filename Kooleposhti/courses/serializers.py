@@ -116,14 +116,15 @@ class UserCommentSerializer(serializers.ModelSerializer):
     image = CommentImageSerializer(read_only=True)
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'image', 'username']
+        fields = ['first_name', 'last_name', 'username', 'image']
 
 
 class ReplySerializer(serializers.ModelSerializer):
+    user = UserCommentSerializer(read_only=True)
     class Meta:
         model = Comment
-        fields = ['id', 'created_date', 'text']
-        read_only_fields = ['id', 'created_date']
+        fields = ['id', 'created_date', 'text', 'user']
+        read_only_fields = ['id', 'created_date', 'user']
 
     def create(self, validated_data):
         request = self.context.get("request")
@@ -138,7 +139,7 @@ class CommentSerializer(serializers.ModelSerializer):
     user = UserCommentSerializer(read_only=True)
     class Meta:
         model = Comment
-        fields = ['id', 'created_date', 'user', 'text', 'reply']
+        fields = ['id', 'created_date', 'text', 'user', 'reply']
         read_only_fields = ['id', 'created_date']
 
     def create(self, validated_data):
@@ -148,6 +149,14 @@ class CommentSerializer(serializers.ModelSerializer):
         validated_data['user'] = request.user
         return super().create(validated_data)
 
+
+# class CommentReplySerializer(serializers.ModelSerializer):
+#     reply = ReplySerializer(read_only=True)
+#     comment = CommentSerializer(read_only=True)
+#     class Meta:
+#         model = Comment
+#         fields = ['comment', 'reply']
+#         read_only_fields = ['comment', 'reply']
 
 class InstructorCourseSerializer(serializers.ModelSerializer):
     class Meta:
