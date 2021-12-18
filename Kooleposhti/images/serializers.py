@@ -9,7 +9,7 @@ class ProfileImageSerializer(serializers.ModelSerializer):
         fields = ['image', 'name', 'description', 'upload_date']
 
 
-class HomeworkImageSerializer(serializers.ModelSerializer):
+class CommentImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MyImage

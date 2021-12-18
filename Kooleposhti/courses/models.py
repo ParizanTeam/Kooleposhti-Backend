@@ -63,6 +63,10 @@ class Course(models.Model):
     def is_owner(self, user):
         return self.instructor == user
 
+    def is_course_user(self, user):
+        return (user.has_role('student') and self.is_enrolled(user.student)) \
+		or (user.has_role('instructor') and self.is_owner(user.instructor))
+
     def update_rate(self):
         rates = self.rates.all()
         self.rate_no = len(rates)
@@ -139,13 +143,21 @@ class Session(models.Model):
 class Comment(models.Model):
     course = models.ForeignKey(
         Course, on_delete=models.CASCADE, related_name='comments')
-    student = models.ForeignKey(
-        Student, on_delete=models.CASCADE, related_name='comments')
-    created_date = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='comments')
+    parent = models.OneToOneField('Comment', on_delete=models.CASCADE, 
+                        related_name='reply', null=True, blank=True)
+    created_date = models.DateTimeField()
     text = models.TextField()
 
     def __str__(self):
         return f"{self.course.title} {self.text}"
+
+    def is_owner(self, user):
+        return self.user == user
+
+    def is_course_owner(self, user):
+        return self.course.instructor == user
 
 
 class Tag(models.Model):
@@ -178,6 +190,10 @@ class Assignment(models.Model):
     def is_course_student(self, user):
         return self.course.is_enrolled(user)
 
+    def is_course_user(self, user):
+        return (user.has_role('student') and self.is_course_student(user.student)) \
+		or (user.has_role('instructor') and self.is_course_owner(user.instructor))
+
     def sent(self, user):
         return self.homeworks.filter(student=user).exists()
 
@@ -189,7 +205,6 @@ class Homework(models.Model):
     submited_date = models.DateTimeField(auto_now_add=True)
     answer = models.TextField(blank=True, null=True)
     file = models.FileField(blank=True, null=True)
-    grade = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.assignment.course.title}  \
@@ -200,6 +215,10 @@ class Homework(models.Model):
 
     def is_course_owner(self, user):
         return self.assignment.course.instructor == user
+
+    def can_see(self, user):
+        return (user.has_role('student') and self.is_owner(user.student)) \
+		or (user.has_role('instructor') and self.is_course_owner(user.instructor))
 
 
 
@@ -222,6 +241,10 @@ class Feedback(models.Model):
 
     def is_course_owner(self, user):
         return self.homework.assignment.course.instructor == user
+
+    def can_see(self, user):
+        return (user.has_role('student') and self.is_mine(user.student)) \
+		or (user.has_role('instructor') and self.is_owner(user.instructor))
 
 
 class Goal(models.Model):
