@@ -3,6 +3,7 @@ from rest_framework.viewsets import ModelViewSet
 from .models import *
 from decimal import Decimal
 from accounts.models import Instructor
+from images.serializers import HomeworkImageSerializer
 from djoser.serializers import UserSerializer as BaseUserSerializer
 from accounts.serializers.instructor_serializer import InstructorSerializer
 import jdatetime
@@ -52,25 +53,62 @@ class SessionSerializer(serializers.ModelSerializer):
 class AssignmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Assignment
+        # fields = ["course", "title", "question", "start_date", 
+        #         "start_time", "end_date", "end_time"]
         fields = '__all__'
+        read_only_fields = ['created_date', 'number']
 
     def create(self, validated_data):
-        course_pk = self.context['course']
-        course = Course.objects.get(pk=course_pk)
+        course = validated_data.get('course', None)
         number = len(course.assignments.all()) + 1
-        return Session.objects.create(course=course, number=number, **validated_data)
+        return Assignment.objects.create(number=number, **validated_data)
+
+
+# class StudentHomeworkSerializer(serializers.ModelSerializer):
+#     image =HomeworkImageSerializer(
+#         source='user.image', read_only=True)
+#     class Meta:
+#         model = Student
+#         fields = ['id', 'first_name', 'last_name', 'image',]
+
+
+class CourseTitleSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Course
+        fields = ['id', 'title']
+
+
+class AssignmentStudentSerializer(serializers.ModelSerializer):
+    course = CourseTitleSerializer(read_only=True)
+    class Meta:
+        model = Assignment
+        fields = ["id", "course", "title", "end_date", "end_time"]
+
 
 
 class HomeworkSerializer(serializers.ModelSerializer):
+    # feedback = FeedbackSerializer(read_only=True)
+    # student = StudentHomeworkSerializer(read_only=True)
     class Meta:
         model = Homework
         fields = '__all__'
+        read_only_fields = ['assignment', 'submited_date', 'grade']
 
     def create(self, validated_data):
-        assignment_pk = self.context['assignment']
-        assignment = Assignment.objects.get(pk=assignment_pk)
-        return Session.objects.create(assignment=assignment, **validated_data)
+        assignment = self.context['assignment']
+        return Homework.objects.create(assignment_id=assignment, **validated_data)
 
+
+class FeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Feedback
+        fields = '__all__'
+        read_only_fields = ['created_date', 'last_update', 'homework']
+
+    def create(self, validated_data):
+        homework = self.context['homework']
+        return Feedback.objects.create(homework_id=homework, **validated_data)
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -90,6 +128,7 @@ class InstructorCourseSerializer(serializers.ModelSerializer):
         model = Course
         fields = ['id', 'title', 'image', 'start_date',
                   'end_date', 'max_students']
+
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -131,6 +170,7 @@ class CourseSerializer(serializers.ModelSerializer):
             self.fail("course remaining capacity should not be negative")
         validated_data['capacity'] = capacity
         return super().update(instance, validated_data)
+
 
 
 

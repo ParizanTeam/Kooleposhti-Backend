@@ -42,7 +42,7 @@ import djoser.views
 from courses import serializers as course_serializers
 from django.db import utils
 from skyroom import *
-from Kooleposhti.settings import skyroom_key
+from Kooleposhti.settings import SKYROOM_KEY
 # import rest_framework.request
 
 
@@ -256,7 +256,7 @@ class InstructorViewSet(views.APIView):
 
     def delete_user(self, instance):
         # delete skyroom user
-        api = SkyroomAPI(skyroom_key)
+        api = SkyroomAPI(SKYROOM_KEY)
         api.deleteUser({"user_id": instance.user.userskyroom.skyroom_id})
 
     """
@@ -290,7 +290,7 @@ class InstructorViewSet(views.APIView):
         # update skyroom user
         data = serializer.validated_data['user']
         user = self.get_instructor(request).user
-        api = SkyroomAPI(skyroom_key)
+        api = SkyroomAPI(SKYROOM_KEY)
         if user.username == data.get('username', user.username):
             params = {
                 "user_id": int(user.userskyroom.skyroom_id),
