@@ -10,7 +10,7 @@ echo $NOW
 
 git commit -m "new deploy at $NOW"
 
-git pull
+git --rebase pull
 
 git push
 
