@@ -430,14 +430,13 @@ class CourseViewSet(ModelViewSet):
 
 
 
-class CategoryViewSet(ModelViewSet):
-	queryset = Category.objects.all()
-	serializer_class = CategorySerializer
-	permission_classes = [IsAdminOrReadOnly]
-	# permission_classes = [AllowAny]
+# class CategoryViewSet(ModelViewSet):
+# 	queryset = Category.objects.all()
+# 	serializer_class = CategorySerializer
+# 	permission_classes = [IsAdminOrReadOnly]
 
-	@action(detail=True, url_path="courses")
-	def get_courses(self, request, *args, **kwargs):
-		category = self.get_object()
-		serializer = self.get_serializer(category.courses, many=True)
-		return Response(serializer.data, status=status.HTTP_200_OK)
+	# @action(detail=True, url_path="courses")
+	# def get_courses(self, request, *args, **kwargs):
+	# 	category = self.get_object()
+	# 	serializer = self.get_serializer(category.courses, many=True)
+	# 	return Response(serializer.data, status=status.HTTP_200_OK)

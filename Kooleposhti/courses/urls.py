@@ -37,6 +37,7 @@ courses_router = routers.NestedDefaultRouter(
     parent_router=router, parent_prefix='courses', lookup='course')  # course_pk
 courses_router.register('reviews', ReviewViweSet, basename='course-reviews')
 courses_router.register('sessions', SessionViewSet, basename='course-sessions')
+courses_router.register('comments', CommentViewSet, basename='course-comments')
 
 assignments_router = routers.NestedDefaultRouter(
     parent_router=router, parent_prefix='assignments', lookup='assignment')  # assignment_pk
