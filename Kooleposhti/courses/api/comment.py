@@ -19,7 +19,8 @@ class CommentViewSet(ModelViewSet):
 
 	def get_queryset(self):
 		return Comment.objects.filter(
-			course_id=self.kwargs.get('course_pk'), parent=None)
+			course_id=self.kwargs.get('course_pk'), parent=None)\
+			.order_by('-created_date')
 	
 	def get_serializer_context(self):
 		context = super().get_serializer_context()
