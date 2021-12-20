@@ -15,7 +15,49 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.urls.conf import include
+# from rest_framework.schemas import get_schema_view
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+from marshmallow.utils import pprint
+from rest_framework import permissions
+from django.conf import settings
+from django.conf.urls.static import static
+
+
+schema_view = get_schema_view(  # swagger/redoc
+    openapi.Info(
+        title="Kooleposhti",
+        default_version="v1",
+        description="Kooleposhti BackEnd",
+        terms_of_service="Use it for good :)",
+        contact=openapi.Contact(email=settings.EMAIL_HOST_USER),
+        license=openapi.License(name="Kooleposhti License"),
+    ),
+    public=True,
+    permission_classes=(permissions.AllowAny,),
+)
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-]
+    path('accounts/', include('accounts.urls'), name='accounts'),
+    path('images/', include('images.urls'), name='images'),
+    path('', include('courses.urls'), name='courses'),
+    path('commands/', include('commands.urls'), name='commands'),
+    path('auth/', include('djoser.urls')),
+    path('auth/', include('djoser.urls.jwt')),
+    path('swagger/', schema_view.with_ui('swagger',
+                                         cache_timeout=0), name='schema-swagger-ui'),
+    path('redoc/', schema_view.with_ui('redoc',
+                                       cache_timeout=0), name='schema-redoc'),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
+'''    
+    path('openapi', get_schema_view(
+            title="Blog API",
+            description="A sample API for learning DRF",
+            version="1.0.0"),
+            name='openapi-schema'),
+'''

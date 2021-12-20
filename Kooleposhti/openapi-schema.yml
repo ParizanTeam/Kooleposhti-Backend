@@ -1,0 +1,2287 @@
+[<URLPattern '^users/$' [name='user-list']>,
+ <URLPattern '^users\.(?P<format>[a-z0-9]+)/?$' [name='user-list']>,
+ <URLPattern '^users/activation/$' [name='user-activation']>,
+ <URLPattern '^users/activation\.(?P<format>[a-z0-9]+)/?$' [name='user-activation']>,
+ <URLPattern '^users/me/$' [name='user-me']>,
+ <URLPattern '^users/me\.(?P<format>[a-z0-9]+)/?$' [name='user-me']>,
+ <URLPattern '^users/resend_activation/$' [name='user-resend-activation']>,
+ <URLPattern '^users/resend_activation\.(?P<format>[a-z0-9]+)/?$' [name='user-resend-activation']>,
+ <URLPattern '^users/reset_password/$' [name='user-reset-password']>,
+ <URLPattern '^users/reset_password\.(?P<format>[a-z0-9]+)/?$' [name='user-reset-password']>,
+ <URLPattern '^users/reset_password_confirm/$' [name='user-reset-password-confirm']>,
+ <URLPattern '^users/reset_password_confirm\.(?P<format>[a-z0-9]+)/?$' [name='user-reset-password-confirm']>,
+ <URLPattern '^users/reset_username/$' [name='user-reset-username']>,
+ <URLPattern '^users/reset_username\.(?P<format>[a-z0-9]+)/?$' [name='user-reset-username']>,
+ <URLPattern '^users/reset_username_confirm/$' [name='user-reset-username-confirm']>,
+ <URLPattern '^users/reset_username_confirm\.(?P<format>[a-z0-9]+)/?$' [name='user-reset-username-confirm']>,
+ <URLPattern '^users/set_password/$' [name='user-set-password']>,
+ <URLPattern '^users/set_password\.(?P<format>[a-z0-9]+)/?$' [name='user-set-password']>,
+ <URLPattern '^users/set_username/$' [name='user-set-username']>,
+ <URLPattern '^users/set_username\.(?P<format>[a-z0-9]+)/?$' [name='user-set-username']>,
+ <URLPattern '^users/(?P<id>[^/.]+)/$' [name='user-detail']>,
+ <URLPattern '^users/(?P<id>[^/.]+)\.(?P<format>[a-z0-9]+)/?$' [name='user-detail']>,
+ <URLPattern '^$' [name='api-root']>,
+ <URLPattern '^\.(?P<format>[a-z0-9]+)/?$' [name='api-root']>]
+openapi: 3.0.2
+info:
+  title: ''
+  version: ''
+paths:
+  /accounts/instructors/:
+    get:
+      operationId: listInstructors
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  properties:
+                    birth_date:
+                      type: string
+                      format: date
+                      nullable: true
+          description: ''
+    post:
+      operationId: createInstructor
+      description: ''
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema: &id001
+              properties:
+                birth_date:
+                  type: string
+                  format: date
+                  nullable: true
+          application/x-www-form-urlencoded:
+            schema: *id001
+          multipart/form-data:
+            schema: *id001
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  birth_date:
+                    type: string
+                    format: date
+                    nullable: true
+          description: ''
+  /accounts/instructors/{id}/:
+    get:
+      operationId: retrieveInstructor
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this instructor.
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  birth_date:
+                    type: string
+                    format: date
+                    nullable: true
+          description: ''
+    put:
+      operationId: updateInstructor
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this instructor.
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema: &id002
+              properties:
+                birth_date:
+                  type: string
+                  format: date
+                  nullable: true
+          application/x-www-form-urlencoded:
+            schema: *id002
+          multipart/form-data:
+            schema: *id002
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  birth_date:
+                    type: string
+                    format: date
+                    nullable: true
+          description: ''
+    patch:
+      operationId: partial_updateInstructor
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this instructor.
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema: &id003
+              properties:
+                birth_date:
+                  type: string
+                  format: date
+                  nullable: true
+          application/x-www-form-urlencoded:
+            schema: *id003
+          multipart/form-data:
+            schema: *id003
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  birth_date:
+                    type: string
+                    format: date
+                    nullable: true
+          description: ''
+    delete:
+      operationId: destroyInstructor
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this instructor.
+        schema:
+          type: string
+      responses:
+        '204':
+          description: ''
+  /accounts/students/:
+    get:
+      operationId: listStudents
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  properties:
+                    id:
+                      type: integer
+                      readOnly: true
+                    user_id:
+                      type: integer
+                      readOnly: true
+                    birth_date:
+                      type: string
+                      format: date
+                      nullable: true
+          description: ''
+    post:
+      operationId: createStudent
+      description: ''
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema: &id004
+              properties:
+                birth_date:
+                  type: string
+                  format: date
+                  nullable: true
+          application/x-www-form-urlencoded:
+            schema: *id004
+          multipart/form-data:
+            schema: *id004
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    type: integer
+                    readOnly: true
+                  user_id:
+                    type: integer
+                    readOnly: true
+                  birth_date:
+                    type: string
+                    format: date
+                    nullable: true
+          description: ''
+  /accounts/students/me/:
+    get:
+      operationId: meStudent
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    type: integer
+                    readOnly: true
+                  user_id:
+                    type: integer
+                    readOnly: true
+                  birth_date:
+                    type: string
+                    format: date
+                    nullable: true
+          description: ''
+    put:
+      operationId: meStudent
+      description: ''
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema: &id005
+              properties:
+                birth_date:
+                  type: string
+                  format: date
+                  nullable: true
+          application/x-www-form-urlencoded:
+            schema: *id005
+          multipart/form-data:
+            schema: *id005
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    type: integer
+                    readOnly: true
+                  user_id:
+                    type: integer
+                    readOnly: true
+                  birth_date:
+                    type: string
+                    format: date
+                    nullable: true
+          description: ''
+  /accounts/students/{id}/:
+    get:
+      operationId: retrieveStudent
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this student.
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    type: integer
+                    readOnly: true
+                  user_id:
+                    type: integer
+                    readOnly: true
+                  birth_date:
+                    type: string
+                    format: date
+                    nullable: true
+          description: ''
+    put:
+      operationId: updateStudent
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this student.
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema: &id006
+              properties:
+                birth_date:
+                  type: string
+                  format: date
+                  nullable: true
+          application/x-www-form-urlencoded:
+            schema: *id006
+          multipart/form-data:
+            schema: *id006
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    type: integer
+                    readOnly: true
+                  user_id:
+                    type: integer
+                    readOnly: true
+                  birth_date:
+                    type: string
+                    format: date
+                    nullable: true
+          description: ''
+    patch:
+      operationId: partial_updateStudent
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this student.
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema: &id007
+              properties:
+                birth_date:
+                  type: string
+                  format: date
+                  nullable: true
+          application/x-www-form-urlencoded:
+            schema: *id007
+          multipart/form-data:
+            schema: *id007
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    type: integer
+                    readOnly: true
+                  user_id:
+                    type: integer
+                    readOnly: true
+                  birth_date:
+                    type: string
+                    format: date
+                    nullable: true
+          description: ''
+    delete:
+      operationId: destroyStudent
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this student.
+        schema:
+          type: string
+      responses:
+        '204':
+          description: ''
+  /accounts/password/reset/confirm/{uid}/{token}:
+    get:
+      operationId: Retrievereset_user_password
+      description: ''
+      parameters:
+      - name: uid
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      - name: token
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /accounts/activate/{uid}/{token}:
+    get:
+      operationId: Retrieveactivate_user_account
+      description: ''
+      parameters:
+      - name: uid
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      - name: token
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /courses/:
+    get:
+      operationId: listCourses
+      description: ''
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: instructor_id
+        required: false
+        in: query
+        description: instructor_id
+        schema:
+          type: string
+      - name: price__gt
+        required: false
+        in: query
+        description: price__gt
+        schema:
+          type: string
+      - name: price__lt
+        required: false
+        in: query
+        description: price__lt
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    example: 123
+                  next:
+                    type: string
+                    nullable: true
+                  previous:
+                    type: string
+                    nullable: true
+                  results:
+                    type: array
+                    items:
+                      properties:
+                        title:
+                          type: string
+                          maxLength: 255
+                        description:
+                          type: string
+                        price:
+                          type: number
+                          multipleOf: 0.01
+                          maximum: 10000
+                          minimum: -10000
+                        last_update:
+                          type: string
+                          format: date-time
+                          readOnly: true
+                        instructor:
+                          type: string
+                        new_price:
+                          type: string
+                          readOnly: true
+                      required:
+                      - title
+                      - description
+                      - price
+                      - instructor
+          description: ''
+    post:
+      operationId: createCourse
+      description: ''
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema: &id008
+              properties:
+                title:
+                  type: string
+                  maxLength: 255
+                description:
+                  type: string
+                price:
+                  type: number
+                  multipleOf: 0.01
+                  maximum: 10000
+                  minimum: -10000
+                instructor:
+                  type: string
+              required:
+              - title
+              - description
+              - price
+              - instructor
+          application/x-www-form-urlencoded:
+            schema: *id008
+          multipart/form-data:
+            schema: *id008
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  title:
+                    type: string
+                    maxLength: 255
+                  description:
+                    type: string
+                  price:
+                    type: number
+                    multipleOf: 0.01
+                    maximum: 10000
+                    minimum: -10000
+                  last_update:
+                    type: string
+                    format: date-time
+                    readOnly: true
+                  instructor:
+                    type: string
+                  new_price:
+                    type: string
+                    readOnly: true
+                required:
+                - title
+                - description
+                - price
+                - instructor
+          description: ''
+  /courses/{id}/:
+    get:
+      operationId: retrieveCourse
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this course.
+        schema:
+          type: string
+      - name: instructor_id
+        required: false
+        in: query
+        description: instructor_id
+        schema:
+          type: string
+      - name: price__gt
+        required: false
+        in: query
+        description: price__gt
+        schema:
+          type: string
+      - name: price__lt
+        required: false
+        in: query
+        description: price__lt
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  title:
+                    type: string
+                    maxLength: 255
+                  description:
+                    type: string
+                  price:
+                    type: number
+                    multipleOf: 0.01
+                    maximum: 10000
+                    minimum: -10000
+                  last_update:
+                    type: string
+                    format: date-time
+                    readOnly: true
+                  instructor:
+                    type: string
+                  new_price:
+                    type: string
+                    readOnly: true
+                required:
+                - title
+                - description
+                - price
+                - instructor
+          description: ''
+    put:
+      operationId: updateCourse
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this course.
+        schema:
+          type: string
+      - name: instructor_id
+        required: false
+        in: query
+        description: instructor_id
+        schema:
+          type: string
+      - name: price__gt
+        required: false
+        in: query
+        description: price__gt
+        schema:
+          type: string
+      - name: price__lt
+        required: false
+        in: query
+        description: price__lt
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema: &id009
+              properties:
+                title:
+                  type: string
+                  maxLength: 255
+                description:
+                  type: string
+                price:
+                  type: number
+                  multipleOf: 0.01
+                  maximum: 10000
+                  minimum: -10000
+                instructor:
+                  type: string
+              required:
+              - title
+              - description
+              - price
+              - instructor
+          application/x-www-form-urlencoded:
+            schema: *id009
+          multipart/form-data:
+            schema: *id009
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  title:
+                    type: string
+                    maxLength: 255
+                  description:
+                    type: string
+                  price:
+                    type: number
+                    multipleOf: 0.01
+                    maximum: 10000
+                    minimum: -10000
+                  last_update:
+                    type: string
+                    format: date-time
+                    readOnly: true
+                  instructor:
+                    type: string
+                  new_price:
+                    type: string
+                    readOnly: true
+                required:
+                - title
+                - description
+                - price
+                - instructor
+          description: ''
+    patch:
+      operationId: partial_updateCourse
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this course.
+        schema:
+          type: string
+      - name: instructor_id
+        required: false
+        in: query
+        description: instructor_id
+        schema:
+          type: string
+      - name: price__gt
+        required: false
+        in: query
+        description: price__gt
+        schema:
+          type: string
+      - name: price__lt
+        required: false
+        in: query
+        description: price__lt
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema: &id010
+              properties:
+                title:
+                  type: string
+                  maxLength: 255
+                description:
+                  type: string
+                price:
+                  type: number
+                  multipleOf: 0.01
+                  maximum: 10000
+                  minimum: -10000
+                instructor:
+                  type: string
+          application/x-www-form-urlencoded:
+            schema: *id010
+          multipart/form-data:
+            schema: *id010
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  title:
+                    type: string
+                    maxLength: 255
+                  description:
+                    type: string
+                  price:
+                    type: number
+                    multipleOf: 0.01
+                    maximum: 10000
+                    minimum: -10000
+                  last_update:
+                    type: string
+                    format: date-time
+                    readOnly: true
+                  instructor:
+                    type: string
+                  new_price:
+                    type: string
+                    readOnly: true
+                required:
+                - title
+                - description
+                - price
+                - instructor
+          description: ''
+    delete:
+      operationId: destroyCourse
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this course.
+        schema:
+          type: string
+      - name: instructor_id
+        required: false
+        in: query
+        description: instructor_id
+        schema:
+          type: string
+      - name: price__gt
+        required: false
+        in: query
+        description: price__gt
+        schema:
+          type: string
+      - name: price__lt
+        required: false
+        in: query
+        description: price__lt
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      responses:
+        '204':
+          description: ''
+  /carts/{id}/:
+    get:
+      operationId: retrieveShoppingCart
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A UUID string identifying this shopping cart.
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    readOnly: true
+                  items:
+                    type: array
+                    items:
+                      properties:
+                        id:
+                          type: integer
+                          readOnly: true
+                        course:
+                          type: integer
+                        quantity:
+                          type: integer
+                          maximum: 32767
+                          minimum: 0
+                        total_price:
+                          type: string
+                          readOnly: true
+                      required:
+                      - course
+                      - quantity
+                    readOnly: true
+                  total_price:
+                    type: string
+                    readOnly: true
+          description: ''
+    delete:
+      operationId: destroyShoppingCart
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A UUID string identifying this shopping cart.
+        schema:
+          type: string
+      responses:
+        '204':
+          description: ''
+  /courses/{course_pk}/reviews/:
+    get:
+      operationId: listReviews
+      description: ''
+      parameters:
+      - name: course_pk
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  properties:
+                    id:
+                      type: integer
+                      readOnly: true
+                    date:
+                      type: string
+                      format: date
+                      readOnly: true
+                    name:
+                      type: string
+                      maxLength: 255
+                    description:
+                      type: string
+                  required:
+                  - name
+                  - description
+          description: ''
+    post:
+      operationId: createReview
+      description: ''
+      parameters:
+      - name: course_pk
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema: &id011
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                description:
+                  type: string
+              required:
+              - name
+              - description
+          application/x-www-form-urlencoded:
+            schema: *id011
+          multipart/form-data:
+            schema: *id011
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    type: integer
+                    readOnly: true
+                  date:
+                    type: string
+                    format: date
+                    readOnly: true
+                  name:
+                    type: string
+                    maxLength: 255
+                  description:
+                    type: string
+                required:
+                - name
+                - description
+          description: ''
+  /courses/{course_pk}/reviews/{id}/:
+    get:
+      operationId: retrieveReview
+      description: ''
+      parameters:
+      - name: course_pk
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    type: integer
+                    readOnly: true
+                  date:
+                    type: string
+                    format: date
+                    readOnly: true
+                  name:
+                    type: string
+                    maxLength: 255
+                  description:
+                    type: string
+                required:
+                - name
+                - description
+          description: ''
+    put:
+      operationId: updateReview
+      description: ''
+      parameters:
+      - name: course_pk
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema: &id012
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                description:
+                  type: string
+              required:
+              - name
+              - description
+          application/x-www-form-urlencoded:
+            schema: *id012
+          multipart/form-data:
+            schema: *id012
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    type: integer
+                    readOnly: true
+                  date:
+                    type: string
+                    format: date
+                    readOnly: true
+                  name:
+                    type: string
+                    maxLength: 255
+                  description:
+                    type: string
+                required:
+                - name
+                - description
+          description: ''
+    patch:
+      operationId: partial_updateReview
+      description: ''
+      parameters:
+      - name: course_pk
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema: &id013
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                description:
+                  type: string
+          application/x-www-form-urlencoded:
+            schema: *id013
+          multipart/form-data:
+            schema: *id013
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    type: integer
+                    readOnly: true
+                  date:
+                    type: string
+                    format: date
+                    readOnly: true
+                  name:
+                    type: string
+                    maxLength: 255
+                  description:
+                    type: string
+                required:
+                - name
+                - description
+          description: ''
+    delete:
+      operationId: destroyReview
+      description: ''
+      parameters:
+      - name: course_pk
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      responses:
+        '204':
+          description: ''
+  /carts/{cart_pk}/items/:
+    get:
+      operationId: listCartItems
+      description: ''
+      parameters:
+      - name: cart_pk
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  properties:
+                    id:
+                      type: integer
+                      readOnly: true
+                    course:
+                      type: integer
+                    quantity:
+                      type: integer
+                      maximum: 32767
+                      minimum: 0
+                    total_price:
+                      type: string
+                      readOnly: true
+                  required:
+                  - course
+                  - quantity
+          description: ''
+    post:
+      operationId: createCartItem
+      description: ''
+      parameters:
+      - name: cart_pk
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema: &id014
+              properties:
+                course:
+                  type: integer
+                quantity:
+                  type: integer
+                  maximum: 32767
+                  minimum: 0
+              required:
+              - course
+              - quantity
+          application/x-www-form-urlencoded:
+            schema: *id014
+          multipart/form-data:
+            schema: *id014
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    type: integer
+                    readOnly: true
+                  course:
+                    type: integer
+                  quantity:
+                    type: integer
+                    maximum: 32767
+                    minimum: 0
+                  total_price:
+                    type: string
+                    readOnly: true
+                required:
+                - course
+                - quantity
+          description: ''
+  /carts/{cart_pk}/items/{id}/:
+    get:
+      operationId: retrieveCartItem
+      description: ''
+      parameters:
+      - name: cart_pk
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    type: integer
+                    readOnly: true
+                  course:
+                    type: integer
+                  quantity:
+                    type: integer
+                    maximum: 32767
+                    minimum: 0
+                  total_price:
+                    type: string
+                    readOnly: true
+                required:
+                - course
+                - quantity
+          description: ''
+    put:
+      operationId: updateCartItem
+      description: ''
+      parameters:
+      - name: cart_pk
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema: &id015
+              properties:
+                course:
+                  type: integer
+                quantity:
+                  type: integer
+                  maximum: 32767
+                  minimum: 0
+              required:
+              - course
+              - quantity
+          application/x-www-form-urlencoded:
+            schema: *id015
+          multipart/form-data:
+            schema: *id015
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    type: integer
+                    readOnly: true
+                  course:
+                    type: integer
+                  quantity:
+                    type: integer
+                    maximum: 32767
+                    minimum: 0
+                  total_price:
+                    type: string
+                    readOnly: true
+                required:
+                - course
+                - quantity
+          description: ''
+    patch:
+      operationId: partial_updateCartItem
+      description: ''
+      parameters:
+      - name: cart_pk
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema: &id016
+              properties:
+                course:
+                  type: integer
+                quantity:
+                  type: integer
+                  maximum: 32767
+                  minimum: 0
+          application/x-www-form-urlencoded:
+            schema: *id016
+          multipart/form-data:
+            schema: *id016
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    type: integer
+                    readOnly: true
+                  course:
+                    type: integer
+                  quantity:
+                    type: integer
+                    maximum: 32767
+                    minimum: 0
+                  total_price:
+                    type: string
+                    readOnly: true
+                required:
+                - course
+                - quantity
+          description: ''
+    delete:
+      operationId: destroyCartItem
+      description: ''
+      parameters:
+      - name: cart_pk
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      responses:
+        '204':
+          description: ''
+  /auth/users/:
+    get:
+      operationId: listUsers
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  properties:
+                    email:
+                      type: string
+                      format: email
+                      maxLength: 254
+                    id:
+                      type: integer
+                      readOnly: true
+                    username:
+                      type: string
+                      readOnly: true
+                      description: Required. 150 characters or fewer. Letters, digits
+                        and @/./+/-/_ only.
+                  required:
+                  - email
+          description: ''
+    post:
+      operationId: createUser
+      description: ''
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema: &id017
+              properties:
+                email:
+                  type: string
+                  format: email
+                  maxLength: 254
+                username:
+                  type: string
+                  description: Required. 150 characters or fewer. Letters, digits
+                    and @/./+/-/_ only.
+                  pattern: ^[\w.@+-]+\Z
+                  maxLength: 150
+                password:
+                  type: string
+                  writeOnly: true
+                re_password:
+                  type: string
+              required:
+              - email
+              - username
+              - password
+              - re_password
+          application/x-www-form-urlencoded:
+            schema: *id017
+          multipart/form-data:
+            schema: *id017
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  email:
+                    type: string
+                    format: email
+                    maxLength: 254
+                  username:
+                    type: string
+                    description: Required. 150 characters or fewer. Letters, digits
+                      and @/./+/-/_ only.
+                    pattern: ^[\w.@+-]+\Z
+                    maxLength: 150
+                  id:
+                    type: integer
+                    readOnly: true
+                  re_password:
+                    type: string
+                required:
+                - email
+                - username
+                - re_password
+          description: ''
+  /auth/users/me/:
+    get:
+      operationId: meUser
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    type: integer
+                    readOnly: true
+                  username:
+                    type: string
+                    readOnly: true
+                    description: Required. 150 characters or fewer. Letters, digits
+                      and @/./+/-/_ only.
+                  email:
+                    type: string
+                    format: email
+                    maxLength: 254
+                  first_name:
+                    type: string
+                    maxLength: 20
+                  last_name:
+                    type: string
+                    maxLength: 20
+                required:
+                - email
+                - first_name
+                - last_name
+          description: ''
+    put:
+      operationId: meUser
+      description: ''
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema: &id018
+              properties:
+                email:
+                  type: string
+                  format: email
+                  maxLength: 254
+                first_name:
+                  type: string
+                  maxLength: 20
+                last_name:
+                  type: string
+                  maxLength: 20
+              required:
+              - email
+              - first_name
+              - last_name
+          application/x-www-form-urlencoded:
+            schema: *id018
+          multipart/form-data:
+            schema: *id018
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    type: integer
+                    readOnly: true
+                  username:
+                    type: string
+                    readOnly: true
+                    description: Required. 150 characters or fewer. Letters, digits
+                      and @/./+/-/_ only.
+                  email:
+                    type: string
+                    format: email
+                    maxLength: 254
+                  first_name:
+                    type: string
+                    maxLength: 20
+                  last_name:
+                    type: string
+                    maxLength: 20
+                required:
+                - email
+                - first_name
+                - last_name
+          description: ''
+    patch:
+      operationId: meUser
+      description: ''
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema: &id019
+              properties:
+                email:
+                  type: string
+                  format: email
+                  maxLength: 254
+                first_name:
+                  type: string
+                  maxLength: 20
+                last_name:
+                  type: string
+                  maxLength: 20
+          application/x-www-form-urlencoded:
+            schema: *id019
+          multipart/form-data:
+            schema: *id019
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    type: integer
+                    readOnly: true
+                  username:
+                    type: string
+                    readOnly: true
+                    description: Required. 150 characters or fewer. Letters, digits
+                      and @/./+/-/_ only.
+                  email:
+                    type: string
+                    format: email
+                    maxLength: 254
+                  first_name:
+                    type: string
+                    maxLength: 20
+                  last_name:
+                    type: string
+                    maxLength: 20
+                required:
+                - email
+                - first_name
+                - last_name
+          description: ''
+    delete:
+      operationId: meUser
+      description: ''
+      parameters: []
+      responses:
+        '204':
+          description: ''
+  /auth/users/{id}/:
+    get:
+      operationId: retrieveUser
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this user.
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  email:
+                    type: string
+                    format: email
+                    maxLength: 254
+                  id:
+                    type: integer
+                    readOnly: true
+                  username:
+                    type: string
+                    readOnly: true
+                    description: Required. 150 characters or fewer. Letters, digits
+                      and @/./+/-/_ only.
+                required:
+                - email
+          description: ''
+    put:
+      operationId: updateUser
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this user.
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema: &id020
+              properties:
+                email:
+                  type: string
+                  format: email
+                  maxLength: 254
+              required:
+              - email
+          application/x-www-form-urlencoded:
+            schema: *id020
+          multipart/form-data:
+            schema: *id020
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  email:
+                    type: string
+                    format: email
+                    maxLength: 254
+                  id:
+                    type: integer
+                    readOnly: true
+                  username:
+                    type: string
+                    readOnly: true
+                    description: Required. 150 characters or fewer. Letters, digits
+                      and @/./+/-/_ only.
+                required:
+                - email
+          description: ''
+    patch:
+      operationId: partial_updateUser
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this user.
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema: &id021
+              properties:
+                email:
+                  type: string
+                  format: email
+                  maxLength: 254
+          application/x-www-form-urlencoded:
+            schema: *id021
+          multipart/form-data:
+            schema: *id021
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  email:
+                    type: string
+                    format: email
+                    maxLength: 254
+                  id:
+                    type: integer
+                    readOnly: true
+                  username:
+                    type: string
+                    readOnly: true
+                    description: Required. 150 characters or fewer. Letters, digits
+                      and @/./+/-/_ only.
+                required:
+                - email
+          description: ''
+    delete:
+      operationId: destroyUser
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A unique integer value identifying this user.
+        schema:
+          type: string
+      responses:
+        '204':
+          description: ''
+  /carts/:
+    post:
+      operationId: createShoppingCart
+      description: ''
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema: &id022
+              properties: {}
+          application/x-www-form-urlencoded:
+            schema: *id022
+          multipart/form-data:
+            schema: *id022
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    readOnly: true
+                  items:
+                    type: array
+                    items:
+                      properties:
+                        id:
+                          type: integer
+                          readOnly: true
+                        course:
+                          type: integer
+                        quantity:
+                          type: integer
+                          maximum: 32767
+                          minimum: 0
+                        total_price:
+                          type: string
+                          readOnly: true
+                      required:
+                      - course
+                      - quantity
+                    readOnly: true
+                  total_price:
+                    type: string
+                    readOnly: true
+          description: ''
+  /auth/users/activation/:
+    post:
+      operationId: activationUser
+      description: ''
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema: &id023
+              properties:
+                uid:
+                  type: string
+                token:
+                  type: string
+              required:
+              - uid
+              - token
+          application/x-www-form-urlencoded:
+            schema: *id023
+          multipart/form-data:
+            schema: *id023
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  uid:
+                    type: string
+                  token:
+                    type: string
+                required:
+                - uid
+                - token
+          description: ''
+  /auth/users/resend_activation/:
+    post:
+      operationId: resend_activationUser
+      description: ''
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema: &id024
+              properties:
+                email:
+                  type: string
+                  format: email
+              required:
+              - email
+          application/x-www-form-urlencoded:
+            schema: *id024
+          multipart/form-data:
+            schema: *id024
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  email:
+                    type: string
+                    format: email
+                required:
+                - email
+          description: ''
+  /auth/users/reset_password/:
+    post:
+      operationId: reset_passwordUser
+      description: ''
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema: &id025
+              properties:
+                email:
+                  type: string
+                  format: email
+              required:
+              - email
+          application/x-www-form-urlencoded:
+            schema: *id025
+          multipart/form-data:
+            schema: *id025
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  email:
+                    type: string
+                    format: email
+                required:
+                - email
+          description: ''
+  /auth/users/reset_password_confirm/:
+    post:
+      operationId: reset_password_confirmUser
+      description: ''
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema: &id026
+              properties:
+                uid:
+                  type: string
+                token:
+                  type: string
+                new_password:
+                  type: string
+                re_new_password:
+                  type: string
+              required:
+              - uid
+              - token
+              - new_password
+              - re_new_password
+          application/x-www-form-urlencoded:
+            schema: *id026
+          multipart/form-data:
+            schema: *id026
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  uid:
+                    type: string
+                  token:
+                    type: string
+                  new_password:
+                    type: string
+                  re_new_password:
+                    type: string
+                required:
+                - uid
+                - token
+                - new_password
+                - re_new_password
+          description: ''
+  /auth/users/reset_username/:
+    post:
+      operationId: reset_usernameUser
+      description: ''
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema: &id027
+              properties:
+                email:
+                  type: string
+                  format: email
+              required:
+              - email
+          application/x-www-form-urlencoded:
+            schema: *id027
+          multipart/form-data:
+            schema: *id027
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  email:
+                    type: string
+                    format: email
+                required:
+                - email
+          description: ''
+  /auth/users/reset_username_confirm/:
+    post:
+      operationId: reset_username_confirmUser
+      description: ''
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema: &id028
+              properties:
+                new_username:
+                  type: string
+                  description: Required. 150 characters or fewer. Letters, digits
+                    and @/./+/-/_ only.
+                  pattern: ^[\w.@+-]+\Z
+                  maxLength: 150
+              required:
+              - new_username
+          application/x-www-form-urlencoded:
+            schema: *id028
+          multipart/form-data:
+            schema: *id028
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  new_username:
+                    type: string
+                    description: Required. 150 characters or fewer. Letters, digits
+                      and @/./+/-/_ only.
+                    pattern: ^[\w.@+-]+\Z
+                    maxLength: 150
+                required:
+                - new_username
+          description: ''
+  /auth/users/set_password/:
+    post:
+      operationId: set_passwordUser
+      description: ''
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema: &id029
+              properties:
+                new_password:
+                  type: string
+                re_new_password:
+                  type: string
+                current_password:
+                  type: string
+              required:
+              - new_password
+              - re_new_password
+              - current_password
+          application/x-www-form-urlencoded:
+            schema: *id029
+          multipart/form-data:
+            schema: *id029
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  new_password:
+                    type: string
+                  re_new_password:
+                    type: string
+                  current_password:
+                    type: string
+                required:
+                - new_password
+                - re_new_password
+                - current_password
+          description: ''
+  /auth/users/set_username/:
+    post:
+      operationId: set_usernameUser
+      description: ''
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema: &id030
+              properties:
+                current_password:
+                  type: string
+                new_username:
+                  type: string
+                  description: Required. 150 characters or fewer. Letters, digits
+                    and @/./+/-/_ only.
+                  pattern: ^[\w.@+-]+\Z
+                  maxLength: 150
+              required:
+              - current_password
+              - new_username
+          application/x-www-form-urlencoded:
+            schema: *id030
+          multipart/form-data:
+            schema: *id030
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  current_password:
+                    type: string
+                  new_username:
+                    type: string
+                    description: Required. 150 characters or fewer. Letters, digits
+                      and @/./+/-/_ only.
+                    pattern: ^[\w.@+-]+\Z
+                    maxLength: 150
+                required:
+                - current_password
+                - new_username
+          description: ''
+  /auth/jwt/create/:
+    post:
+      operationId: CreateTokenObtainPair
+      description: 'Takes a set of user credentials and returns an access and refresh
+        JSON web
+
+        token pair to prove the authentication of those credentials.'
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema: &id031
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                  writeOnly: true
+              required:
+              - username
+              - password
+          application/x-www-form-urlencoded:
+            schema: *id031
+          multipart/form-data:
+            schema: *id031
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  username:
+                    type: string
+                required:
+                - username
+          description: ''
+  /auth/jwt/refresh/:
+    post:
+      operationId: CreateTokenRefresh
+      description: 'Takes a refresh type JSON web token and returns an access type
+        JSON web
+
+        token if the refresh token is valid.'
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema: &id032
+              properties:
+                refresh:
+                  type: string
+              required:
+              - refresh
+          application/x-www-form-urlencoded:
+            schema: *id032
+          multipart/form-data:
+            schema: *id032
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  refresh:
+                    type: string
+                  access:
+                    type: string
+                    readOnly: true
+                required:
+                - refresh
+          description: ''
+  /auth/jwt/verify/:
+    post:
+      operationId: CreateTokenVerify
+      description: 'Takes a token and indicates if it is valid.  This view provides
+        no
+
+        information about a token''s fitness for a particular use.'
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema: &id033
+              properties:
+                token:
+                  type: string
+              required:
+              - token
+          application/x-www-form-urlencoded:
+            schema: *id033
+          multipart/form-data:
+            schema: *id033
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  token:
+                    type: string
+                required:
+                - token
+          description: ''
