@@ -12,7 +12,7 @@ git commit -m "new deploy at $NOW"
 
 git --rebase pull
 
-git push
+git push -f deploy 
 
 cd Kooleposhti
 
