@@ -1,2 +1,2 @@
-web: gunicorn --chdir /app/Kooleposhti Kooleposhti.wsgi:application --log-file - --log-level debug
+web: gunicorn --chdir /app/Kooleposhti Kooleposhti.wsgi:application
 

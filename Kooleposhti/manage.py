@@ -7,7 +7,6 @@ import sys
 def main():
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Kooleposhti.settings')
-    # my_commands()
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
@@ -17,11 +16,6 @@ def main():
             "forget to activate a virtual environment?"
         ) from exc
     execute_from_command_line(sys.argv)
-
-
-def my_commands():
-    os.system("chmod +x track_changes.sh && ./track_changes.sh")
-    os.system("chmod +x auto_commit.sh")
 
 
 if __name__ == '__main__':
