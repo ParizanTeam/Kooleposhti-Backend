@@ -975,21 +975,13 @@ class StudentViewSet(views.APIView):
         courses = student.courses.all()
         assignments = list()
         for course in courses:
-            # new_assignments = course.assignments.filter(end_date__lt=jdatetime.datetime.now().date())
-            # print(jdatetime.datetime.now().date())
-            for assignment in course.assignments.all():
-                # print(datetime.datetime.combine(assignment.end_date, assignment.end_time), jdatetime.datetime.now(),
-                # assignment.end_date < jdatetime.date.today() or (assignment.end_date == jdatetime.date.today().day and assignment.end_time < jdatetime.datetime.today().time()))
-                if not assignment.sent(student):
-                #  and \
-                # (datetime.datetime.combine(assignment.end_date, assignment.end_time) \
-                # <= jdatetime.datetime.now())
-                    assignments.append(assignment)
-        assignments.sort(
-            key=lambda a:datetime.datetime.combine(a.end_date, a.end_time))
-        
-        # assignments = [assignment for assignment in 
-        # [course.assignments.all() for course in courses] 
-        # if not assignment.homeworks.filter(student=student).exists()]
+            assignments += [assignment for assignment in 
+            course.assignments.filter(date__gte=datetime.datetime.now()).all()
+            if not assignment.sent(student)]
+        assignments.sort(key=lambda a:a.date, reverse=True)
         serializer = AssignmentStudentSerializer(assignments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+         # assignments = [assignment for assignment in 
+        # (course.assignments.filter(date__lte=datetime.datetime.now()).all()
+        # for course in courses) if not assignment.sent(student)].sort(key=lambda a:a.date)

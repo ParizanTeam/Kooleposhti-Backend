@@ -53,15 +53,19 @@ class SessionSerializer(serializers.ModelSerializer):
 class AssignmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Assignment
-        # fields = ["course", "title", "question", "start_date", 
-        #         "start_time", "end_date", "end_time"]
-        fields = '__all__'
+        fields = ["course", "title", "number", "question", "created_date",
+                "start_date", "start_time", "end_date", "end_time"]
         read_only_fields = ['created_date', 'number']
 
     def create(self, validated_data):
         course = validated_data.get('course', None)
-        number = len(course.assignments.all()) + 1
-        return Assignment.objects.create(number=number, **validated_data)
+        validated_data['number'] = len(course.assignments.all()) + 1
+        end_date = validated_data['end_date']
+        end_time = validated_data['end_time']
+        validated_data['date'] = jdatetime.datetime(
+            end_date.year, end_date.month, end_date.day, hour=end_time.hour, 
+            minute=end_time.minute, second=end_time.second).togregorian()
+        return super().create(validated_data)
 
 
 # class StudentHomeworkSerializer(serializers.ModelSerializer):
