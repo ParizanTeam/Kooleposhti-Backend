@@ -180,6 +180,7 @@ class Assignment(models.Model):
     start_time = models.TimeField()
     end_date = models.DateField()
     end_time = models.TimeField()
+    date = models.DateTimeField(blank=True)
 
     def __str__(self):
         return f"{self.course.title} {self.title}"
