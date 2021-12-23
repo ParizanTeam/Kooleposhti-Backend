@@ -118,3 +118,22 @@ class PublicProfile(models.Model):
 
     def __str__(self):
         return f'{self.user.first_name} {self.user.last_name}'
+
+
+class Wallet(models.Model):
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name='wallet')
+    balance = models.DecimalField(default=0, blank=True, decimal_places=3, max_digits=12)
+    card_no = models.CharField(blank=True, null=True, max_length=16)
+    sheba = models.CharField(blank=True, null=True, max_length=24)
+
+    def __str__(self):
+        return f"{self.user.username} {self.balance}"
+    
+    def is_set(self):
+        return self.card_no and self.sheba
+
+    def withdraw(self, amount):
+        self.balance -= amount
+        self.save()
+    
