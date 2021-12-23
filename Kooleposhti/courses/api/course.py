@@ -302,7 +302,7 @@ class CourseViewSet(ModelViewSet):
 
 
 
-	@action(detail=True, methods=['put'],
+	action(detail=True, methods=['put'],
 			permission_classes=[IsInstructor], url_name="delete-student",
 			url_path="delete-student/(?P<sid>[^/.]+)")
 	def delete_student(self, request: HttpRequest, sid, *args, **kwargs):

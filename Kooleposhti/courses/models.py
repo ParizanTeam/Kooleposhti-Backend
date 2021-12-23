@@ -304,3 +304,18 @@ class Review(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
     date = models.DateField(auto_now_add=True)
+
+
+
+class Discount(models.Model):
+    '''
+    fields = ('id', 'discount', 'created_date', 'expiration_date', 'title', 'code', 'owner', 'used_no')
+    '''
+    discount = models.FloatField()
+    created_date = models.DateTimeField(auto_now_add=True)
+    expiration_date = models.DateTimeField()
+    title = models.CharField(max_length=255)
+    code = models.CharField(max_length=255,unique=True)
+    owner = models.ForeignKey(
+        Instructor, on_delete=models.CASCADE, related_name='discount_codes')
+    used_no = models.IntegerField(default=0)

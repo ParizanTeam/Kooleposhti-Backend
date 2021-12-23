@@ -11,7 +11,7 @@ import jalali_date
 from datetime import date, datetime, time, timedelta
 import base64
 import os
-
+from rest_framework.exceptions import ValidationError
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
@@ -261,3 +261,32 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShoppingCart
         fields = ['id', 'items', 'total_price']
+
+
+class DiscountSerializer(serializers.ModelSerializer):
+    default_error_messages = {'code_exists': 'Duplicate: The code already exists'}
+    code=serializers.CharField(max_length=255,required=False)
+    class Meta:
+        model = Discount
+        fields = ['discount','expiration_date','title','code','used_no','created_date']
+        read_only_fields=['used_no','created_date']
+
+
+    def create(self, validated_data):
+        request = self.context.get("request")
+        validated_data['owner'] = request.user.instructor
+        return super().create(validated_data)
+
+    def validate(self, attrs):
+        validated_attrs = super().validate(attrs)
+        errors = {}
+        is_code_exist=Discount.objects.filter(code=validated_attrs['code']).exists()
+        if (is_code_exist):
+            errors['code'] = self.error_messages['code_exists']
+
+        if errors:
+            raise ValidationError(errors)
+
+        return validated_attrs
+
+
