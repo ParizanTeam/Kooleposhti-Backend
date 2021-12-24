@@ -53,7 +53,7 @@ class SessionSerializer(serializers.ModelSerializer):
 class AssignmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Assignment
-        fields = ["course", "title", "number", "question", "created_date",
+        fields = ["id", "course", "title", "number", "question", "created_date",
                 "start_date", "start_time", "end_date", "end_time"]
         read_only_fields = ['created_date', 'number']
 
