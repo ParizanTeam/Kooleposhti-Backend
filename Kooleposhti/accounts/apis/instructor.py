@@ -42,7 +42,7 @@ import djoser.views
 from courses import serializers as course_serializers
 from django.db import utils
 from skyroom import *
-from Kooleposhti.settings import skyroom_key
+from Kooleposhti.settings import SKYROOM_KEY
 # import rest_framework.request
 
 
@@ -256,7 +256,7 @@ class InstructorViewSet(views.APIView):
 
     def delete_user(self, instance):
         # delete skyroom user
-        api = SkyroomAPI(skyroom_key)
+        api = SkyroomAPI(SKYROOM_KEY)
         api.deleteUser({"user_id": instance.user.userskyroom.skyroom_id})
 
     """
@@ -290,29 +290,31 @@ class InstructorViewSet(views.APIView):
         # update skyroom user
         data = serializer.validated_data['user']
         user = self.get_instructor(request).user
-        api = SkyroomAPI(skyroom_key)
-        if user.username == data.get('username', user.username):
-            params = {
-                "user_id": int(user.userskyroom.skyroom_id),
-                'password': data.get('password'),
-                'email': data.get('email', user.email),
-                "fname": data.get('first_name', user.first_name),
-                "lname": data.get('last_name', user.last_name)
-            }
-            api.updateUser(params)
-        else:
-            api.deleteUser({"user_id": user.userskyroom.skyroom_id})
-            user.userskyroom.delete()
-            params = {
-                'username': data.get('username', user.username),
-                'password': data.get('password'),
-                "nickname": data.get('username', user.username),
-                'email': data.get('email', user.email),
-                "fname": data.get('first_name', user.first_name),
-                "lname": data.get('last_name', user.last_name)
-            }
-            skyroom_id = api.createUser(params)
-            UserSkyRoom.objects.create(skyroom_id=skyroom_id, user=user)
+        api = SkyroomAPI(SKYROOM_KEY)
+        # if user.username == data.get('username', user.username):
+        print(SKYROOM_KEY)
+        params = {
+            "user_id": int(user.userskyroom.skyroom_id),
+            'email': data.get('email', user.email),
+            "fname": data.get('first_name', user.first_name),
+            "lname": data.get('last_name', user.last_name)
+        }
+        if len(password) > 7:
+            params['password'] = password
+        api.updateUser(params)
+        # else:
+        #     api.deleteUser({"user_id": user.userskyroom.skyroom_id})
+        #     user.userskyroom.delete()
+        #     params = {
+        #         'username': data.get('username', user.username),
+        #         'password': data.get('password'),
+        #         "nickname": data.get('username', user.username),
+        #         'email': data.get('email', user.email),
+        #         "fname": data.get('first_name', user.first_name),
+        #         "lname": data.get('last_name', user.last_name)
+        #     }
+        #     skyroom_id = api.createUser(params)
+        #     UserSkyRoom.objects.create(skyroom_id=skyroom_id, user=user)
 
     def partial_update(self, request, *args, **kwargs):
         kwargs['partial'] = True

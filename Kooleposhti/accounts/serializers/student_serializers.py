@@ -12,6 +12,7 @@ from .user_serializers import BaseUserSerializer
 
 
 class StudentSerializer(BaseUserSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
     class Meta(BaseUserSerializer.Meta):
         model = Student
         fields = BaseUserSerializer.Meta.fields + ['user_id', ]

@@ -1,6 +1,7 @@
 from django.db import utils
 from accounts.permissions import IsStudent
 from courses.models import Course
+from courses.serializers import AssignmentStudentSerializer
 from django.contrib.auth.tokens import default_token_generator
 from django.urls import reverse
 from rest_framework.viewsets import ModelViewSet
@@ -39,7 +40,9 @@ from rest_framework import mixins, views
 from rest_framework.settings import api_settings
 import djoser.views
 from skyroom import *
-from Kooleposhti.settings import skyroom_key
+from Kooleposhti.settings import SKYROOM_KEY
+import datetime
+import jdatetime
 # import rest_framework.request
 
 
@@ -261,7 +264,7 @@ class StudentViewSet(views.APIView):
 
     def delete_user(self, instance):
         # delete skyroom user
-        api = SkyroomAPI(skyroom_key)
+        api = SkyroomAPI(SKYROOM_KEY)
         api.deleteUser({"user_id": instance.user.userskyroom.skyroom_id})
 
     """
@@ -295,29 +298,16 @@ class StudentViewSet(views.APIView):
         # update skyroom user
         data = serializer.validated_data['user']
         user = self.get_student(request).user
-        api = SkyroomAPI(skyroom_key)
-        if user.username == data.get('username', user.username):
-            params = {
-                "user_id": int(user.userskyroom.skyroom_id),
-                'password': data.get('password'),
-                'email': data.get('email', user.email),
-                "fname": data.get('first_name', user.first_name),
-                "lname": data.get('last_name', user.last_name)
-            }
-            api.updateUser(params)
-        else:
-            api.deleteUser({"user_id": user.userskyroom.skyroom_id})
-            user.userskyroom.delete()
-            params = {
-                'username': data.get('username', user.username),
-                'password': data.get('password'),
-                "nickname": data.get('username', user.username),
-                'email': data.get('email', user.email),
-                "fname": data.get('first_name', user.first_name),
-                "lname": data.get('last_name', user.last_name)
-            }
-            skyroom_id = api.createUser(params)
-            UserSkyRoom.objects.create(skyroom_id=skyroom_id, user=user)
+        api = SkyroomAPI(SKYROOM_KEY)
+        params = {
+            "user_id": int(user.userskyroom.skyroom_id),
+            'email': data.get('email', user.email),
+            "fname": data.get('first_name', user.first_name),
+            "lname": data.get('last_name', user.last_name)
+        }
+        if data.get('password', None):
+            params['password'] = data['password']
+        api.updateUser(params)
 
 
     def partial_update(self, request, *args, **kwargs):
@@ -965,3 +955,20 @@ class StudentViewSet(views.APIView):
         student, course = self.student_course(request, *args, **kwargs)
         student.courses.remove(course)
         return Response(data={'message': 'Successfully left'}, status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, permission_classes=[IsStudent])
+    def assignments(self, request):
+        student = self.get_student(request)
+        courses = student.courses.all()
+        assignments = list()
+        for course in courses:
+            assignments += [assignment for assignment in 
+            course.assignments.filter(date__gte=datetime.datetime.now()).all()
+            if not assignment.sent(student)]
+        assignments.sort(key=lambda a:a.date, reverse=True)
+        serializer = AssignmentStudentSerializer(assignments, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+         # assignments = [assignment for assignment in 
+        # (course.assignments.filter(date__lte=datetime.datetime.now()).all()
+        # for course in courses) if not assignment.sent(student)].sort(key=lambda a:a.date)
