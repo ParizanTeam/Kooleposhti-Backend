@@ -12,7 +12,6 @@ from datetime import date, datetime, time, timedelta
 import base64
 import os
 from rest_framework.exceptions import ValidationError
-
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
@@ -268,7 +267,7 @@ class DiscountSerializer(serializers.ModelSerializer):
     code=serializers.CharField(max_length=255,required=False)
     class Meta:
         model = Discount
-        fields = ['discount','expiration_date','title','code','used_no','created_date']
+        fields = ['discount','expiration_date','title','code','used_no','created_date','course']
         read_only_fields=['used_no','created_date']
 
 
@@ -280,7 +279,9 @@ class DiscountSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         validated_attrs = super().validate(attrs)
         errors = {}
+        Discount.code.field.run_validators(value=validated_attrs['code'])
         is_code_exist=Discount.objects.filter(code=validated_attrs['code']).exists()
+
         if (is_code_exist):
             errors['code'] = self.error_messages['code_exists']
 

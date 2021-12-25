@@ -2,6 +2,7 @@ from django.db import models
 from accounts.models import Instructor, Student, User
 from uuid import uuid4
 from Kooleposhti import settings
+from django.core.validators import RegexValidator
 
 
 class Promotion(models.Model):
@@ -309,13 +310,15 @@ class Review(models.Model):
 
 class Discount(models.Model):
     '''
-    fields = ('id', 'discount', 'created_date', 'expiration_date', 'title', 'code', 'owner', 'used_no')
+    fields = ('id', 'discount', 'created_date', 'expiration_date', 'title', 'code', 'owner', 'course', 'used_no')
     '''
     discount = models.FloatField()
     created_date = models.DateTimeField(auto_now_add=True)
     expiration_date = models.DateTimeField()
     title = models.CharField(max_length=255)
-    code = models.CharField(max_length=255,unique=True)
+    code = models.CharField(max_length=12,unique=True,validators=[RegexValidator(regex="^[a-zA-Z0-9]*$")])
     owner = models.ForeignKey(
         Instructor, on_delete=models.CASCADE, related_name='discount_codes')
+    course = models.ForeignKey(
+        Course, on_delete=models.CASCADE, related_name='discont_courses')
     used_no = models.IntegerField(default=0)

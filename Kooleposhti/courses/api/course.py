@@ -432,3 +432,15 @@ class CategoryViewSet(ModelViewSet):
 		category = self.get_object()
 		serializer = self.get_serializer(category.courses, many=True)
 		return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+# class FavoriteViewSet(ModelViewSet):
+# 	serializer_class = FavoriteSerializer
+# 	http_method_names = ['get', 'post']
+
+# 	def get_queryset(self):
+# 		return Session.objects.filter(course_id=self.kwargs.get('student_pk'))
+
+# 	def get_serializer_context(self):
+# 		return {'course': self.kwargs.get('student_pk')}

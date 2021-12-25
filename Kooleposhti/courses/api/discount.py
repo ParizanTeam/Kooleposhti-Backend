@@ -21,7 +21,7 @@ class DiscountViewSet(ModelViewSet):
 	def create(self, request, *args, **kwargs):
 		data = request.data.copy()
 		auto_gen=False
-		if("code" not in data.keys()):
+		if("code" not in data.keys() or data["code"]==""):
 			random_code=''.join(random.choice(string.ascii_letters + string.digits) for _ in range(5))
 			data["code"]=random_code
 			auto_gen=True
@@ -36,10 +36,10 @@ class DiscountViewSet(ModelViewSet):
 				status=status.HTTP_201_CREATED, headers=headers)
 
 
-	@action(detail=False,url_path="codes")
-	def get_owner_code(self, request):
+	@action(detail=False,url_path="codes/(?P<course>[0-9]+)")
+	def get_owner_code(self, request,course=None):
 		owner= request.user.instructor
-		discounts=Discount.objects.filter(owner=owner)
+		discounts=Discount.objects.filter(owner=owner,course=course)
 		serializer = self.get_serializer(discounts, many=True)
 		return Response(serializer.data, status=status.HTTP_200_OK)
 
