@@ -258,7 +258,7 @@ class CourseViewSet(ModelViewSet):
 		student = request.user.student
 		if course.is_enrolled(student):
 			return Response('Already enrolled', status=status.HTTP_400_BAD_REQUEST)
-		if course.capacity < 1:
+		if course.capacity < 1 or course.end_date < jdatetime.datetime.now():
 			return Response("there's no enrollment available", status=status.HTTP_400_BAD_REQUEST)
 
 		try:
@@ -342,11 +342,11 @@ class CourseViewSet(ModelViewSet):
 	def can_enroll(self, request, *args, **kwargs):
 		course = self.get_object()
 		try:
-			return Response({'enroll': not course.is_enrolled(request.user.student)},
-							status=status.HTTP_200_OK)
+			return Response({'enroll': not course.is_enrolled(request.user.student) 
+				and course.end_date >= jdatetime.date.today()}, status=status.HTTP_200_OK)
 		except:
-			return Response({'enroll': not request.user.is_authenticated},
-							status=status.HTTP_200_OK)
+			return Response({'enroll': not request.user.is_authenticated
+				and course.end_date >= jdatetime.date.today()}, status=status.HTTP_200_OK)
 
 		
 	@action(detail=True, permission_classes=[AllowAny],
@@ -404,7 +404,6 @@ class CourseViewSet(ModelViewSet):
 		user = request.user
 		if course.is_course_user(user):
 			serializer = AssignmentSerializer(course.assignments, many=True)
-			print(serializer.data)
 			return Response(serializer.data, status=status.HTTP_200_OK)
 		return Response({"you do not have permission to see this course assignments."}, 
 						status=status.HTTP_403_FORBIDDEN)
