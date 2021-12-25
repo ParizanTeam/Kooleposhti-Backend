@@ -31,8 +31,11 @@ class WalletViewSet(ModelViewSet):
 	def withdraw(self, request, *args, **kwargs):
 		wallet = self.get_object()
 		amount = request.data['amount']
-		if amount > wallet.balance or amount < 0:
+		if amount > wallet.balance:
 			return Response('Insufficient funds.',
+							status=status.HTTP_400_BAD_REQUEST)
+		if amount < 100000 or amount % 1000:
+			return Response('Invalid amount.',
 							status=status.HTTP_400_BAD_REQUEST)
 		wallet.withdraw(amount)
 		return Response('done.', status=status.HTTP_200_OK)

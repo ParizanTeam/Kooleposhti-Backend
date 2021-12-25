@@ -291,28 +291,29 @@ class InstructorViewSet(views.APIView):
         data = serializer.validated_data['user']
         user = self.get_instructor(request).user
         api = SkyroomAPI(SKYROOM_KEY)
-        if user.username == data.get('username', user.username):
-            params = {
-                "user_id": int(user.userskyroom.skyroom_id),
-                'password': data.get('password'),
-                'email': data.get('email', user.email),
-                "fname": data.get('first_name', user.first_name),
-                "lname": data.get('last_name', user.last_name)
-            }
-            api.updateUser(params)
-        else:
-            api.deleteUser({"user_id": user.userskyroom.skyroom_id})
-            user.userskyroom.delete()
-            params = {
-                'username': data.get('username', user.username),
-                'password': data.get('password'),
-                "nickname": data.get('username', user.username),
-                'email': data.get('email', user.email),
-                "fname": data.get('first_name', user.first_name),
-                "lname": data.get('last_name', user.last_name)
-            }
-            skyroom_id = api.createUser(params)
-            UserSkyRoom.objects.create(skyroom_id=skyroom_id, user=user)
+        # if user.username == data.get('username', user.username):
+        params = {
+            "user_id": int(user.userskyroom.skyroom_id),
+            'email': data.get('email', user.email),
+            "fname": data.get('first_name', user.first_name),
+            "lname": data.get('last_name', user.last_name)
+        }
+        if len(password) > 7:
+            params['password'] = password
+        api.updateUser(params)
+        # else:
+        #     api.deleteUser({"user_id": user.userskyroom.skyroom_id})
+        #     user.userskyroom.delete()
+        #     params = {
+        #         'username': data.get('username', user.username),
+        #         'password': data.get('password'),
+        #         "nickname": data.get('username', user.username),
+        #         'email': data.get('email', user.email),
+        #         "fname": data.get('first_name', user.first_name),
+        #         "lname": data.get('last_name', user.last_name)
+        #     }
+        #     skyroom_id = api.createUser(params)
+        #     UserSkyRoom.objects.create(skyroom_id=skyroom_id, user=user)
 
     def partial_update(self, request, *args, **kwargs):
         kwargs['partial'] = True
