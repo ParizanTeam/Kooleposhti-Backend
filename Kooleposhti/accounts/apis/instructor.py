@@ -1,5 +1,5 @@
 from django.http.request import QueryDict
-from accounts.serializers.instructor_serializer import InstructorProfileSerializer
+from accounts.serializers.instructor_serializer import InstructorProfileSerializer, InstructorSerializer
 from accounts.permissions import IsInstructor
 from courses.models import Course
 from django.contrib.auth.tokens import default_token_generator
@@ -963,3 +963,12 @@ class InstructorViewSet(views.APIView):
         serializer = course_serializers.InstructorCourseSerializer(
             courses, many=True)
         return Response(serializer.data)
+
+
+    @action(detail=False, permission_classes=[AllowAny])
+    def top(self, request):
+        count = request.data.get('count', 12)
+        count = min(len(Instructor.objects.all()), count)
+        serializer = InstructorSerializer(Instructor.objects.order_by('pk')[:count], many=True)
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
+

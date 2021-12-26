@@ -5,7 +5,7 @@ from decimal import Decimal
 from accounts.models import Instructor
 from images.serializers import CommentImageSerializer
 from djoser.serializers import UserSerializer as BaseUserSerializer
-from accounts.serializers.instructor_serializer import InstructorSerializer
+from accounts.serializers.instructor_serializer import CourseInstructorSerializer, InstructorSerializer
 import jdatetime
 import jalali_date
 from datetime import date, datetime, time, timedelta
@@ -209,6 +209,14 @@ class CourseSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
+class SimpleCourseSerializer(serializers.ModelSerializer):
+    # Basic info for Cart item
+    instructor = CourseInstructorSerializer(read_only=True)
+    class Meta:
+        model = Course
+        fields = ['id', 'title', 'rate', 'image', 'instructor']
+
+
 
 class CategorySerializer(serializers.ModelSerializer):
     # courses = CourseSerializer(many=True, read_only=True)
@@ -229,13 +237,6 @@ class ReviewSerializer(serializers.ModelSerializer):
             course_id=course_id,
             **validated_data
         )
-
-
-class SimpleCourseSerializer():
-    # Basic info for Cart item
-    class Meta:
-        model = Course
-        fields = ['id', 'title', 'price']
 
 
 class CartItemSerializer(serializers.ModelSerializer):

@@ -408,6 +408,16 @@ class CourseViewSet(ModelViewSet):
 		return Response({"you do not have permission to see this course assignments."}, 
 						status=status.HTTP_403_FORBIDDEN)
 
+	
+	
+	@action(detail=False, permission_classes=[AllowAny])
+	def top(self, request):
+		count = request.data.get('count', 10)
+		count = min(len(Course.objects.all()), count)
+		serializer = SimpleCourseSerializer(Course.objects.order_by('pk')[:count], many=True)
+		return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+
 	# @action(detail=True, methods=['post'],
 	# 		permission_classes=[IsAuthenticated])
 	# def comment(self, request, *args, **kwargs):
