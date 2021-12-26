@@ -286,7 +286,7 @@ TSWLatexianTemp*
 *.lyx~
 
 # Kile
-*.backup
+# *.backup
 
 # KBibTeX
 *~[0-9]*
@@ -564,7 +564,7 @@ Generated_Code/
 # to a newer Visual Studio version. Backup files are not needed,
 # because we have git ;-)
 _UpgradeReport_Files/
-Backup*/
+#Backup*/
 UpgradeLog*.XML
 UpgradeLog*.htm
 ServiceFabricBackup/
@@ -1516,7 +1516,7 @@ TSWLatexianTemp*
 *.lyx~
 
 # Kile
-*.backup
+# *.backup
 
 # gummi
 .*.swp

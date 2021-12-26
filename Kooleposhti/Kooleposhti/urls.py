@@ -53,8 +53,12 @@ urlpatterns = [
                                        cache_timeout=0), name='schema-redoc'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
+urlpatterns = [
+    path('api/v1/', include(urlpatterns), name='api'),
+]
 
-'''    
+
+'''
     path('openapi', get_schema_view(
             title="Blog API",
             description="A sample API for learning DRF",

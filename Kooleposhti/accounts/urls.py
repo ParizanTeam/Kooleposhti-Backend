@@ -19,6 +19,7 @@ from django.urls import base, path
 
 from accounts.apis.instructor import InstructorViewSet
 from accounts.apis.user import UserViewSet
+from accounts.apis.wallet import WalletViewSet
 from .views import *
 from .email import ActivationEmail
 from rest_framework.routers import DefaultRouter, SimpleRouter
@@ -35,6 +36,7 @@ router.register('instructors', InstructorViewSet,
 router.register('students', StudentViewSet, basename='accounts-student')
 router.register('users', UserViewSet, basename='accounts-user')
 router.register('profile', PublicProfile)
+router.register('wallet', WalletViewSet)
 # urlpatterns = router.urls
 # pprint(router.urls)
 # pprint(router.urls)

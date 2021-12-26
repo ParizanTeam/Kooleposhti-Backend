@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'jalali_date',
     'images',
     'commands',
+    'dbbackup',
 ]
 
 MIDDLEWARE = [
@@ -105,12 +106,21 @@ WSGI_APPLICATION = 'Kooleposhti.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 DATABASES = {
-    'default': {
+    # 'default': {  # kooleposhti
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     'NAME': 'dcnob3lebr55o2',
+    #     'USER': 'hzgvghwtcuhwbt',
+    #     'PASSWORD': env.str('DB_PASSWORD'),
+    #     'HOST': 'ec2-35-171-90-188.compute-1.amazonaws.com',
+    #     'PORT': '5432',
+    # },
+    'default': {  # kooleposhti
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'kooleposhtidb',
         'USER': 'ubuntu',
         'PASSWORD': env.str('DB_PASSWORD'),
         'HOST': 'kooleposhti.ml',
+        # 'HOST': 'localhost',
         'PORT': '5432',
     },
     'TEST': {
@@ -162,6 +172,14 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [str(BASE_DIR.joinpath('static'))]
 STATIC_ROOT = str(BASE_DIR.joinpath('staticfiles'))
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+DBBACKUP_STORAGE = STATICFILES_STORAGE
+DBBACKUP_STORAGE_OPTIONS = {
+    'location': os.path.join(BASE_DIR, 'backup')
+}
+DBBACKUP_FILENAME_TEMPLATE = '{datetime}-{databasename}.{extension}'
+DBBACKUP_MEDIA_FILENAME_TEMPLATE = '{datetime}-media.{extension}'
+
+
 # MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # MEDIA_URL = '/media/'
 
@@ -286,6 +304,15 @@ JALALI_DATE_DEFAULTS = {
                 'admin/jquery.ui.datepicker.jalali/themes/base/jquery-ui.min.css',
             ]
         }
+    },
+}
+
+DELETE_UNSTAGED_USERS_AFTER_DAYS = 3
+
+CELERY_BEAT_SCHEDULE = {
+    'scheduled_task': {
+        'task': 'accounts.tasks.remove_unstaged_users_task',
+        'schedule': timedelta(days=DELETE_UNSTAGED_USERS_AFTER_DAYS),
     },
 }
 

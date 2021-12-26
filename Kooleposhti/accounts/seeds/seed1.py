@@ -37,3 +37,5 @@ s.image = MyImage.objects.first()
 s.student.age = 15
 s.student.save()
 s.save()
+
+# User.objects.filter('courses')

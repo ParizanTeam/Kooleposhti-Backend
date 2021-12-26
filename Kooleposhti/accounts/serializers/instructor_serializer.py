@@ -14,6 +14,7 @@ class TagProfileSerializer(serializers.ModelSerializer):
 
 class InstructorProfileSerializer(BaseUserSerializer):
     tags = TagProfileSerializer(many=True, read_only=True)
+    username = serializers.CharField(source='user.username', read_only=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
