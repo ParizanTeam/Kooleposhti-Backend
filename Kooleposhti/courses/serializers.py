@@ -1,8 +1,9 @@
-from rest_framework import serializers
+from rest_framework import request, serializers
 from rest_framework.viewsets import ModelViewSet
 from .models import *
 from decimal import Decimal
 from accounts.models import Instructor
+from images.models import MyImage
 from images.serializers import CommentImageSerializer
 from djoser.serializers import UserSerializer as BaseUserSerializer
 from accounts.serializers.instructor_serializer import InstructorSerializer
@@ -231,11 +232,34 @@ class ReviewSerializer(serializers.ModelSerializer):
         )
 
 
-class SimpleCourseSerializer():
-    # Basic info for Cart item
+class SimpleUserSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+    username = serializers.SerializerMethodField()
+
+    def get_username(self,instructor:Instructor):
+        user=User.objects.get(id=instructor.id)
+        return user.username
+
+
+    def get_image(self,user:Instructor):
+        myImage=MyImage.objects.filter(user=user.id)
+        return myImage[0].image if myImage.exists() else None
+    class Meta:
+        model = User
+        fields = ['id', 'first_name','last_name','image','username']
+
+
+class SimpleCourseSerializer(serializers.ModelSerializer):
+    instructor = SimpleUserSerializer()
+    # is_favorite = serializers.SerializerMethodField()
+
+    # def get_is_favorite(self,course:Course):
+    #     request=self.context.get("request")
+    #     return Favorite.get(course=course,student=request.user).exists()
+
     class Meta:
         model = Course
-        fields = ['id', 'title', 'price']
+        fields = ['id', 'title', 'instructor','rate']
 
 
 class CartItemSerializer(serializers.ModelSerializer):

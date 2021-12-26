@@ -409,6 +409,35 @@ class CourseViewSet(ModelViewSet):
 		return Response({"you do not have permission to see this course assignments."}, 
 						status=status.HTTP_403_FORBIDDEN)
 
+
+
+	@action(detail=True, methods=['GET'],
+			permission_classes=[IsStudent],url_path="favorite/add")
+	def add_favorite(self, request, *args, **kwargs):
+		course = self.get_object()
+		student = request.user.student
+		if course.is_enrolled(student):
+				Favorite.objects.create(course=course, student=student)
+				return Response('Added to favorites successfully', status=status.HTTP_200_OK)
+		else:
+			return Response({"you're not enrolled."}, status=status.HTTP_403_FORBIDDEN)
+
+	@action(detail=True, methods=['GET'],
+			permission_classes=[IsStudent],url_path="favorite/remove")
+	def remove_favorite(self, request, *args, **kwargs):
+		course = self.get_object()
+		student = request.user.student
+		if course.is_enrolled(student):
+				favorite=Favorite.objects.get(course=course, student=student)
+				if(not favorite.exists()):
+					return Response('Course in not in favorites', status=status.HTTP_400_BAD_REQUEST)
+				favorite.delete()
+				return Response('Removed from favorites successfully', status=status.HTTP_200_OK)
+		else:
+			return Response({"you're not enrolled."}, status=status.HTTP_403_FORBIDDEN)
+
+
+
 	# @action(detail=True, methods=['post'],
 	# 		permission_classes=[IsAuthenticated])
 	# def comment(self, request, *args, **kwargs):
@@ -432,3 +461,6 @@ class CategoryViewSet(ModelViewSet):
 		category = self.get_object()
 		serializer = self.get_serializer(category.courses, many=True)
 		return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+

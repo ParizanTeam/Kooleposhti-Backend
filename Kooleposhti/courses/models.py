@@ -304,3 +304,7 @@ class Review(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
     date = models.DateField(auto_now_add=True)
+
+class Favorite(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='favorites_students')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='favorites_courses')

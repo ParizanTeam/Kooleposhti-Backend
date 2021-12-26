@@ -1,7 +1,7 @@
 from django.db import utils
 from accounts.permissions import IsStudent
-from courses.models import Course
-from courses.serializers import AssignmentStudentSerializer
+from courses.models import Course, Favorite
+from courses.serializers import AssignmentStudentSerializer,SimpleCourseSerializer
 from django.contrib.auth.tokens import default_token_generator
 from django.urls import reverse
 from rest_framework.viewsets import ModelViewSet
@@ -985,3 +985,13 @@ class StudentViewSet(views.APIView):
          # assignments = [assignment for assignment in 
         # (course.assignments.filter(date__lte=datetime.datetime.now()).all()
         # for course in courses) if not assignment.sent(student)].sort(key=lambda a:a.date)
+
+
+    
+    @action(detail=False, methods=['GET'],permission_classes=[IsStudent],url_path="favorites")
+    def get_favorite(self, request):
+        student = request.user.student
+        favorites=Favorite.objects.filter(student=student).values_list("course",flat=True)
+        courses=Course.objects.filter(pk__in=favorites)
+        serializer = SimpleCourseSerializer(courses, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
