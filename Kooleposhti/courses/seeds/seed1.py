@@ -1,4 +1,4 @@
-from .models import Category
+from courses.models import Category
 
 Category.objects.create(title="مسافرت")
 Category.objects.create(title="زیبایی")

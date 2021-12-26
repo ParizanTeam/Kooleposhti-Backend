@@ -36,3 +36,10 @@ class InstructorSerializer(BaseUserSerializer):
         model = Instructor
         fields = ['id', 'username', 'first_name', 'last_name',
                   'image', 'tags']
+
+class CourseInstructorSerializer(BaseUserSerializer):
+    image = serializers.ImageField(source='image.image', read_only=True)
+
+    class Meta(BaseUserSerializer.Meta):
+        model = Instructor
+        fields = ['id', 'first_name', 'last_name', 'image']
