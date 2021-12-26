@@ -6,7 +6,7 @@ from accounts.models import Instructor
 from images.models import MyImage
 from images.serializers import CommentImageSerializer
 from djoser.serializers import UserSerializer as BaseUserSerializer
-from accounts.serializers.instructor_serializer import InstructorSerializer
+from accounts.serializers.instructor_serializer import CourseInstructorSerializer, InstructorSerializer
 import jdatetime
 import jalali_date
 from datetime import date, datetime, time, timedelta
@@ -207,6 +207,14 @@ class CourseSerializer(serializers.ModelSerializer):
             self.fail("course remaining capacity should not be negative")
         validated_data['capacity'] = capacity
         return super().update(instance, validated_data)
+
+
+class CartCourseSerializer(serializers.ModelSerializer):
+    # Basic info for Cart item
+    instructor = CourseInstructorSerializer(read_only=True)
+    class Meta:
+        model = Course
+        fields = ['id', 'title', 'rate', 'image', 'instructor']
 
 
 

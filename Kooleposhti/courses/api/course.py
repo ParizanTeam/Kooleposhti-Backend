@@ -435,6 +435,14 @@ class CourseViewSet(ModelViewSet):
 		else:
 			return Response({"you're not enrolled."}, status=status.HTTP_403_FORBIDDEN)
 
+	
+	
+	@action(detail=False, permission_classes=[AllowAny])
+	def top(self, request):
+		count = request.data.get('count', 10)
+		count = min(len(Course.objects.all()), count)
+		serializer = CartCourseSerializer(Course.objects.order_by('pk')[:count], many=True)
+		return Response(status=status.HTTP_200_OK, data=serializer.data)
 
 
 	# @action(detail=True, methods=['post'],
