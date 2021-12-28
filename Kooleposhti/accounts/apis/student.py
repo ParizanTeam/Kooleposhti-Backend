@@ -1,4 +1,6 @@
+import decimal
 from django.db import utils
+from accounts.models import Wallet
 from accounts.permissions import IsStudent
 from courses.models import Course, Favorite
 from courses.serializers import AssignmentStudentSerializer,SimpleCourseSerializer
@@ -43,6 +45,7 @@ from skyroom import *
 from Kooleposhti.settings import SKYROOM_KEY
 import datetime
 import jdatetime
+from courses.api.discount import DiscountViewSet
 # import rest_framework.request
 
 
@@ -946,7 +949,30 @@ class StudentViewSet(views.APIView):
             raise Exception('Already enrolled')
         if not course.can_enroll(student):
             raise Exception('Cannot enroll')
+
+        course_price=course.price
+        is_used_discount=False
+        discount_code= request.data.get('code')
+        if(discount_code!="" and discount_code!=None):
+            discount_result=DiscountViewSet.validate_code(discount_code,course.id)
+            if type(discount_result) is Response:
+                return discount_result
+            course_price-=decimal.Decimal((float(course_price)*discount_result.discount)//100)
+            is_used_discount=True
+    
+
+        student_wallet= Wallet.objects.get(user=student.id)
+        if course_price > student_wallet.balance:
+            return Response('Insufficient funds.',
+							status=status.HTTP_400_BAD_REQUEST)
+
+        student_wallet.withdraw(course_price)
         student.courses.add(course)
+
+        if(is_used_discount):
+            discount_result.used_no+=1
+            discount_result.save()
+
         return Response(data={'message': 'Successfully enrolled'}, status=status.HTTP_204_NO_CONTENT)
 
     # (?P<course_pk>[^/.]+)
