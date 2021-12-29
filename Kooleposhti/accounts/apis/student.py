@@ -961,7 +961,9 @@ class StudentViewSet(views.APIView):
             is_used_discount=True
     
 
-        student_wallet= Wallet.objects.get(user=student.id)
+        student_wallet= Wallet.objects.get(user=student.user_id)
+        print(student_wallet.balance)
+        print(course_price)
         if course_price > student_wallet.balance:
             return Response('Insufficient funds.',
 							status=status.HTTP_400_BAD_REQUEST)
