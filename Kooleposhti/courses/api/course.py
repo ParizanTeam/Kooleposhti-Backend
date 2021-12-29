@@ -285,9 +285,11 @@ class CourseViewSet(ModelViewSet):
 		
 		student_wallet.withdraw(course_price)
 		Order.objects.create(course=course, student=student, 
-		instructor=course.instructor, amount=course_price, date=jdatetime.date.today())
+		instructor=course.instructor, amount=course_price, 
+		date=datetime.strptime(jdatetime.date.today().__str__(), "%Y-%m-%d"))
 		course.students.add(student)
 		course.update_capacity()
+		course.save()
 		
 		if(is_used_discount):
 			discount_result.used_no+=1
