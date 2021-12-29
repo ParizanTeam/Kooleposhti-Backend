@@ -43,8 +43,7 @@ class CourseViewSet(ModelViewSet):
 	filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
 	filterset_fields = ['instructor_id']
 	filterset_class = CourseFilter
-	search_fields = ['title', 'description', 
-	'instructor__user__first_name', 'instructor__user__last_name']  # space comma seprator
+	search_fields = ['title']  # space comma seprator
 	ordering_fields = ['price', 'last_update']  # -prince, last_update
 	pagination_class = DefaultPagination  # can be moved to settings
 	permission_classes = [IsInstructorOrReadOnly]
@@ -96,7 +95,7 @@ class CourseViewSet(ModelViewSet):
 		params = {
 			"name": f"class{course.id}",
 			"title": course.title,
-			"description": course.description,
+			# "description": course.description,
 			"session_duration": course.duration,
 			"max_users": course.max_students + 1,
 			"guest_login": False,

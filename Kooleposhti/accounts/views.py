@@ -178,12 +178,13 @@ def sign_up_user(request: HttpRequest, *args, **kwargs):
             
         user = serializer.save()
         userskyroom = UserSkyRoom.objects.create(skyroom_id=skyroom_id, user=user)
-        wallet = Wallet.objects.create(user=user)
 
         if is_instructor:
             Instructor.objects.create(user=user)
+            Wallet.objects.create(user=user)
         else:
             Student.objects.create(user=user)
+            Wallet.objects.create(user=user, balance=50000)
         # data = serializer.validated_data.copy()
         # del data['password']
         # del data['password2']
