@@ -234,6 +234,22 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'courses']
 
 
+class OrderSerializer(serializers.ModelSerializer):
+    course = serializers.CharField(source='course.title', read_only=True)
+    student = serializers.CharField(source='student.user.username', read_only=True)
+    class Meta:
+        model = Order
+        fields = ['id', 'date', 'amount', 'course', 'student']
+        read_only_fields = ['id', 'date', 'amount']
+
+
+class CourseOrderSerializer(serializers.ModelSerializer):
+    orders = OrderSerializer(many=True, read_only=True)
+    class Meta:
+        model = Course
+        fields = ['orders']
+
+
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
