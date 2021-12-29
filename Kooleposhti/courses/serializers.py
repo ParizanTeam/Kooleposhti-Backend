@@ -138,6 +138,10 @@ class ReplySerializer(serializers.ModelSerializer):
         validated_data['user'] = request.user
         return super().create(validated_data)
 
+    def update(self, instance, validated_data):
+        validated_data['created_date'] = jdatetime.datetime.now().__str__()
+        return super().update(instance, validated_data)
+
 class CommentSerializer(serializers.ModelSerializer):
     reply = ReplySerializer(read_only=True)
     user = UserCommentSerializer(read_only=True)
@@ -152,6 +156,10 @@ class CommentSerializer(serializers.ModelSerializer):
         validated_data['created_date'] = jdatetime.datetime.now().__str__()
         validated_data['user'] = request.user
         return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data['created_date'] = jdatetime.datetime.now().__str__()
+        return super().update(instance, validated_data)
 
 
 # class CommentReplySerializer(serializers.ModelSerializer):
