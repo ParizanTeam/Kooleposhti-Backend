@@ -96,7 +96,7 @@ class CourseViewSet(ModelViewSet):
 		params = {
 			"name": f"class{course.id}",
 			"title": course.title,
-			"description": course.description,
+			# "description": course.description,
 			"session_duration": course.duration,
 			"max_users": course.max_students + 1,
 			"guest_login": False,
