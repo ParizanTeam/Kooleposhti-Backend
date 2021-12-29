@@ -209,7 +209,7 @@ class CourseSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-class SimpleCourseSerializer(serializers.ModelSerializer):
+class CartCourseSerializer(serializers.ModelSerializer):
     # Basic info for Cart item
     instructor = CourseInstructorSerializer(read_only=True)
     class Meta:

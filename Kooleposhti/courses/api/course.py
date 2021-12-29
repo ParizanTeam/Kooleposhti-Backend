@@ -410,7 +410,6 @@ class CourseViewSet(ModelViewSet):
 
 
 
-
 	@action(detail=True, methods=['GET'],
 			permission_classes=[IsStudent],url_path="favorite/add")
 	def add_favorite(self, request, *args, **kwargs):
@@ -431,13 +430,12 @@ class CourseViewSet(ModelViewSet):
 		favorite.delete()
 		return Response('Removed from favorites successfully', status=status.HTTP_200_OK)
 
-
 	
 	@action(detail=False, permission_classes=[AllowAny])
 	def top(self, request):
 		count = request.data.get('count', 10)
 		count = min(len(Course.objects.all()), count)
-		serializer = SimpleCourseSerializer(Course.objects.order_by('pk')[:count], many=True)
+		serializer = CartCourseSerializer(Course.objects.order_by('pk')[:count], many=True)
 		return Response(status=status.HTTP_200_OK, data=serializer.data)
 
 
@@ -465,5 +463,4 @@ class CategoryViewSet(ModelViewSet):
 		category = self.get_object()
 		serializer = self.get_serializer(category.courses, many=True)
 		return Response(serializer.data, status=status.HTTP_200_OK)
-
 
