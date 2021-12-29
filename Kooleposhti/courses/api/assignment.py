@@ -41,8 +41,7 @@ class AssignmentViewSet(ModelViewSet):
 	def perform_get(self, request, action, *args, **kwargs):
 		assignment = self.get_object()
 		user = request.user
-		if not (user.has_role('student') and assignment.is_course_student(user.student)) \
-		and not (user.has_role('instructor') and  assignment.is_course_owner(user.instructor)):
+		if not assignment.is_course_user(user):
 			return Response('you are not enrolled.',status=status.HTTP_403_FORBIDDEN)
 		if action == 'retrieve':
 			return super().retrieve(request, *args, **kwargs)
