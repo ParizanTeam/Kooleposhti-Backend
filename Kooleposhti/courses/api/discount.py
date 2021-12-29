@@ -21,6 +21,13 @@ class DiscountViewSet(ModelViewSet):
 	def create(self, request, *args, **kwargs):
 		data = request.data.copy()
 		auto_gen=False
+<<<<<<< HEAD
+=======
+		owner= request.user
+
+		if(data["title"]==""):
+			data["title"]=f"{owner.username}'s Discount Code "
+>>>>>>> 7d372b67c0bf02a95d99ae0b0d6f40f7b3243488
 		if("code" not in data.keys() or data["code"]==""):
 			random_code=''.join(random.choice(string.ascii_letters + string.digits) for _ in range(5))
 			data["code"]=random_code
@@ -42,18 +49,30 @@ class DiscountViewSet(ModelViewSet):
 		discounts=Discount.objects.filter(owner=owner,course=course)
 		serializer = self.get_serializer(discounts, many=True)
 		return Response(serializer.data, status=status.HTTP_200_OK)
-
-	@action(detail=False,url_path="validate/(?P<code>[0-9a-zA-Z]+)")
-	def validate_code(self, request,code=None):
+	
+	@staticmethod
+	def validate_code(code,course_id):
 		discount=Discount.objects.filter(code=code)
 
 		if(not discount.exists()):
-			return Response("Not Found", status=status.HTTP_404_NOT_FOUND)
+			return Response("Invalid discount code", status=status.HTTP_403_FORBIDDEN)
 
 		discount=discount.get()
 
 		if(timezone.now()>discount.expiration_date):
-			return Response("Expired", status=status.HTTP_410_GONE)
+			return Response("The discount code has expired", status=status.HTTP_410_GONE)
 
-		serializer = self.get_serializer(discount)
+		if(discount.course.id!=int(course_id)):
+			return Response("Invalid discount code", status=status.HTTP_403_FORBIDDEN)
+		return discount
+
+	# (?P<code>[0-9a-zA-Z]+)?c=(?P<course_id>[0-9]+)
+	@action(detail=False,url_path="validate")
+	def validate_code_view(self,request):
+		code = self.request.GET.get('code')
+		course_id = self.request.GET.get('course')
+		result=DiscountViewSet.validate_code(code,course_id)
+		if type(result) is Response:
+			return result
+		serializer = self.get_serializer(result)
 		return Response(serializer.data, status=status.HTTP_200_OK)
