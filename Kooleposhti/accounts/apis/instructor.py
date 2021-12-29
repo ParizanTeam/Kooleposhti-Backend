@@ -298,7 +298,7 @@ class InstructorViewSet(views.APIView):
             "fname": data.get('first_name', user.first_name),
             "lname": data.get('last_name', user.last_name)
         }
-        if len(password) > 7:
+        if password and len(password) > 7 and not password.isnumeric():
             params['password'] = password
         api.updateUser(params)
         # else:
