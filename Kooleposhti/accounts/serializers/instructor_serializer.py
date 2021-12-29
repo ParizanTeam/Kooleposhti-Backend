@@ -3,6 +3,7 @@ from rest_framework.utils import html, model_meta, representation
 from accounts.models import Instructor, Tag
 from rest_framework import serializers
 from .user_serializers import BaseUserSerializer
+from images.serializers import CommentImageSerializer
 
 
 class TagProfileSerializer(serializers.ModelSerializer):
@@ -14,6 +15,7 @@ class TagProfileSerializer(serializers.ModelSerializer):
 
 class InstructorProfileSerializer(BaseUserSerializer):
     tags = TagProfileSerializer(many=True, read_only=True)
+    username = serializers.CharField(source='user.username', read_only=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -35,3 +37,10 @@ class InstructorSerializer(BaseUserSerializer):
         model = Instructor
         fields = ['id', 'username', 'first_name', 'last_name',
                   'image', 'tags']
+
+class CourseInstructorSerializer(BaseUserSerializer):
+    image = serializers.ImageField(source='user.image.image', read_only=True)
+
+    class Meta(BaseUserSerializer.Meta):
+        model = Instructor
+        fields = ['id', 'first_name', 'last_name', 'image',]

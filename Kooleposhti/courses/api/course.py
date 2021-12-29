@@ -45,8 +45,7 @@ class CourseViewSet(ModelViewSet):
 	filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
 	filterset_fields = ['instructor_id']
 	filterset_class = CourseFilter
-	search_fields = ['title', 'description', 
-	'instructor__user__first_name', 'instructor__user__last_name']  # space comma seprator
+	search_fields = ['title']  # space comma seprator
 	ordering_fields = ['price', 'last_update']  # -prince, last_update
 	pagination_class = DefaultPagination  # can be moved to settings
 	permission_classes = [IsInstructorOrReadOnly]
@@ -98,7 +97,7 @@ class CourseViewSet(ModelViewSet):
 		params = {
 			"name": f"class{course.id}",
 			"title": course.title,
-			"description": course.description,
+			# "description": course.description,
 			"session_duration": course.duration,
 			"max_users": course.max_students + 1,
 			"guest_login": False,
@@ -235,6 +234,7 @@ class CourseViewSet(ModelViewSet):
 
 	def perform_add_student(self, course, student):
 		# create room user
+		print(course.room_id)
 		params = {
 			'room_id': course.room_id,
 			'users': [{'user_id': student.user.userskyroom.skyroom_id}]
@@ -327,7 +327,7 @@ class CourseViewSet(ModelViewSet):
 
 
 
-	@action(detail=True, methods=['put'],
+	action(detail=True, methods=['put'],
 			permission_classes=[IsInstructor], url_name="delete-student",
 			url_path="delete-student/(?P<sid>[^/.]+)")
 	def delete_student(self, request: HttpRequest, sid, *args, **kwargs):
@@ -366,12 +366,14 @@ class CourseViewSet(ModelViewSet):
 			url_name="can-enroll", url_path="can-enroll")
 	def can_enroll(self, request, *args, **kwargs):
 		course = self.get_object()
+		is_passed=course.end_date >= jdatetime.date.today()
+		print(is_passed)
 		try:
-			return Response({'enroll': not course.is_enrolled(request.user.student)},
-							status=status.HTTP_200_OK)
+			return Response({'enroll': not course.is_enrolled(request.user.student) 
+				and not is_passed}, status=status.HTTP_200_OK)
 		except:
-			return Response({'enroll': not request.user.is_authenticated},
-							status=status.HTTP_200_OK)
+			return Response({'enroll': not request.user.is_authenticated
+				and not is_passed}, status=status.HTTP_200_OK)
 
 		
 	@action(detail=True, permission_classes=[AllowAny],
@@ -429,10 +431,44 @@ class CourseViewSet(ModelViewSet):
 		user = request.user
 		if course.is_course_user(user):
 			serializer = AssignmentSerializer(course.assignments, many=True)
-			print(serializer.data)
 			return Response(serializer.data, status=status.HTTP_200_OK)
 		return Response({"you do not have permission to see this course assignments."}, 
 						status=status.HTTP_403_FORBIDDEN)
+
+
+
+
+	@action(detail=True, methods=['GET'],
+			permission_classes=[IsStudent],url_path="favorite/add")
+	def add_favorite(self, request, *args, **kwargs):
+		course = self.get_object()
+		student = request.user.student
+		Favorite.objects.create(course=course, student=student)
+		return Response('Added to favorites successfully', status=status.HTTP_200_OK)
+
+
+	@action(detail=True, methods=['GET'],
+			permission_classes=[IsStudent],url_path="favorite/remove")
+	def remove_favorite(self, request, *args, **kwargs):
+		course = self.get_object()
+		student = request.user.student
+		favorite=Favorite.objects.filter(course=course, student=student)
+		if(not favorite.exists()):
+			return Response('Course in not in favorites', status=status.HTTP_400_BAD_REQUEST)
+		favorite[0].delete()
+		return Response('Removed from favorites successfully', status=status.HTTP_200_OK)
+
+
+	
+	
+	@action(detail=False, permission_classes=[AllowAny])
+	def top(self, request):
+		count = request.data.get('count', 10)
+		count = min(len(Course.objects.all()), count)
+		serializer = CartCourseSerializer(Course.objects.order_by('pk')[:count], many=True)
+		return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+
 
 	# @action(detail=True, methods=['post'],
 	# 		permission_classes=[IsAuthenticated])
@@ -457,3 +493,5 @@ class CategoryViewSet(ModelViewSet):
 		category = self.get_object()
 		serializer = self.get_serializer(category.courses, many=True)
 		return Response(serializer.data, status=status.HTTP_200_OK)
+
+
