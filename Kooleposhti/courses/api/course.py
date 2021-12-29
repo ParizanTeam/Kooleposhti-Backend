@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpRequest, HttpResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from accounts.models import Instructor, Student
+from accounts.models import Instructor, Student, Wallet
 from courses.filters import CourseFilter
 from courses.pagination import DefaultPagination
 from accounts.permissions import *
@@ -18,6 +18,8 @@ from rest_framework.pagination import PageNumberPagination, LimitOffsetPaginatio
 from accounts.serializers.student_serializers import StudentSerializer
 from skyroom import *
 from Kooleposhti.settings import SKYROOM_KEY
+from courses.api.discount import DiscountViewSet
+import decimal
 
 
 api = SkyroomAPI(SKYROOM_KEY)
@@ -261,13 +263,36 @@ class CourseViewSet(ModelViewSet):
 		if course.capacity < 1:
 			return Response("there's no enrollment available", status=status.HTTP_400_BAD_REQUEST)
 
+		course_price=course.price
+		is_used_discount=False
+		discount_code= request.data.get('code')
+		if(discount_code!="" and discount_code!=None):
+			discount_result=DiscountViewSet.validate_code(discount_code,course.id)
+			if type(discount_result) is Response:
+				return discount_result
+			course_price-=decimal.Decimal((float(course_price)*discount_result.discount)//100)
+			is_used_discount=True
+    
+		student_wallet= Wallet.objects.get(user=student.user.id)
+		if course_price > student_wallet.balance:
+			return Response('Insufficient funds.',
+							status=status.HTTP_400_BAD_REQUEST)
+		
 		try:
 			self.perform_add_student(course, student)
 		except Exception as e:
 			return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
+		
+		student_wallet.withdraw(course_price)
+		Order.objects.create(course=course, student=student, 
+		instructor=course.instructor, amount=course_price, date=jdatetime.date.today())
 		course.students.add(student)
 		course.update_capacity()
+		
+		if(is_used_discount):
+			discount_result.used_no+=1
+			discount_result.save()
+
 		return Response({'enrolled': True}, status=status.HTTP_200_OK)
 
 
