@@ -233,6 +233,7 @@ class CourseViewSet(ModelViewSet):
 
 	def perform_add_student(self, course, student):
 		# create room user
+		print(course.room_id)
 		params = {
 			'room_id': course.room_id,
 			'users': [{'user_id': student.user.userskyroom.skyroom_id}]
@@ -258,7 +259,7 @@ class CourseViewSet(ModelViewSet):
 		student = request.user.student
 		if course.is_enrolled(student):
 			return Response('Already enrolled', status=status.HTTP_400_BAD_REQUEST)
-		if course.capacity < 1 or course.end_date < jdatetime.datetime.now():
+		if course.capacity < 1:
 			return Response("there's no enrollment available", status=status.HTTP_400_BAD_REQUEST)
 
 		try:
@@ -412,6 +413,7 @@ class CourseViewSet(ModelViewSet):
 
 
 
+
 	@action(detail=True, methods=['GET'],
 			permission_classes=[IsStudent],url_path="favorite/add")
 	def add_favorite(self, request, *args, **kwargs):
@@ -432,6 +434,8 @@ class CourseViewSet(ModelViewSet):
 		favorite[0].delete()
 		return Response('Removed from favorites successfully', status=status.HTTP_200_OK)
 
+
+	
 	
 	@action(detail=False, permission_classes=[AllowAny])
 	def top(self, request):
@@ -465,4 +469,5 @@ class CategoryViewSet(ModelViewSet):
 		category = self.get_object()
 		serializer = self.get_serializer(category.courses, many=True)
 		return Response(serializer.data, status=status.HTTP_200_OK)
+
 
