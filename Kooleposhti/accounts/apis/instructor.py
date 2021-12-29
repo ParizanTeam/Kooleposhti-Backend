@@ -298,7 +298,7 @@ class InstructorViewSet(views.APIView):
             "fname": data.get('first_name', user.first_name),
             "lname": data.get('last_name', user.last_name)
         }
-        if password and len(password) > 7 and not password.isnumeric():
+        if password is not None and password and len(password) > 7 and not password.isnumeric():
             params['password'] = password
         api.updateUser(params)
         # else:
@@ -934,6 +934,7 @@ class InstructorViewSet(views.APIView):
                 request.data._mutable = True
             password = request.data.get('password')
             self.delete_empty_field('password', request)
+            self.delete_none_field('password', request)
             self.delete_empty_field('image.image', request)
             self.delete_none_field('image.image', request)
             self.delete_nested_field_none('image', 'image', request)
@@ -964,11 +965,10 @@ class InstructorViewSet(views.APIView):
             courses, many=True)
         return Response(serializer.data)
 
-
     @action(detail=False, permission_classes=[AllowAny])
     def top(self, request):
         count = request.data.get('count', 12)
         count = min(len(Instructor.objects.all()), count)
-        serializer = InstructorSerializer(Instructor.objects.order_by('pk')[:count], many=True)
+        serializer = InstructorSerializer(
+            Instructor.objects.order_by('pk')[:count], many=True)
         return Response(status=status.HTTP_200_OK, data=serializer.data)
-
