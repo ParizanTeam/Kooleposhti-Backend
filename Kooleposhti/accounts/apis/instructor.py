@@ -962,3 +962,37 @@ class InstructorViewSet(views.APIView):
         serializer = course_serializers.InstructorCourseSerializer(
             courses, many=True)
         return Response(serializer.data)
+
+
+
+    @action(detail=False, methods=['GET'],
+            permission_classes=[IsInstructor])
+    def orders(self, request):
+        try:
+            instructor = self.get_instructor(request)
+        except AttributeError as e:
+            return Response(data={'message': 'you are not logged in'}, 
+                                status=status.HTTP_401_UNAUTHORIZED)
+        except Http404 as e:
+            return Response(data={'message': 'Instructor does not exist'}, 
+                                        status=status.HTTP_404_NOT_FOUND)
+        orders = instructor.orders.all().order_by('-placed_at')
+        serializer = course_serializers.OrderSerializer(orders, many=True)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+
+    @action(detail=False, methods=['GET'],
+            permission_classes=[IsInstructor],
+            url_path="course-orders")
+    def course_orders(self, request):
+        try:
+            instructor = self.get_instructor(request)
+        except AttributeError as e:
+            return Response(data={'message': 'you are not logged in'}, 
+                                status=status.HTTP_401_UNAUTHORIZED)
+        except Http404 as e:
+            return Response(data={'message': 'Instructor does not exist'}, 
+                                        status=status.HTTP_404_NOT_FOUND)
+        courses = instructor.courses.all()
+        serializer = course_serializers.CourseOrderSerializer(courses, many=True)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
