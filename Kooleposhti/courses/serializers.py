@@ -266,7 +266,7 @@ class SimpleCourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ['id', 'title', 'instructor','rate']
+        fields = ['id', 'title', 'instructor','rate','image']
 
 
 class CartItemSerializer(serializers.ModelSerializer):
