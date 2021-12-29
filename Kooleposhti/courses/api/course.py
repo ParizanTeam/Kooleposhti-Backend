@@ -341,12 +341,14 @@ class CourseViewSet(ModelViewSet):
 			url_name="can-enroll", url_path="can-enroll")
 	def can_enroll(self, request, *args, **kwargs):
 		course = self.get_object()
+		is_passed=course.end_date >= jdatetime.date.today()
+		print(is_passed)
 		try:
 			return Response({'enroll': not course.is_enrolled(request.user.student) 
-				and course.end_date >= jdatetime.date.today()}, status=status.HTTP_200_OK)
+				and not is_passed}, status=status.HTTP_200_OK)
 		except:
 			return Response({'enroll': not request.user.is_authenticated
-				and course.end_date >= jdatetime.date.today()}, status=status.HTTP_200_OK)
+				and not is_passed}, status=status.HTTP_200_OK)
 
 		
 	@action(detail=True, permission_classes=[AllowAny],
