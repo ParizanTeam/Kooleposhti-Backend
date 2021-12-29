@@ -264,8 +264,9 @@ class SimpleUserSerializer(serializers.ModelSerializer):
         fields = ['id', 'first_name','last_name','image','username']
 
 
+
 class SimpleCourseSerializer(serializers.ModelSerializer):
-    instructor = SimpleUserSerializer()
+    instructor = InstructorSerializer()
     # is_favorite = serializers.SerializerMethodField()
 
     # def get_is_favorite(self,course:Course):
