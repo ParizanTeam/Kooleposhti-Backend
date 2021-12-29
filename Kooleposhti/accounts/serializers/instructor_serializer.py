@@ -14,6 +14,7 @@ class TagProfileSerializer(serializers.ModelSerializer):
 
 class InstructorProfileSerializer(BaseUserSerializer):
     tags = TagProfileSerializer(many=True, read_only=True)
+    username = serializers.CharField(source='user.username', read_only=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -35,3 +36,10 @@ class InstructorSerializer(BaseUserSerializer):
         model = Instructor
         fields = ['id', 'username', 'first_name', 'last_name',
                   'image', 'tags']
+
+class CourseInstructorSerializer(BaseUserSerializer):
+    image = serializers.ImageField(source='image.image', read_only=True)
+
+    class Meta(BaseUserSerializer.Meta):
+        model = Instructor
+        fields = ['id', 'first_name', 'last_name', 'image']

@@ -1,4 +1,6 @@
+import decimal
 from django.db import utils
+from accounts.models import Wallet
 from accounts.permissions import IsStudent
 from courses.models import Course, Favorite
 from courses.serializers import AssignmentStudentSerializer,SimpleCourseSerializer
@@ -43,6 +45,7 @@ from skyroom import *
 from Kooleposhti.settings import SKYROOM_KEY
 import datetime
 import jdatetime
+from courses.api.discount import DiscountViewSet
 # import rest_framework.request
 
 
@@ -299,28 +302,15 @@ class StudentViewSet(views.APIView):
         data = serializer.validated_data['user']
         user = self.get_student(request).user
         api = SkyroomAPI(SKYROOM_KEY)
-        if user.username == data.get('username', user.username):
-            params = {
-                "user_id": int(user.userskyroom.skyroom_id),
-                'password': data.get('password'),
-                'email': data.get('email', user.email),
-                "fname": data.get('first_name', user.first_name),
-                "lname": data.get('last_name', user.last_name)
-            }
-            api.updateUser(params)
-        else:
-            api.deleteUser({"user_id": user.userskyroom.skyroom_id})
-            user.userskyroom.delete()
-            params = {
-                'username': data.get('username', user.username),
-                'password': data.get('password'),
-                "nickname": data.get('username', user.username),
-                'email': data.get('email', user.email),
-                "fname": data.get('first_name', user.first_name),
-                "lname": data.get('last_name', user.last_name)
-            }
-            skyroom_id = api.createUser(params)
-            UserSkyRoom.objects.create(skyroom_id=skyroom_id, user=user)
+        params = {
+            "user_id": int(user.userskyroom.skyroom_id),
+            'email': data.get('email', user.email),
+            "fname": data.get('first_name', user.first_name),
+            "lname": data.get('last_name', user.last_name)
+        }
+        if data.get('password', None):
+            params['password'] = data['password']
+        api.updateUser(params)
 
 
     def partial_update(self, request, *args, **kwargs):
@@ -959,7 +949,30 @@ class StudentViewSet(views.APIView):
             raise Exception('Already enrolled')
         if not course.can_enroll(student):
             raise Exception('Cannot enroll')
+
+        course_price=course.price
+        is_used_discount=False
+        discount_code= request.data.get('code')
+        if(discount_code!="" and discount_code!=None):
+            discount_result=DiscountViewSet.validate_code(discount_code,course.id)
+            if type(discount_result) is Response:
+                return discount_result
+            course_price-=decimal.Decimal((float(course_price)*discount_result.discount)//100)
+            is_used_discount=True
+    
+
+        student_wallet= Wallet.objects.get(user=student.id)
+        if course_price > student_wallet.balance:
+            return Response('Insufficient funds.',
+							status=status.HTTP_400_BAD_REQUEST)
+
+        student_wallet.withdraw(course_price)
         student.courses.add(course)
+
+        if(is_used_discount):
+            discount_result.used_no+=1
+            discount_result.save()
+
         return Response(data={'message': 'Successfully enrolled'}, status=status.HTTP_204_NO_CONTENT)
 
     # (?P<course_pk>[^/.]+)

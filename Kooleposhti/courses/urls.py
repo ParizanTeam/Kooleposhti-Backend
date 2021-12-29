@@ -23,7 +23,7 @@ from .api.comment import *
 from rest_framework.routers import SimpleRouter, DefaultRouter
 from rest_framework_nested import routers
 from pprint import pprint
-
+from .api.discount import DiscountViewSet
 app_name = 'courses'
 
 router = routers.DefaultRouter()
@@ -31,6 +31,8 @@ router.register('courses', CourseViewSet, basename=None)
 router.register('carts', ShoppingCartViewSet)
 router.register('categories', CategoryViewSet)
 router.register('assignments', AssignmentViewSet)
+router.register('discounts', DiscountViewSet)
+
 # pprint(router.urls)
 
 courses_router = routers.NestedDefaultRouter(
