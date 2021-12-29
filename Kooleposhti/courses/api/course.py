@@ -424,10 +424,10 @@ class CourseViewSet(ModelViewSet):
 	def remove_favorite(self, request, *args, **kwargs):
 		course = self.get_object()
 		student = request.user.student
-		favorite=Favorite.objects.get(course=course, student=student)
+		favorite=Favorite.objects.filter(course=course, student=student)
 		if(not favorite.exists()):
 			return Response('Course in not in favorites', status=status.HTTP_400_BAD_REQUEST)
-		favorite.delete()
+		favorite[0].delete()
 		return Response('Removed from favorites successfully', status=status.HTTP_200_OK)
 
 	
