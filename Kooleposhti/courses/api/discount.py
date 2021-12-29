@@ -21,19 +21,10 @@ class DiscountViewSet(ModelViewSet):
 	def create(self, request, *args, **kwargs):
 		data = request.data.copy()
 		auto_gen=False
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
->>>>>>> v1.0.4
 		owner= request.user
 
 		if(data["title"]==""):
 			data["title"]=f"{owner.username}'s Discount Code "
-<<<<<<< HEAD
-=======
->>>>>>> 7d372b67c0bf02a95d99ae0b0d6f40f7b3243488
->>>>>>> v1.0.4
 		if("code" not in data.keys() or data["code"]==""):
 			random_code=''.join(random.choice(string.ascii_letters + string.digits) for _ in range(5))
 			data["code"]=random_code
