@@ -297,7 +297,7 @@ class StudentViewSet(views.APIView):
     def perform_update(self, serializer):
         serializer.save()
 
-    def update_user(self, request, serializer):
+    def update_user(self, request, serializer, password):
         # update skyroom user
         data = serializer.validated_data['user']
         user = self.get_student(request).user
@@ -308,8 +308,8 @@ class StudentViewSet(views.APIView):
             "fname": data.get('first_name', user.first_name),
             "lname": data.get('last_name', user.last_name)
         }
-        if data.get('password', None):
-            params['password'] = data['password']
+        if password and len(password) > 7 and not password.isnumeric():
+            params['password'] = password
         api.updateUser(params)
 
 
@@ -895,12 +895,12 @@ class StudentViewSet(views.APIView):
             serializer = self.get_serializer(instance=student)
             return Response(serializer.data)
         elif request.method == 'PUT':
+            password = request.data.get('password')
             serializer = self.get_serializer(
                 instance=student, data=request.data)
             serializer.is_valid(raise_exception=True)
-            
             try:
-                self.update_user(request, serializer)
+                self.update_user(request, serializer, password)
             except Exception as e: 
                 return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 

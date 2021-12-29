@@ -233,6 +233,7 @@ class CourseViewSet(ModelViewSet):
 
 	def perform_add_student(self, course, student):
 		# create room user
+		print(course.room_id)
 		params = {
 			'room_id': course.room_id,
 			'users': [{'user_id': student.user.userskyroom.skyroom_id}]
@@ -258,7 +259,7 @@ class CourseViewSet(ModelViewSet):
 		student = request.user.student
 		if course.is_enrolled(student):
 			return Response('Already enrolled', status=status.HTTP_400_BAD_REQUEST)
-		if course.capacity < 1 or course.end_date < jdatetime.datetime.now():
+		if course.capacity < 1:
 			return Response("there's no enrollment available", status=status.HTTP_400_BAD_REQUEST)
 
 		try:
