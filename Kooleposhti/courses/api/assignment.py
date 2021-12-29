@@ -41,8 +41,7 @@ class AssignmentViewSet(ModelViewSet):
 	def perform_get(self, request, action, *args, **kwargs):
 		assignment = self.get_object()
 		user = request.user
-		if not (user.has_role('student') and assignment.is_course_student(user.student)) \
-		and not (user.has_role('instructor') and  assignment.is_course_owner(user.instructor)):
+		if not assignment.is_course_user(user):
 			return Response('you are not enrolled.',status=status.HTTP_403_FORBIDDEN)
 		if action == 'retrieve':
 			return super().retrieve(request, *args, **kwargs)
@@ -87,9 +86,10 @@ class HomeworkViewSet(ModelViewSet):
 		return {'assignment': self.kwargs.get('assignment_pk')}
 
 	def list(self, request, *args, **kwargs):
-		homework = self.get_object()
 		user = request.user
-		if user.has_role('instructor') and homework.is_course_owner(user.instructor):
+		assignment_pk = self.kwargs.get('assignment_pk')
+		assignment = get_object_or_404(Assignment.objects, pk=assignment_pk)
+		if user.has_role('instructor') and assignment.is_course_owner(user.instructor):
 			return super().list(request, *args, **kwargs)
 		return Response('you are not the course owner.',
 						status=status.HTTP_403_FORBIDDEN)
@@ -97,14 +97,17 @@ class HomeworkViewSet(ModelViewSet):
 	def retrieve(self, request, *args, **kwargs):
 		homework = self.get_object()
 		user = request.user
+		if homework.can_see(user):
+			return super().retrieve(request, *args, **kwargs)
+		return Response('you do not have permission to check this homework.',
+						status=status.HTTP_403_FORBIDDEN)
+
+	def create(self, request, *args, **kwargs):
+		user = request.user
 		data = request.data.copy()
 		student = request.user.student
 		assignment_pk = self.kwargs.get('assignment_pk')
 		assignment = get_object_or_404(Assignment.objects, pk=assignment_pk)
-		# try:
-		# 	assignment = Assignment.objects.get(pk=assignment_pk)
-		# except:
-		# 	return Response('assignment Not found', status=status.HTTP_404_NOT_FOUND)
 		if not assignment.is_course_student(student):
 			return Response('Not enrolled yet!', status=status.HTTP_403_FORBIDDEN)
 		if not data['answer'] and not data['file']:
