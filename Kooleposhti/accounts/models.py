@@ -136,4 +136,8 @@ class Wallet(models.Model):
     def withdraw(self, amount):
         self.balance -= amount
         self.save()
+
+    def deposit(self, amount):
+        self.balance += amount
+        self.save()
     
