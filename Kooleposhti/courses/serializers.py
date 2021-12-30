@@ -87,7 +87,7 @@ class AssignmentStudentSerializer(serializers.ModelSerializer):
     course = CourseTitleSerializer(read_only=True)
     class Meta:
         model = Assignment
-        fields = ["id", "course", "title", "end_date", "end_time"]
+        fields = ["id", "course", "title", "end_date", "end_time","question"]
 
 
 class HomeworkSerializer(serializers.ModelSerializer):
