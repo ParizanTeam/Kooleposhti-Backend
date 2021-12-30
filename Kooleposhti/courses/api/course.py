@@ -278,10 +278,10 @@ class CourseViewSet(ModelViewSet):
 			return Response('Insufficient funds.',
 							status=status.HTTP_400_BAD_REQUEST)
 		
-		# try:
-		# 	self.perform_add_student(course, student)
-		# except Exception as e:
-		# 	return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+		try:
+			self.perform_add_student(course, student)
+		except Exception as e:
+			return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 		
 		student_wallet.withdraw(course_price)
 		Order.objects.create(course=course, student=student, 
