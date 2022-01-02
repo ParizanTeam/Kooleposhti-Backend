@@ -247,7 +247,7 @@ class CourseOrderSerializer(serializers.ModelSerializer):
     orders = OrderSerializer(many=True, read_only=True)
     class Meta:
         model = Course
-        fields = ['orders']
+        fields = ['title', 'orders']
 
 
 class ReviewSerializer(serializers.ModelSerializer):

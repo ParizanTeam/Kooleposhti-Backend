@@ -273,7 +273,7 @@ class CourseViewSet(ModelViewSet):
 			course_price-=decimal.Decimal((float(course_price)*discount_result.discount)//100)
 			is_used_discount=True
     
-		student_wallet= Wallet.objects.get(user=student.user.id)
+		student_wallet= student.user.wallet
 		if course_price > student_wallet.balance:
 			return Response('Insufficient funds.',
 							status=status.HTTP_400_BAD_REQUEST)
@@ -284,7 +284,7 @@ class CourseViewSet(ModelViewSet):
 			return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 		
 		student_wallet.withdraw(course_price)
-		course.instructor.wallet.deposit(course_price)
+		course.instructor.user.wallet.deposit(course_price)
 		Order.objects.create(course=course, student=student, 
 		instructor=course.instructor, amount=course_price, 
 		date=datetime.strptime(jdatetime.date.today().__str__(), "%Y-%m-%d"))
