@@ -162,14 +162,6 @@ class CommentSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-# class CommentReplySerializer(serializers.ModelSerializer):
-#     reply = ReplySerializer(read_only=True)
-#     comment = CommentSerializer(read_only=True)
-#     class Meta:
-#         model = Comment
-#         fields = ['comment', 'reply']
-#         read_only_fields = ['comment', 'reply']
-
 class InstructorCourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course

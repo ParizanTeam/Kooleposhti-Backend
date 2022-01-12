@@ -312,12 +312,14 @@ class CourseViewSet(ModelViewSet):
 			student = get_object_or_404(Student, pk=sid)
 			if not course.is_enrolled(student):
 				return Response('Not enrolled', status=status.HTTP_403_FORBIDDEN)
+			
 
 			try:
 				self.perform_remove_student(course, student)
 			except Exception as e:
 				return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+			instructor.wallet.withraw()
 			course.students.remove(student)
 			course.update_capacity()
 			return Response({'deleted': True})
@@ -414,19 +416,6 @@ class CourseViewSet(ModelViewSet):
 		count = min(len(Course.objects.all()), count)
 		serializer = SimpleCourseSerializer(Course.objects.order_by('pk')[:count], many=True)
 		return Response(status=status.HTTP_200_OK, data=serializer.data)
-
-
-	# @action(detail=True, methods=['post'],
-	# 		permission_classes=[IsAuthenticated])
-	# def comment(self, request, *args, **kwargs):
-	# 	course = self.get_object()
-	# 	user = request.user
-	# 	if course.is_course_user(user):
-	# 		Comment.objects.create(course=course, student=user.student,
-	# 							   text=request.data['comment'])
-	# 		return Response('succssesfuly commented', status=status.HTTP_200_OK)
-	# 	return Response("you're not enrolled", status=status.HTTP_403_FORBIDDEN)
-
 
 
 class CategoryViewSet(ModelViewSet):
