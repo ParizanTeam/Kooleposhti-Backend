@@ -324,8 +324,8 @@ class DiscountSerializer(serializers.ModelSerializer):
     code=serializers.CharField(max_length=255,required=False)
     class Meta:
         model = Discount
-        fields = ['discount','expiration_date','title','code','used_no','created_date','course']
-        read_only_fields=['used_no','created_date']
+        fields = ['discount','expiration_date','title','code','used_no','created_date','course','id']
+        read_only_fields=['used_no','created_date','id']
 
 
     def create(self, validated_data):
