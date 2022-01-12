@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpRequest, HttpResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from accounts.models import Instructor, Student
+from accounts.models import Instructor, Student, Wallet
 from courses.filters import CourseFilter
 from courses.pagination import DefaultPagination
 from accounts.permissions import *
@@ -18,6 +18,8 @@ from rest_framework.pagination import PageNumberPagination, LimitOffsetPaginatio
 from accounts.serializers.student_serializers import StudentSerializer
 from skyroom import *
 from Kooleposhti.settings import SKYROOM_KEY
+from courses.api.discount import DiscountViewSet
+import decimal
 
 
 api = SkyroomAPI(SKYROOM_KEY)
@@ -261,13 +263,39 @@ class CourseViewSet(ModelViewSet):
 		if course.capacity < 1:
 			return Response("there's no enrollment available", status=status.HTTP_400_BAD_REQUEST)
 
+		course_price=course.price
+		is_used_discount=False
+		discount_code= request.data.get('code')
+		if(discount_code!="" and discount_code!=None):
+			discount_result=DiscountViewSet.validate_code(discount_code,course.id)
+			if type(discount_result) is Response:
+				return discount_result
+			course_price-=decimal.Decimal((float(course_price)*discount_result.discount)//100)
+			is_used_discount=True
+    
+		student_wallet= student.user.wallet
+		if course_price > student_wallet.balance:
+			return Response('Insufficient funds.',
+							status=status.HTTP_400_BAD_REQUEST)
+		
 		try:
 			self.perform_add_student(course, student)
 		except Exception as e:
 			return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
+		
+		student_wallet.withdraw(course_price)
+		course.instructor.user.wallet.deposit(course_price)
+		Order.objects.create(course=course, student=student, 
+		instructor=course.instructor, amount=course_price, 
+		date=datetime.strptime(jdatetime.date.today().__str__(), "%Y-%m-%d"))
 		course.students.add(student)
 		course.update_capacity()
+		course.save()
+		
+		if(is_used_discount):
+			discount_result.used_no+=1
+			discount_result.save()
+
 		return Response({'enrolled': True}, status=status.HTTP_200_OK)
 
 
@@ -302,7 +330,7 @@ class CourseViewSet(ModelViewSet):
 
 
 
-	@action(detail=True, methods=['put'],
+	action(detail=True, methods=['put'],
 			permission_classes=[IsInstructor], url_name="delete-student",
 			url_path="delete-student/(?P<sid>[^/.]+)")
 	def delete_student(self, request: HttpRequest, sid, *args, **kwargs):
@@ -343,10 +371,14 @@ class CourseViewSet(ModelViewSet):
 			url_name="can-enroll", url_path="can-enroll")
 	def can_enroll(self, request, *args, **kwargs):
 		course = self.get_object()
+		is_passed=course.end_date >= jdatetime.date.today()
+		print(is_passed)
 		try:
-			return Response({'enroll': not course.is_enrolled(request.user.student)}, status=status.HTTP_200_OK)
+			return Response({'enroll': not course.is_enrolled(request.user.student) 
+				and not is_passed}, status=status.HTTP_200_OK)
 		except:
-			return Response({'enroll': not request.user.is_authenticated}, status=status.HTTP_200_OK)
+			return Response({'enroll': not request.user.is_authenticated
+				and not is_passed}, status=status.HTTP_200_OK)
 
 		
 	@action(detail=True, permission_classes=[AllowAny],
@@ -408,13 +440,37 @@ class CourseViewSet(ModelViewSet):
 		return Response({"you do not have permission to see this course assignments."}, 
 						status=status.HTTP_403_FORBIDDEN)
 
+
+
+
+	@action(detail=True, methods=['GET'],
+			permission_classes=[IsStudent],url_path="favorite/add")
+	def add_favorite(self, request, *args, **kwargs):
+		course = self.get_object()
+		student = request.user.student
+		Favorite.objects.create(course=course, student=student)
+		return Response('Added to favorites successfully', status=status.HTTP_200_OK)
+
+
+	@action(detail=True, methods=['GET'],
+			permission_classes=[IsStudent],url_path="favorite/remove")
+	def remove_favorite(self, request, *args, **kwargs):
+		course = self.get_object()
+		student = request.user.student
+		favorite=Favorite.objects.filter(course=course, student=student)
+		if(not favorite.exists()):
+			return Response('Course in not in favorites', status=status.HTTP_400_BAD_REQUEST)
+		favorite[0].delete()
+		return Response('Removed from favorites successfully', status=status.HTTP_200_OK)
+
+
 	
 	
 	@action(detail=False, permission_classes=[AllowAny])
 	def top(self, request):
 		count = request.data.get('count', 10)
 		count = min(len(Course.objects.all()), count)
-		serializer = SimpleCourseSerializer(Course.objects.order_by('pk')[:count], many=True)
+		serializer = CartCourseSerializer(Course.objects.order_by('pk')[:count], many=True)
 		return Response(status=status.HTTP_200_OK, data=serializer.data)
 
 
@@ -428,3 +484,5 @@ class CategoryViewSet(ModelViewSet):
 		category = self.get_object()
 		serializer = self.get_serializer(category.courses, many=True)
 		return Response(serializer.data, status=status.HTTP_200_OK)
+
+

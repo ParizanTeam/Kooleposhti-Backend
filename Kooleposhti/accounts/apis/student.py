@@ -1,7 +1,9 @@
+import decimal
 from django.db import utils
+from accounts.models import Wallet
 from accounts.permissions import IsStudent
-from courses.models import Course
-from courses.serializers import AssignmentStudentSerializer
+from courses.models import Course, Favorite
+from courses.serializers import AssignmentStudentSerializer,SimpleCourseSerializer
 from django.contrib.auth.tokens import default_token_generator
 from django.urls import reverse
 from rest_framework.viewsets import ModelViewSet
@@ -43,6 +45,7 @@ from skyroom import *
 from Kooleposhti.settings import SKYROOM_KEY
 import datetime
 import jdatetime
+from courses.api.discount import DiscountViewSet
 # import rest_framework.request
 
 
@@ -946,7 +949,32 @@ class StudentViewSet(views.APIView):
             raise Exception('Already enrolled')
         if not course.can_enroll(student):
             raise Exception('Cannot enroll')
+
+        course_price=course.price
+        is_used_discount=False
+        discount_code= request.data.get('code')
+        if(discount_code!="" and discount_code!=None):
+            discount_result=DiscountViewSet.validate_code(discount_code,course.id)
+            if type(discount_result) is Response:
+                return discount_result
+            course_price-=decimal.Decimal((float(course_price)*discount_result.discount)//100)
+            is_used_discount=True
+    
+
+        student_wallet= Wallet.objects.get(user=student.user_id)
+        print(student_wallet.balance)
+        print(course_price)
+        if course_price > student_wallet.balance:
+            return Response('Insufficient funds.',
+							status=status.HTTP_400_BAD_REQUEST)
+
+        student_wallet.withdraw(course_price)
         student.courses.add(course)
+
+        if(is_used_discount):
+            discount_result.used_no+=1
+            discount_result.save()
+
         return Response(data={'message': 'Successfully enrolled'}, status=status.HTTP_204_NO_CONTENT)
 
     # (?P<course_pk>[^/.]+)
@@ -972,3 +1000,13 @@ class StudentViewSet(views.APIView):
          # assignments = [assignment for assignment in 
         # (course.assignments.filter(date__lte=datetime.datetime.now()).all()
         # for course in courses) if not assignment.sent(student)].sort(key=lambda a:a.date)
+
+
+    
+    @action(detail=False, methods=['GET'],permission_classes=[IsStudent],url_path="favorites")
+    def get_favorite(self, request):
+        student = request.user.student
+        favorites=Favorite.objects.filter(student=student).values_list("course",flat=True)
+        courses=Course.objects.filter(pk__in=favorites)
+        serializer = SimpleCourseSerializer(courses, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

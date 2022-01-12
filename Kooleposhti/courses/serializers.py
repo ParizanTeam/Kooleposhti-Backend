@@ -1,8 +1,9 @@
-from rest_framework import serializers
+from rest_framework import request, serializers
 from rest_framework.viewsets import ModelViewSet
 from .models import *
 from decimal import Decimal
 from accounts.models import Instructor
+from images.models import MyImage
 from images.serializers import CommentImageSerializer
 from djoser.serializers import UserSerializer as BaseUserSerializer
 from accounts.serializers.instructor_serializer import CourseInstructorSerializer, InstructorSerializer
@@ -11,8 +12,7 @@ import jalali_date
 from datetime import date, datetime, time, timedelta
 import base64
 import os
-
-
+from rest_framework.exceptions import ValidationError
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
@@ -87,7 +87,7 @@ class AssignmentStudentSerializer(serializers.ModelSerializer):
     course = CourseTitleSerializer(read_only=True)
     class Meta:
         model = Assignment
-        fields = ["id", "course", "title", "end_date", "end_time"]
+        fields = ["id", "course", "title", "end_date", "end_time","question"]
 
 
 class HomeworkSerializer(serializers.ModelSerializer):
@@ -209,7 +209,7 @@ class CourseSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-class SimpleCourseSerializer(serializers.ModelSerializer):
+class CartCourseSerializer(serializers.ModelSerializer):
     # Basic info for Cart item
     instructor = CourseInstructorSerializer(read_only=True)
     class Meta:
@@ -226,6 +226,22 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'courses']
 
 
+class OrderSerializer(serializers.ModelSerializer):
+    course = serializers.CharField(source='course.title', read_only=True)
+    student = serializers.CharField(source='student.user.username', read_only=True)
+    class Meta:
+        model = Order
+        fields = ['id', 'date', 'amount', 'course', 'student']
+        read_only_fields = ['id', 'date', 'amount']
+
+
+class CourseOrderSerializer(serializers.ModelSerializer):
+    orders = OrderSerializer(many=True, read_only=True)
+    class Meta:
+        model = Course
+        fields = ['title', 'orders']
+
+
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
@@ -237,6 +253,37 @@ class ReviewSerializer(serializers.ModelSerializer):
             course_id=course_id,
             **validated_data
         )
+
+
+class SimpleUserSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+    username = serializers.SerializerMethodField()
+
+    def get_username(self,instructor:Instructor):
+        user=User.objects.get(id=instructor.id)
+        return user.username
+
+
+    def get_image(self,user:Instructor):
+        myImage=MyImage.objects.filter(user=user.id)
+        return myImage[0].image if myImage.exists() else None
+    class Meta:
+        model = User
+        fields = ['id', 'first_name','last_name','image','username']
+
+
+
+class SimpleCourseSerializer(serializers.ModelSerializer):
+    instructor = InstructorSerializer()
+    # is_favorite = serializers.SerializerMethodField()
+
+    # def get_is_favorite(self,course:Course):
+    #     request=self.context.get("request")
+    #     return Favorite.get(course=course,student=request.user).exists()
+
+    class Meta:
+        model = Course
+        fields = ['id', 'title', 'instructor','rate','image']
 
 
 class CartItemSerializer(serializers.ModelSerializer):
@@ -262,3 +309,34 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShoppingCart
         fields = ['id', 'items', 'total_price']
+
+
+class DiscountSerializer(serializers.ModelSerializer):
+    default_error_messages = {'code_exists': 'Duplicate: The code already exists'}
+    code=serializers.CharField(max_length=255,required=False)
+    class Meta:
+        model = Discount
+        fields = ['discount','expiration_date','title','code','used_no','created_date','course','id']
+        read_only_fields=['used_no','created_date','id']
+
+
+    def create(self, validated_data):
+        request = self.context.get("request")
+        validated_data['owner'] = request.user.instructor
+        return super().create(validated_data)
+
+    def validate(self, attrs):
+        validated_attrs = super().validate(attrs)
+        errors = {}
+        Discount.code.field.run_validators(value=validated_attrs['code'])
+        is_code_exist=Discount.objects.filter(code=validated_attrs['code']).exists()
+
+        if (is_code_exist):
+            errors['code'] = self.error_messages['code_exists']
+
+        if errors:
+            raise ValidationError(errors)
+
+        return validated_attrs
+
+

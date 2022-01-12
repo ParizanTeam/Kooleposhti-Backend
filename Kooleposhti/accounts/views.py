@@ -184,7 +184,7 @@ def sign_up_user(request: HttpRequest, *args, **kwargs):
             Wallet.objects.create(user=user)
         else:
             Student.objects.create(user=user)
-            Wallet.objects.create(user=user, balance=50000)
+            Wallet.objects.create(user=user, balance=500000)
         # data = serializer.validated_data.copy()
         # del data['password']
         # del data['password2']

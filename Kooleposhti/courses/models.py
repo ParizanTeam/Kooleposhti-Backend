@@ -2,6 +2,7 @@ from django.db import models
 from accounts.models import Instructor, Student, User
 from uuid import uuid4
 from Kooleposhti import settings
+from django.core.validators import RegexValidator
 
 
 class Promotion(models.Model):
@@ -257,20 +258,31 @@ class Goal(models.Model):
         return f"{self.course.title} {self.text}"
 
 
-
-class Order (models.Model):
-    PAYMENT_STATUS_PENDING = 'P'
-    PAYMENT_STATUS_COMPLETE = 'C'
-    PAYMENT_STATUS_FAILED = 'F'
-    PAYMENT_STATUS_CHOICES = [
-        (PAYMENT_STATUS_PENDING, 'Pending'),
-        (PAYMENT_STATUS_COMPLETE, 'Complete'),
-        (PAYMENT_STATUS_FAILED, 'Failed'),
-    ]
+class Order(models.Model):
+    course = models.ForeignKey(
+        Course, related_name='orders', on_delete=models.CASCADE)
+    instructor = models.ForeignKey(
+        Instructor, related_name='orders', on_delete=models.CASCADE)
+    student = models.ForeignKey(
+        Student, related_name='orders', on_delete=models.PROTECT)
     placed_at = models.DateTimeField(auto_now_add=True)
-    payment_status = models.CharField(
-        max_length=1, choices=PAYMENT_STATUS_CHOICES, default=PAYMENT_STATUS_PENDING)
-    student = models.ForeignKey(Student, on_delete=models.PROTECT)
+    date = models.DateField()
+    amount = models.DecimalField(max_digits=9, decimal_places=3)
+
+
+# class Order (models.Model):
+#     PAYMENT_STATUS_PENDING = 'P'
+#     PAYMENT_STATUS_COMPLETE = 'C'
+#     PAYMENT_STATUS_FAILED = 'F'
+#     PAYMENT_STATUS_CHOICES = [
+#         (PAYMENT_STATUS_PENDING, 'Pending'),
+#         (PAYMENT_STATUS_COMPLETE, 'Complete'),
+#         (PAYMENT_STATUS_FAILED, 'Failed'),
+#     ]
+#     placed_at = models.DateTimeField(auto_now_add=True)
+#     payment_status = models.CharField(
+#         max_length=1, choices=PAYMENT_STATUS_CHOICES, default=PAYMENT_STATUS_PENDING)
+#     student = models.ForeignKey(Student, on_delete=models.PROTECT)
 
 
 class OrderItem (models.Model):
@@ -304,3 +316,27 @@ class Review(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
     date = models.DateField(auto_now_add=True)
+
+
+class Favorite(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='favorites_students')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='favorites_courses')
+
+
+class Discount(models.Model):
+    '''
+    fields = ('id', 'discount', 'created_date', 'expiration_date', 'title', 'code', 'owner', 'course', 'used_no')
+    '''
+    discount = models.FloatField()
+    created_date = models.DateTimeField(auto_now_add=True)
+    expiration_date = models.DateTimeField()
+    title = models.CharField(max_length=255)
+    code = models.CharField(max_length=12,unique=True,validators=[RegexValidator(regex="^[a-zA-Z0-9]*$")])
+    owner = models.ForeignKey(
+        Instructor, on_delete=models.CASCADE, related_name='discount_codes')
+    course = models.ForeignKey(
+        Course, on_delete=models.CASCADE, related_name='discont_courses')
+    used_no = models.IntegerField(default=0)
+
+    def is_course_owner(self, user):
+        return self.course.instructor == user
