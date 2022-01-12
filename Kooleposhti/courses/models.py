@@ -338,3 +338,5 @@ class Discount(models.Model):
         Course, on_delete=models.CASCADE, related_name='discont_courses')
     used_no = models.IntegerField(default=0)
 
+    def is_course_owner(self, user):
+        return self.course.instructor == user
