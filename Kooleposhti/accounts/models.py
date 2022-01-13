@@ -73,12 +73,19 @@ class Instructor(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     tags = models.ManyToManyField(Tag)
-    rate = models.IntegerField(null=True, validators=[
-                               MinValueValidator(0), MaxValueValidator(5)])
+    rate = models.DecimalField(
+        max_digits=2, decimal_places=1, default=5,  blank=True, 
+        validators=[MinValueValidator(0), MaxValueValidator(5)])
     # phone = models.CharField(max_length=11)
 
     def __str__(self):
         return f'{self.user.first_name} {self.user.last_name}'
+
+    def update_rate(self):
+        courses = self.courses.all()
+        self.rate = round(sum([course.rate for course in courses]) / len(courses), 1)
+        print(self.rate)
+        self.save()
 
     # class Meta:
     #     odering = ['user__first_name', 'user__last_name']
@@ -131,7 +138,8 @@ class Wallet(models.Model):
         return f"{self.user.username} {self.balance}"
     
     def is_set(self):
-        return self.card_no and self.sheba
+        return self.card_no and len(self.card_no) == 16\
+                and self.sheba and len(self.sheba) == 24
 
     def withdraw(self, amount):
         self.balance -= amount
@@ -139,5 +147,9 @@ class Wallet(models.Model):
 
     def deposit(self, amount):
         self.balance += amount
-        self.save()
+        self.save()  
+    
+    def money_back(self, student, amount):
+        self.withdraw(amount)
+        student.user.wallet.deposit(amount)
     

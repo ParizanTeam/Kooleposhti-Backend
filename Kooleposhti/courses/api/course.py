@@ -330,7 +330,7 @@ class CourseViewSet(ModelViewSet):
 
 
 
-	action(detail=True, methods=['put'],
+	@action(detail=True, methods=['put'],
 			permission_classes=[IsInstructor], url_name="delete-student",
 			url_path="delete-student/(?P<sid>[^/.]+)")
 	def delete_student(self, request: HttpRequest, sid, *args, **kwargs):
@@ -338,9 +338,12 @@ class CourseViewSet(ModelViewSet):
 		instructor = request.user.instructor
 		if course.is_owner(instructor):
 			student = get_object_or_404(Student, pk=sid)
+			money = course.orders.filter(student=student).last().amount
 			if not course.is_enrolled(student):
 				return Response('Not enrolled', status=status.HTTP_403_FORBIDDEN)
-
+			if instructor.user.wallet.balance < money:
+				return Response('Insufficient funds.',
+											status=status.HTTP_400_BAD_REQUEST)
 			try:
 				self.perform_remove_student(course, student)
 			except Exception as e:
@@ -348,7 +351,8 @@ class CourseViewSet(ModelViewSet):
 
 			course.students.remove(student)
 			course.update_capacity()
-			return Response({'deleted': True})
+			instructor.user.wallet.money_back(student, money)
+			return Response({'deleted': True, 'money_back': money}, status=status.HTTP_200_OK)
 		return Response("your'e not the course owner", status=status.HTTP_403_FORBIDDEN)
 
 
@@ -361,7 +365,8 @@ class CourseViewSet(ModelViewSet):
 		if course.is_course_user(user):
 			serializer = StudentSerializer(course.students, many=True)
 			return Response(status=status.HTTP_200_OK, data=serializer.data)
-		return Response("your don't have permission to perform this action", status=status.HTTP_403_FORBIDDEN)
+		return Response("your don't have permission to perform this action", 
+										status=status.HTTP_403_FORBIDDEN)
 
 
 
@@ -385,9 +390,11 @@ class CourseViewSet(ModelViewSet):
 		user = request.user
 		course = self.get_object()
 		role = 'anonymous'
-		if user.is_authenticated and user.has_role('student') and course.is_enrolled(user.student):
+		if user.is_authenticated and user.has_role('student')\
+						and course.is_enrolled(user.student):
 			role = 'student'
-		if user.is_authenticated and user.has_role('instructor') and course.is_owner(user.instructor):
+		if user.is_authenticated and user.has_role('instructor')\
+						and course.is_owner(user.instructor):
 			role = 'teacher'
 		return Response({"role": role}, status=status.HTTP_200_OK)
 
@@ -415,17 +422,19 @@ class CourseViewSet(ModelViewSet):
 				rate_obj.rate = rate_data
 				rate_obj.save()
 				course.update_rate()
+				course.instructor.update_rate()
 				return Response('you changed your rate.', status=status.HTTP_200_OK)
 			except:
 				Rate.objects.create(
 					course=course, student=student, rate=rate_data)
-				# course.rate = round((course.rate * course.rate_no + rate_data) / (course.rate_no + 1), 1)
-				# course.rate_no += 1
-				# course.save()
 				course.update_rate()
+				course.instructor.update_rate()
 				return Response('rated successfully', status=status.HTTP_200_OK)
 		else:
 			return Response({"you're not enrolled."}, status=status.HTTP_403_FORBIDDEN)
+		# course.rate = round((course.rate * course.rate_no + rate_data) / (course.rate_no + 1), 1)
+				# course.rate_no += 1
+				# course.save()
 
 	
 	@action(detail=True, permission_classes=[IsAuthenticated])
@@ -470,20 +479,6 @@ class CourseViewSet(ModelViewSet):
 		count = min(len(Course.objects.all()), count)
 		serializer = CartCourseSerializer(Course.objects.order_by('pk')[:count], many=True)
 		return Response(status=status.HTTP_200_OK, data=serializer.data)
-
-
-
-	# @action(detail=True, methods=['post'],
-	# 		permission_classes=[IsAuthenticated])
-	# def comment(self, request, *args, **kwargs):
-	# 	course = self.get_object()
-	# 	user = request.user
-	# 	if course.is_course_user(user):
-	# 		Comment.objects.create(course=course, student=user.student,
-	# 							   text=request.data['comment'])
-	# 		return Response('succssesfuly commented', status=status.HTTP_200_OK)
-	# 	return Response("you're not enrolled", status=status.HTTP_403_FORBIDDEN)
-
 
 
 class CategoryViewSet(ModelViewSet):
