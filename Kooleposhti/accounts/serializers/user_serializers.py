@@ -180,6 +180,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class WalletSerializer(serializers.ModelSerializer):
+    card_no = serializers.CharField(max_length=16, min_length=16)
+    sheba = serializers.CharField(max_length=24, min_length=24)
     class Meta:
         model = Wallet
         fields = ['card_no', 'sheba', 'balance']

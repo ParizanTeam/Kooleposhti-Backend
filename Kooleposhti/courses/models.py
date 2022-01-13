@@ -2,7 +2,7 @@ from django.db import models
 from accounts.models import Instructor, Student, User
 from uuid import uuid4
 from Kooleposhti import settings
-from django.core.validators import RegexValidator
+from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 
 
 class Promotion(models.Model):
@@ -38,7 +38,8 @@ class Course(models.Model):
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=9, decimal_places=2)  # 9999.99
     rate = models.DecimalField(
-        max_digits=2, decimal_places=1, default=5, blank=True)
+        max_digits=2, decimal_places=1, default=5,  blank=True, 
+        validators=[MinValueValidator(0), MaxValueValidator(5)])
     rate_no = models.IntegerField(default=0, blank=True)
     # first time we create Course django stores the current datetime
     last_update = models.DateTimeField(auto_now=True)

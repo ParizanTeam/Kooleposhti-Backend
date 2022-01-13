@@ -45,8 +45,9 @@ class StudentPublicProfileSerializer(BasePublicProfileSerializer):
 
 
 class InstructorPublicProfileSerializer(BasePublicProfileSerializer):
-    rate = serializers.IntegerField(
-        source='instructor.rate', min_value=0, max_value=5, required=False, read_only=True)
+    rate = serializers.DecimalField(
+        source='instructor.rate', decimal_places=1, max_digits=2, min_value=0, 
+                                max_value=5, required=False, read_only=True)
     courses = CourseSerializer(
         source='instructor.courses', many=True, required=False, read_only=True)
 
