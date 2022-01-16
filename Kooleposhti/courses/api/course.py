@@ -347,7 +347,8 @@ class CourseViewSet(ModelViewSet):
 			try:
 				self.perform_remove_student(course, student)
 			except Exception as e:
-				return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+				return Response({"SkyRoom": str(e)}, 
+									status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 			course.students.remove(student)
 			course.update_capacity()
