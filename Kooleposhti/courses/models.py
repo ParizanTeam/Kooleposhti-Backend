@@ -247,7 +247,7 @@ class Feedback(models.Model):
 
     def can_see(self, user):
         return (user.has_role('student') and self.is_mine(user.student)) \
-		or (user.has_role('instructor') and self.is_owner(user.instructor))
+		or (user.has_role('instructor') and self.is_course_owner(user.instructor))
 
 
 class Goal(models.Model):
