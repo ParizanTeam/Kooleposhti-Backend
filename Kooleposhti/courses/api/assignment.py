@@ -173,53 +173,81 @@ class HomeworkViewSet(ModelViewSet):
 class FeedbackViewSet(ModelViewSet):
 	queryset = Assignment.objects.select_related('homework').all()
 	serializer_class = FeedbackSerializer
-	permission_classes = [IsInstructorOrStudentReadOnly]
+	permission_classes = [IsAdminUser]
 
-	def get_queryset(self):
-		return Feedback.objects \
-		.filter(homework_id=self.kwargs.get('homework_pk'))
+	def get_object(self):
+	 	return get_object_or_404(Feedback.objects, 
+		 			homework_id=self.kwargs.get('homework_pk'))
 
 	def get_serializer_context(self):
 		return {'homework': self.kwargs.get('homework_pk')}
 
-	def list(self, request, *args, **kwargs):
-		feedback = self.get_object()
+
+	@action(detail=False, methods=['get', 'patch', 'delete', 'post'],
+	permission_classes=[IsInstructorOrStudentReadOnly])
+	def myfeedback(self, request, *args, **kwargs):
 		user = request.user
-		if user.has_role('instructor') and feedback.is_course_owner(user.instructor):
-			return super().list(request, *args, **kwargs)
-		return Response('you are not the course owner.',
-						status=status.HTTP_403_FORBIDDEN)
+		if request.method == 'POST':
+			homework_pk = self.kwargs.get('homework_pk')
+			homework = get_object_or_404(Homework.objects, pk=homework_pk)
+			if not homework.is_course_owner(user.instructor):
+				return Response('you are not the course owner.', 
+							status=status.HTTP_403_FORBIDDEN)
+			return super().create(request, *args, **kwargs)
 
-	def retrieve(self, request, *args, **kwargs):
 		feedback = self.get_object()
-		user = request.user
-		if feedback.can_see(user):
-			return super().retrieve(request, *args, **kwargs)
-		return Response('you are not enrolled.',status=status.HTTP_403_FORBIDDEN)		
+		if request.method == 'GET':	
+			if feedback.can_see(user):
+				return super().retrieve(request, *args, **kwargs)
+			return Response('you are not enrolled.',status=status.HTTP_403_FORBIDDEN)	
 
-
-	def create(self, request, *args, **kwargs):
-		instructor = request.user.instructor
-		homework_pk = self.kwargs.get('homework_pk')
-		homework = get_object_or_404(Homework.objects, pk=homework_pk)
-		if not homework.is_course_owner(instructor):
+		if not feedback.is_course_owner(user.instructor):
 			return Response('you are not the course owner.', 
 							status=status.HTTP_403_FORBIDDEN)
-		return super().create(request, *args, **kwargs)
-
-
-	def update(self, request, *args, **kwargs):
-		return self.perform_change(request, 'update', *args, **kwargs)
-
-	def destroy(self, request, *args, **kwargs):
-		return self.perform_change(request, 'destroy', *args, **kwargs)
-
-	def perform_change(self, request, action, *args, **kwargs):
-		instructor = request.user.instructor
-		feedback = self.get_queryset()[0]
-		if not feedback.is_course_owner(instructor):
-			return Response('you are not the course owner.', 
-							status=status.HTTP_403_FORBIDDEN)
-		if action == 'update':
+		if request.method == 'PATCH':
 			return super().update(request, *args, **kwargs)
 		return super().destroy(request, *args, **kwargs)
+
+	# def get_queryset(self):
+	# 	return Feedback.objects \
+	# 	.filter(homework__assignment_id=self.kwargs.get('assignment_pk'))
+
+	# def list(self, request, *args, **kwargs):
+		# feedback = self.get_qu
+		# user = request.user
+		# if user.has_role('instructor') and feedback.is_course_owner(user.instructor):
+		# 	return super().list(request, *args, **kwargs)
+		# return Response('you are not the course owner.',
+		# 				status=status.HTTP_403_FORBIDDEN)
+
+	# def retrieve(self, request, *args, **kwargs):
+	# 	feedback = self.get_object()
+	# 	user = request.user
+	# 	if feedback.can_see(user):
+	# 		return super().retrieve(request, *args, **kwargs)
+	# 	return Response('you are not enrolled.',status=status.HTTP_403_FORBIDDEN)	
+
+	# def create(self, request, *args, **kwargs):
+	# 	instructor = request.user.instructor
+	# 	homework_pk = self.kwargs.get('homework_pk')
+	# 	homework = get_object_or_404(Homework.objects, pk=homework_pk)
+	# 	if not homework.is_course_owner(instructor):
+	# 		return Response('you are not the course owner.', 
+	# 						status=status.HTTP_403_FORBIDDEN)
+	# 	return super().create(request, *args, **kwargs)
+
+	# def update(self, request, *args, **kwargs):
+	# 	return self.perform_change(request, 'update', *args, **kwargs)
+
+	# def destroy(self, request, *args, **kwargs):
+	# 	return self.perform_change(request, 'destroy', *args, **kwargs)
+
+	# def perform_change(self, request, action, *args, **kwargs):
+	# 	instructor = request.user.instructor
+	# 	feedback = self.get_queryset()[0]
+	# 	if not feedback.is_course_owner(instructor):
+	# 		return Response('you are not the course owner.', 
+	# 						status=status.HTTP_403_FORBIDDEN)
+	# 	if action == 'update':
+	# 		return super().update(request, *args, **kwargs)
+	# 	return super().destroy(request, *args, **kwargs)
