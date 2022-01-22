@@ -1008,5 +1008,5 @@ class StudentViewSet(views.APIView):
         student = request.user.student
         favorites=Favorite.objects.filter(student=student).values_list("course",flat=True)
         courses=Course.objects.filter(pk__in=favorites)
-        serializer = SimpleCourseSerializer(courses, many=True)
+        serializer = SimpleCourseSerializer(courses, many=True,context={'student': request.user.student})
         return Response(serializer.data, status=status.HTTP_200_OK)
