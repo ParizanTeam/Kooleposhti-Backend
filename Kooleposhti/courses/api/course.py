@@ -485,6 +485,14 @@ class CourseViewSet(ModelViewSet):
 		return Response(status=status.HTTP_200_OK, data=serializer.data)
 
 
+	@action(detail=False, permission_classes=[IsStudent],url_path="student/top")
+	def top_for_students(self, request):
+		count = request.data.get('count', 10)
+		count = min(len(Course.objects.all()), count)
+		serializer = SimpleCourseSerializer(Course.objects.order_by('pk')[:count], many=True,context={'student': request.user.student})
+		return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+
 class CategoryViewSet(ModelViewSet):
 	queryset = Category.objects.all()
 	serializer_class = CategorySerializer
