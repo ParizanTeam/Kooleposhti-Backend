@@ -68,11 +68,11 @@ class DiscountViewSet(ModelViewSet):
 
 		discount=discount.get()
 
-		if(timezone.now()>discount.expiration_date):
-			return Response("The discount code has expired", status=status.HTTP_410_GONE)
-
 		if(discount.course.id!=int(course_id)):
 			return Response("Invalid discount code", status=status.HTTP_403_FORBIDDEN)
+
+		if(timezone.now()>discount.expiration_date):
+			return Response("The discount code has expired", status=status.HTTP_410_GONE)
 		return discount
 
 	# (?P<code>[0-9a-zA-Z]+)?c=(?P<course_id>[0-9]+)
