@@ -1,0 +1,61 @@
+@import '/src/theme/main.scss';
+
+.course-card {
+  width: 250px;
+  height: 350px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: rgba(0, 0, 0, 0.25) 0px 2px 10px;
+  overflow: hidden;
+  text-align: right;
+
+  &__img {
+    width: 100%;
+    min-height: 150px;
+  }
+
+  &__rating-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+  }
+
+  &__title {
+    font-size: 18px;
+    font-weight: 800;
+    color: $c-gray-40;
+    line-height: 1.5;
+    height: 100%;
+    padding: 0 16px;
+  }
+
+  &__teacher-name {
+    color: rgb(106, 116, 130);
+    font-size: 14px;
+    font-weight: 700;
+  }
+  &__footer {
+    border-top: 1px solid rgb(241, 242, 243);
+    display: flex;
+    padding: 16px;
+    align-items: center;
+  }
+
+  &__teacher-img {
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    margin-left: 10px;
+  }
+}
+
+.fav-icon {
+  color: $c-gray-70;
+}
+
+.filled-fav-icon {
+  color: rgb(241, 93, 93);
+  color: rgb(177, 177, 250);
+}
