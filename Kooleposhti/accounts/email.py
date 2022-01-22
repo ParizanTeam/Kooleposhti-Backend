@@ -35,7 +35,7 @@ class ActivationEmail(APIView):
                                         {
                                             'username': user_username,
                                             'code': rnd_tok,
-                                            'WEBSITE_URL': 'kooleposhti.herokuapp.com',
+                                            'WEBSITE_URL': 'kooleposhti.tk',
                                         })
 
             email = EmailMessage('تایید حساب کاربری در کوله پشتی',
