@@ -274,16 +274,17 @@ class SimpleUserSerializer(serializers.ModelSerializer):
 
 
 class SimpleCourseSerializer(serializers.ModelSerializer):
-    instructor = InstructorSerializer()
-    # is_favorite = serializers.SerializerMethodField()
+    instructor = CourseInstructorSerializer(read_only=True)
+    is_favorite = serializers.SerializerMethodField()
 
-    # def get_is_favorite(self,course:Course):
-    #     request=self.context.get("request")
-    #     return Favorite.get(course=course,student=request.user).exists()
-
+    def get_is_favorite(self,course:Course):
+        user = self.context.get("student")
+        if(user==None):
+            return False
+        return Favorite.objects.filter(course=course,student=user).exists()
     class Meta:
         model = Course
-        fields = ['id', 'title', 'instructor','rate','image']
+        fields = ['id', 'title', 'instructor','rate','image','is_favorite']
 
 
 class CartItemSerializer(serializers.ModelSerializer):

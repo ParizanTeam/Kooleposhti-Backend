@@ -68,6 +68,9 @@ INSTALLED_APPS = [
     'dbbackup',
 ]
 
+DOMAIN="kooleposhti.tk"
+SITE_NAME="kooleposhti"
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
