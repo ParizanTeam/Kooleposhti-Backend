@@ -59,18 +59,22 @@ class AssignmentViewSet(ModelViewSet):
 		return super().destroy(request, *args, **kwargs)
 
 
-	# @action(detail=True, url_path='mysubmit',
-	# 		 permission_classes=[IsStudent])
-	# def get_homework(self, request, *args, **kwargs):
-	# 	student = request.user.student
-	# 	assignment = self.get_object()
-	# 	course = assignment.course
-	# 	if not course.is_enrolled(student):
-	# 		return Response('you are not enrolled.', 
-	# 						status=status.HTTP_403_FORBIDDEN)		
-	# 	homework = assignment.homeworks.filter(student=student)
-	# 	serializer = HomeworkSerializer(instance=homework)
-	# 	return Response(serializer.data, status=status.HTTP_200_OK)
+	@action(detail=True, url_path='myfeedback',
+			 permission_classes=[IsStudent])
+	def get_feedback(self, request, *args, **kwargs):
+		student = request.user.student
+		assignment = self.get_object()
+		course = assignment.course
+		if not assignment.is_course_student(student):
+			return Response('you are not enrolled.', 
+							status=status.HTTP_403_FORBIDDEN)		
+		homework = get_object_or_404(assignment.homeworks, student=student)
+		try:
+			serializer = FeedbackSerializer(instance=homework.feedback)
+			return Response(serializer.data, status=status.HTTP_200_OK)
+		except: return Response('no feedback', 
+							status=status.HTTP_404_NOT_FOUND)	
+
 
 
 class HomeworkViewSet(ModelViewSet):
@@ -184,7 +188,7 @@ class FeedbackViewSet(ModelViewSet):
 
 
 	@action(detail=False, methods=['get', 'patch', 'delete', 'post'],
-	permission_classes=[IsInstructorOrStudentReadOnly])
+	permission_classes=[IsInstructor])
 	def myfeedback(self, request, *args, **kwargs):
 		user = request.user
 		if request.method == 'POST':
@@ -196,17 +200,19 @@ class FeedbackViewSet(ModelViewSet):
 			return super().create(request, *args, **kwargs)
 
 		feedback = self.get_object()
-		if request.method == 'GET':	
-			if feedback.can_see(user):
-				return super().retrieve(request, *args, **kwargs)
-			return Response('you are not enrolled.',status=status.HTTP_403_FORBIDDEN)	
-
 		if not feedback.is_course_owner(user.instructor):
 			return Response('you are not the course owner.', 
 							status=status.HTTP_403_FORBIDDEN)
+		if request.method == 'GET':	
+			return super().retrieve(request, *args, **kwargs)
 		if request.method == 'PATCH':
 			return super().update(request, *args, **kwargs)
 		return super().destroy(request, *args, **kwargs)
+
+		# if request.method == 'GET':	
+		# 	if feedback.can_see(user):
+		# 		return super().retrieve(request, *args, **kwargs)
+		# 	return Response('you are not enrolled.',status=status.HTTP_403_FORBIDDEN)	
 
 	# def get_queryset(self):
 	# 	return Feedback.objects \
