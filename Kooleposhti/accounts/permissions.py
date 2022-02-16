@@ -10,14 +10,12 @@ class IsAdminOrReadOnly(BasePermission):
         return bool(request.user and
                     request.user.is_staff  # admin user
                     )
-
 class IsInstructorOrReadOnly(IsAuthenticated):
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             return True
         return super().has_permission(request, view) and \
             request.user.has_role('instructor')   
-
 
 class IsStudent(IsAuthenticated):
     def has_permission(self, request, view):

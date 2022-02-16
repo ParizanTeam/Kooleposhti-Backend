@@ -1,7 +1,9 @@
+import decimal
 from django.db import utils
+from accounts.models import Wallet
 from accounts.permissions import IsStudent
-from courses.models import Course
-from courses.serializers import AssignmentStudentSerializer
+from courses.models import Course, Favorite
+from courses.serializers import AssignmentStudentSerializer,SimpleCourseSerializer
 from django.contrib.auth.tokens import default_token_generator
 from django.urls import reverse
 from rest_framework.viewsets import ModelViewSet
@@ -43,6 +45,7 @@ from skyroom import *
 from Kooleposhti.settings import SKYROOM_KEY
 import datetime
 import jdatetime
+from courses.api.discount import DiscountViewSet
 # import rest_framework.request
 
 
@@ -294,33 +297,20 @@ class StudentViewSet(views.APIView):
     def perform_update(self, serializer):
         serializer.save()
 
-    def update_user(self, request, serializer):
+    def update_user(self, request, serializer, password):
         # update skyroom user
         data = serializer.validated_data['user']
         user = self.get_student(request).user
         api = SkyroomAPI(SKYROOM_KEY)
-        if user.username == data.get('username', user.username):
-            params = {
-                "user_id": int(user.userskyroom.skyroom_id),
-                'password': data.get('password'),
-                'email': data.get('email', user.email),
-                "fname": data.get('first_name', user.first_name),
-                "lname": data.get('last_name', user.last_name)
-            }
-            api.updateUser(params)
-        else:
-            api.deleteUser({"user_id": user.userskyroom.skyroom_id})
-            user.userskyroom.delete()
-            params = {
-                'username': data.get('username', user.username),
-                'password': data.get('password'),
-                "nickname": data.get('username', user.username),
-                'email': data.get('email', user.email),
-                "fname": data.get('first_name', user.first_name),
-                "lname": data.get('last_name', user.last_name)
-            }
-            skyroom_id = api.createUser(params)
-            UserSkyRoom.objects.create(skyroom_id=skyroom_id, user=user)
+        params = {
+            "user_id": int(user.userskyroom.skyroom_id),
+            'email': data.get('email', user.email),
+            "fname": data.get('first_name', user.first_name),
+            "lname": data.get('last_name', user.last_name)
+        }
+        if password and len(password) > 7 and not password.isnumeric():
+            params['password'] = password
+        api.updateUser(params)
 
 
     def partial_update(self, request, *args, **kwargs):
@@ -905,12 +895,12 @@ class StudentViewSet(views.APIView):
             serializer = self.get_serializer(instance=student)
             return Response(serializer.data)
         elif request.method == 'PUT':
+            password = request.data.get('password')
             serializer = self.get_serializer(
                 instance=student, data=request.data)
             serializer.is_valid(raise_exception=True)
-            
             try:
-                self.update_user(request, serializer)
+                self.update_user(request, serializer, password)
             except Exception as e: 
                 return Response({"SkyRoom": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -959,7 +949,32 @@ class StudentViewSet(views.APIView):
             raise Exception('Already enrolled')
         if not course.can_enroll(student):
             raise Exception('Cannot enroll')
+
+        course_price=course.price
+        is_used_discount=False
+        discount_code= request.data.get('code')
+        if(discount_code!="" and discount_code!=None):
+            discount_result=DiscountViewSet.validate_code(discount_code,course.id)
+            if type(discount_result) is Response:
+                return discount_result
+            course_price-=decimal.Decimal((float(course_price)*discount_result.discount)//100)
+            is_used_discount=True
+    
+
+        student_wallet= Wallet.objects.get(user=student.user_id)
+        print(student_wallet.balance)
+        print(course_price)
+        if course_price > student_wallet.balance:
+            return Response('Insufficient funds.',
+							status=status.HTTP_400_BAD_REQUEST)
+
+        student_wallet.withdraw(course_price)
         student.courses.add(course)
+
+        if(is_used_discount):
+            discount_result.used_no+=1
+            discount_result.save()
+
         return Response(data={'message': 'Successfully enrolled'}, status=status.HTTP_204_NO_CONTENT)
 
     # (?P<course_pk>[^/.]+)
@@ -975,21 +990,23 @@ class StudentViewSet(views.APIView):
         courses = student.courses.all()
         assignments = list()
         for course in courses:
-            # new_assignments = course.assignments.filter(end_date__lt=jdatetime.datetime.now().date())
-            # print(jdatetime.datetime.now().date())
-            for assignment in course.assignments.all():
-                # print(datetime.datetime.combine(assignment.end_date, assignment.end_time), jdatetime.datetime.now(),
-                # assignment.end_date < jdatetime.date.today() or (assignment.end_date == jdatetime.date.today().day and assignment.end_time < jdatetime.datetime.today().time()))
-                if not assignment.sent(student):
-                #  and \
-                # (datetime.datetime.combine(assignment.end_date, assignment.end_time) \
-                # <= jdatetime.datetime.now())
-                    assignments.append(assignment)
-        assignments.sort(
-            key=lambda a:datetime.datetime.combine(a.end_date, a.end_time))
-        
-        # assignments = [assignment for assignment in 
-        # [course.assignments.all() for course in courses] 
-        # if not assignment.homeworks.filter(student=student).exists()]
+            assignments += [assignment for assignment in 
+            course.assignments.filter(date__gte=datetime.datetime.now()).all()
+            if not assignment.sent(student)]
+        assignments.sort(key=lambda a:a.date, reverse=True)
         serializer = AssignmentStudentSerializer(assignments, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+         # assignments = [assignment for assignment in 
+        # (course.assignments.filter(date__lte=datetime.datetime.now()).all()
+        # for course in courses) if not assignment.sent(student)].sort(key=lambda a:a.date)
+
+
+    
+    @action(detail=False, methods=['GET'],permission_classes=[IsStudent],url_path="favorites")
+    def get_favorite(self, request):
+        student = request.user.student
+        favorites=Favorite.objects.filter(student=student).values_list("course",flat=True)
+        courses=Course.objects.filter(pk__in=favorites)
+        serializer = SimpleCourseSerializer(courses, many=True,context={'student': request.user.student})
         return Response(serializer.data, status=status.HTTP_200_OK)

@@ -16,11 +16,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.urls.conf import include
-from .views import *
+from .api.views import *
+from .api.course import *
+from .api.assignment import *
+from .api.comment import *
 from rest_framework.routers import SimpleRouter, DefaultRouter
 from rest_framework_nested import routers
 from pprint import pprint
-
+from .api.discount import DiscountViewSet
 app_name = 'courses'
 
 router = routers.DefaultRouter()
@@ -28,12 +31,19 @@ router.register('courses', CourseViewSet, basename=None)
 router.register('carts', ShoppingCartViewSet)
 router.register('categories', CategoryViewSet)
 router.register('assignments', AssignmentViewSet)
+router.register('discounts', DiscountViewSet)
+
 # pprint(router.urls)
 
 courses_router = routers.NestedDefaultRouter(
     parent_router=router, parent_prefix='courses', lookup='course')  # course_pk
 courses_router.register('reviews', ReviewViweSet, basename='course-reviews')
 courses_router.register('sessions', SessionViewSet, basename='course-sessions')
+courses_router.register('comments', CommentViewSet, basename='course-comments')
+
+comments_router = routers.NestedDefaultRouter(
+    parent_router=courses_router, parent_prefix='comments', lookup='parent')  # comment_pk
+comments_router.register('reply', ReplytViewSet, basename='reply')
 
 assignments_router = routers.NestedDefaultRouter(
     parent_router=router, parent_prefix='assignments', lookup='assignment')  # assignment_pk
@@ -53,4 +63,5 @@ urlpatterns = [
     path('', include(carts_router.urls)),
     path('', include(assignments_router.urls)),
     path('', include(homework_router.urls)),
+    path('', include(comments_router.urls)),
 ]

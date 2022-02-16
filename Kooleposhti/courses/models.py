@@ -2,6 +2,7 @@ from django.db import models
 from accounts.models import Instructor, Student, User
 from uuid import uuid4
 from Kooleposhti import settings
+from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 
 
 class Promotion(models.Model):
@@ -37,7 +38,8 @@ class Course(models.Model):
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=9, decimal_places=2)  # 9999.99
     rate = models.DecimalField(
-        max_digits=2, decimal_places=1, default=5, blank=True)
+        max_digits=2, decimal_places=1, default=5,  blank=True, 
+        validators=[MinValueValidator(0), MaxValueValidator(5)])
     rate_no = models.IntegerField(default=0, blank=True)
     # first time we create Course django stores the current datetime
     last_update = models.DateTimeField(auto_now=True)
@@ -62,6 +64,10 @@ class Course(models.Model):
 
     def is_owner(self, user):
         return self.instructor == user
+
+    def is_course_user(self, user):
+        return (user.has_role('student') and self.is_enrolled(user.student)) \
+		or (user.has_role('instructor') and self.is_owner(user.instructor))
 
     def update_rate(self):
         rates = self.rates.all()
@@ -139,13 +145,21 @@ class Session(models.Model):
 class Comment(models.Model):
     course = models.ForeignKey(
         Course, on_delete=models.CASCADE, related_name='comments')
-    student = models.ForeignKey(
-        Student, on_delete=models.CASCADE, related_name='comments')
-    created_date = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='comments')
+    parent = models.OneToOneField('Comment', on_delete=models.CASCADE, 
+                        related_name='reply', null=True, blank=True)
+    created_date = models.DateTimeField()
     text = models.TextField()
 
     def __str__(self):
         return f"{self.course.title} {self.text}"
+
+    def is_owner(self, user):
+        return self.user == user
+
+    def is_course_owner(self, user):
+        return self.course.instructor == user
 
 
 class Tag(models.Model):
@@ -168,6 +182,7 @@ class Assignment(models.Model):
     start_time = models.TimeField()
     end_date = models.DateField()
     end_time = models.TimeField()
+    date = models.DateTimeField(blank=True)
 
     def __str__(self):
         return f"{self.course.title} {self.title}"
@@ -177,6 +192,10 @@ class Assignment(models.Model):
 
     def is_course_student(self, user):
         return self.course.is_enrolled(user)
+
+    def is_course_user(self, user):
+        return (user.has_role('student') and self.is_course_student(user.student)) \
+		or (user.has_role('instructor') and self.is_course_owner(user.instructor))
 
     def sent(self, user):
         return self.homeworks.filter(student=user).exists()
@@ -189,7 +208,6 @@ class Homework(models.Model):
     submited_date = models.DateTimeField(auto_now_add=True)
     answer = models.TextField(blank=True, null=True)
     file = models.FileField(blank=True, null=True)
-    grade = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.assignment.course.title}  \
@@ -200,6 +218,10 @@ class Homework(models.Model):
 
     def is_course_owner(self, user):
         return self.assignment.course.instructor == user
+
+    def can_see(self, user):
+        return (user.has_role('student') and self.is_owner(user.student)) \
+		or (user.has_role('instructor') and self.is_course_owner(user.instructor))
 
 
 
@@ -223,6 +245,10 @@ class Feedback(models.Model):
     def is_course_owner(self, user):
         return self.homework.assignment.course.instructor == user
 
+    def can_see(self, user):
+        return (user.has_role('student') and self.is_mine(user.student)) \
+		or (user.has_role('instructor') and self.is_course_owner(user.instructor))
+
 
 class Goal(models.Model):
     course = models.ForeignKey(
@@ -233,20 +259,31 @@ class Goal(models.Model):
         return f"{self.course.title} {self.text}"
 
 
-
-class Order (models.Model):
-    PAYMENT_STATUS_PENDING = 'P'
-    PAYMENT_STATUS_COMPLETE = 'C'
-    PAYMENT_STATUS_FAILED = 'F'
-    PAYMENT_STATUS_CHOICES = [
-        (PAYMENT_STATUS_PENDING, 'Pending'),
-        (PAYMENT_STATUS_COMPLETE, 'Complete'),
-        (PAYMENT_STATUS_FAILED, 'Failed'),
-    ]
+class Order(models.Model):
+    course = models.ForeignKey(
+        Course, related_name='orders', on_delete=models.CASCADE)
+    instructor = models.ForeignKey(
+        Instructor, related_name='orders', on_delete=models.CASCADE)
+    student = models.ForeignKey(
+        Student, related_name='orders', on_delete=models.PROTECT)
     placed_at = models.DateTimeField(auto_now_add=True)
-    payment_status = models.CharField(
-        max_length=1, choices=PAYMENT_STATUS_CHOICES, default=PAYMENT_STATUS_PENDING)
-    student = models.ForeignKey(Student, on_delete=models.PROTECT)
+    date = models.DateField()
+    amount = models.DecimalField(max_digits=9, decimal_places=3)
+
+
+# class Order (models.Model):
+#     PAYMENT_STATUS_PENDING = 'P'
+#     PAYMENT_STATUS_COMPLETE = 'C'
+#     PAYMENT_STATUS_FAILED = 'F'
+#     PAYMENT_STATUS_CHOICES = [
+#         (PAYMENT_STATUS_PENDING, 'Pending'),
+#         (PAYMENT_STATUS_COMPLETE, 'Complete'),
+#         (PAYMENT_STATUS_FAILED, 'Failed'),
+#     ]
+#     placed_at = models.DateTimeField(auto_now_add=True)
+#     payment_status = models.CharField(
+#         max_length=1, choices=PAYMENT_STATUS_CHOICES, default=PAYMENT_STATUS_PENDING)
+#     student = models.ForeignKey(Student, on_delete=models.PROTECT)
 
 
 class OrderItem (models.Model):
@@ -280,3 +317,27 @@ class Review(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
     date = models.DateField(auto_now_add=True)
+
+
+class Favorite(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='favorites_students')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='favorites_courses')
+
+
+class Discount(models.Model):
+    '''
+    fields = ('id', 'discount', 'created_date', 'expiration_date', 'title', 'code', 'owner', 'course', 'used_no')
+    '''
+    discount = models.FloatField()
+    created_date = models.DateTimeField(auto_now_add=True)
+    expiration_date = models.DateTimeField()
+    title = models.CharField(max_length=255)
+    code = models.CharField(max_length=12,unique=True,validators=[RegexValidator(regex="^[a-zA-Z0-9]*$")])
+    owner = models.ForeignKey(
+        Instructor, on_delete=models.CASCADE, related_name='discount_codes')
+    course = models.ForeignKey(
+        Course, on_delete=models.CASCADE, related_name='discont_courses')
+    used_no = models.IntegerField(default=0)
+
+    def is_course_owner(self, user):
+        return self.course.instructor == user

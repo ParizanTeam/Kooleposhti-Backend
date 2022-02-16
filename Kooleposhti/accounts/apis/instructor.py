@@ -1,5 +1,5 @@
 from django.http.request import QueryDict
-from accounts.serializers.instructor_serializer import InstructorProfileSerializer
+from accounts.serializers.instructor_serializer import InstructorProfileSerializer, InstructorSerializer
 from accounts.permissions import IsInstructor
 from courses.models import Course
 from django.contrib.auth.tokens import default_token_generator
@@ -291,28 +291,29 @@ class InstructorViewSet(views.APIView):
         data = serializer.validated_data['user']
         user = self.get_instructor(request).user
         api = SkyroomAPI(SKYROOM_KEY)
-        if user.username == data.get('username', user.username):
-            params = {
-                "user_id": int(user.userskyroom.skyroom_id),
-                'password': data.get('password'),
-                'email': data.get('email', user.email),
-                "fname": data.get('first_name', user.first_name),
-                "lname": data.get('last_name', user.last_name)
-            }
-            api.updateUser(params)
-        else:
-            api.deleteUser({"user_id": user.userskyroom.skyroom_id})
-            user.userskyroom.delete()
-            params = {
-                'username': data.get('username', user.username),
-                'password': data.get('password'),
-                "nickname": data.get('username', user.username),
-                'email': data.get('email', user.email),
-                "fname": data.get('first_name', user.first_name),
-                "lname": data.get('last_name', user.last_name)
-            }
-            skyroom_id = api.createUser(params)
-            UserSkyRoom.objects.create(skyroom_id=skyroom_id, user=user)
+        # if user.username == data.get('username', user.username):
+        params = {
+            "user_id": int(user.userskyroom.skyroom_id),
+            'email': data.get('email', user.email),
+            "fname": data.get('first_name', user.first_name),
+            "lname": data.get('last_name', user.last_name)
+        }
+        if password and len(password) > 7 and not password.isnumeric():
+            params['password'] = password
+        api.updateUser(params)
+        # else:
+        #     api.deleteUser({"user_id": user.userskyroom.skyroom_id})
+        #     user.userskyroom.delete()
+        #     params = {
+        #         'username': data.get('username', user.username),
+        #         'password': data.get('password'),
+        #         "nickname": data.get('username', user.username),
+        #         'email': data.get('email', user.email),
+        #         "fname": data.get('first_name', user.first_name),
+        #         "lname": data.get('last_name', user.last_name)
+        #     }
+        #     skyroom_id = api.createUser(params)
+        #     UserSkyRoom.objects.create(skyroom_id=skyroom_id, user=user)
 
     def partial_update(self, request, *args, **kwargs):
         kwargs['partial'] = True
@@ -962,3 +963,44 @@ class InstructorViewSet(views.APIView):
         serializer = course_serializers.InstructorCourseSerializer(
             courses, many=True)
         return Response(serializer.data)
+
+
+    @action(detail=False, permission_classes=[AllowAny])
+    def top(self, request):
+        count = request.data.get('count', 12)
+        count = min(len(Instructor.objects.all()), count)
+        serializer = InstructorSerializer(Instructor.objects.order_by('pk')[:count], many=True)
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+
+    @action(detail=False, methods=['GET'],
+            permission_classes=[IsInstructor])
+    def orders(self, request):
+        try:
+            instructor = self.get_instructor(request)
+        except AttributeError as e:
+            return Response(data={'message': 'you are not logged in'}, 
+                                status=status.HTTP_401_UNAUTHORIZED)
+        except Http404 as e:
+            return Response(data={'message': 'Instructor does not exist'}, 
+                                        status=status.HTTP_404_NOT_FOUND)
+        orders = instructor.orders.all().order_by('-placed_at')
+        serializer = course_serializers.OrderSerializer(orders, many=True)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+
+    @action(detail=False, methods=['GET'],
+            permission_classes=[IsInstructor],
+            url_path="course-orders")
+    def course_orders(self, request):
+        try:
+            instructor = self.get_instructor(request)
+        except AttributeError as e:
+            return Response(data={'message': 'you are not logged in'}, 
+                                status=status.HTTP_401_UNAUTHORIZED)
+        except Http404 as e:
+            return Response(data={'message': 'Instructor does not exist'}, 
+                                        status=status.HTTP_404_NOT_FOUND)
+        courses = instructor.courses.all()
+        serializer = course_serializers.CourseOrderSerializer(courses, many=True)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)

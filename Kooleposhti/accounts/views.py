@@ -18,7 +18,7 @@ import rest_framework
 from .models import User, Verification, UserSkyRoom
 from django.shortcuts import render
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
-from accounts.models import Instructor, Student
+from accounts.models import Instructor, Student, Wallet
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAdminUser, IsAuthenticated
@@ -181,8 +181,10 @@ def sign_up_user(request: HttpRequest, *args, **kwargs):
 
         if is_instructor:
             Instructor.objects.create(user=user)
+            Wallet.objects.create(user=user)
         else:
             Student.objects.create(user=user)
+            Wallet.objects.create(user=user, balance=500000)
         # data = serializer.validated_data.copy()
         # del data['password']
         # del data['password2']

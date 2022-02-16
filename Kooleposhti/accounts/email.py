@@ -18,7 +18,8 @@ from django import conf
 
 
 def remove_expired_tokens():
-    time_threshold = datetime.now(timezone.utc) - timedelta(days=1)
+    time_threshold = datetime.now(
+        timezone.utc) - timedelta(days=conf.settings.DELETE_UNSTAGED_USERS_AFTER_DAYS)
     Verification.objects.filter(create_time__lte=time_threshold).delete()
 
 
@@ -34,7 +35,7 @@ class ActivationEmail(APIView):
                                         {
                                             'username': user_username,
                                             'code': rnd_tok,
-                                            'WEBSITE_URL': 'kooleposhti.herokuapp.com',
+                                            'WEBSITE_URL': 'kooleposhti.tk',
                                         })
 
             email = EmailMessage('تایید حساب کاربری در کوله پشتی',

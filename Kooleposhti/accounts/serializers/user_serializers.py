@@ -6,7 +6,7 @@ from rest_framework.utils import model_meta
 from rest_framework.response import Response
 from images.models import MyImage
 from images.serializers import ProfileImageSerializer
-from accounts.models import User
+from accounts.models import User, Wallet
 from rest_framework import serializers
 from accounts.serializers.serializers import update_relation
 from rest_framework import status
@@ -177,3 +177,16 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = BaseUserSerializer.Meta.fields
         excluded_fields = ['password', 'image_url']
+
+
+class WalletSerializer(serializers.ModelSerializer):
+    card_no = serializers.CharField(max_length=16, min_length=16)
+    sheba = serializers.CharField(max_length=24, min_length=24)
+    class Meta:
+        model = Wallet
+        fields = ['card_no', 'sheba', 'balance']
+        read_only_fields = ['balance']
+
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request']
+        return super().create(validated_data)

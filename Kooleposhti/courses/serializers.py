@@ -1,18 +1,18 @@
-from rest_framework import serializers
+from rest_framework import request, serializers
 from rest_framework.viewsets import ModelViewSet
 from .models import *
 from decimal import Decimal
 from accounts.models import Instructor
-from images.serializers import HomeworkImageSerializer
+from images.models import MyImage
+from images.serializers import CommentImageSerializer
 from djoser.serializers import UserSerializer as BaseUserSerializer
-from accounts.serializers.instructor_serializer import InstructorSerializer
+from accounts.serializers.instructor_serializer import CourseInstructorSerializer, InstructorSerializer
 import jdatetime
 import jalali_date
 from datetime import date, datetime, time, timedelta
 import base64
 import os
-
-
+from rest_framework.exceptions import ValidationError
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
@@ -53,15 +53,19 @@ class SessionSerializer(serializers.ModelSerializer):
 class AssignmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Assignment
-        # fields = ["course", "title", "question", "start_date", 
-        #         "start_time", "end_date", "end_time"]
-        fields = '__all__'
+        fields = ["id", "course", "title", "number", "question", "created_date",
+                "start_date", "start_time", "end_date", "end_time"]
         read_only_fields = ['created_date', 'number']
 
     def create(self, validated_data):
         course = validated_data.get('course', None)
-        number = len(course.assignments.all()) + 1
-        return Assignment.objects.create(number=number, **validated_data)
+        validated_data['number'] = len(course.assignments.all()) + 1
+        end_date = validated_data['end_date']
+        end_time = validated_data['end_time']
+        validated_data['date'] = jdatetime.datetime(
+            end_date.year, end_date.month, end_date.day, hour=end_time.hour, 
+            minute=end_time.minute, second=end_time.second).togregorian()
+        return super().create(validated_data)
 
 
 # class StudentHomeworkSerializer(serializers.ModelSerializer):
@@ -83,8 +87,7 @@ class AssignmentStudentSerializer(serializers.ModelSerializer):
     course = CourseTitleSerializer(read_only=True)
     class Meta:
         model = Assignment
-        fields = ["id", "course", "title", "end_date", "end_time"]
-
+        fields = ["id", "course", "title", "end_date", "end_time","question"]
 
 
 class HomeworkSerializer(serializers.ModelSerializer):
@@ -97,7 +100,8 @@ class HomeworkSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         assignment = self.context['assignment']
-        return Homework.objects.create(assignment_id=assignment, **validated_data)
+        return Homework.objects.create(
+                    assignment_id=assignment, **validated_data)
 
 
 class FeedbackSerializer(serializers.ModelSerializer):
@@ -108,19 +112,54 @@ class FeedbackSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         homework = self.context['homework']
-        return Feedback.objects.create(homework_id=homework, **validated_data)
+        return Feedback.objects.create(
+                        homework_id=homework, **validated_data)
 
 
-class CommentSerializer(serializers.ModelSerializer):
+class UserCommentSerializer(serializers.ModelSerializer):
+    image = CommentImageSerializer(read_only=True)
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'username', 'image']
+
+
+class ReplySerializer(serializers.ModelSerializer):
+    user = UserCommentSerializer(read_only=True)
     class Meta:
         model = Comment
-        fields = '__all__'
+        fields = ['id', 'created_date', 'text', 'user']
+        read_only_fields = ['id', 'created_date', 'user']
 
-    # def create(self, validated_data):
-    #     request = self.context.get("request")
-    #     student = request.user
-    #     return Comment.objects.create(student=student, **validated_data)
+    def create(self, validated_data):
+        request = self.context.get("request")
+        validated_data['course_id'] = self.context.get("course")
+        validated_data['parent_id'] = self.context.get("parent")
+        validated_data['created_date'] = jdatetime.datetime.now().__str__()
+        validated_data['user'] = request.user
+        return super().create(validated_data)
 
+    def update(self, instance, validated_data):
+        validated_data['created_date'] = jdatetime.datetime.now().__str__()
+        return super().update(instance, validated_data)
+
+class CommentSerializer(serializers.ModelSerializer):
+    reply = ReplySerializer(read_only=True)
+    user = UserCommentSerializer(read_only=True)
+    class Meta:
+        model = Comment
+        fields = ['id', 'created_date', 'text', 'user', 'reply']
+        read_only_fields = ['id', 'created_date']
+
+    def create(self, validated_data):
+        request = self.context.get("request")
+        validated_data['course_id'] = self.context.get("course")
+        validated_data['created_date'] = jdatetime.datetime.now().__str__()
+        validated_data['user'] = request.user
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data['created_date'] = jdatetime.datetime.now().__str__()
+        return super().update(instance, validated_data)
 
 
 class InstructorCourseSerializer(serializers.ModelSerializer):
@@ -130,10 +169,9 @@ class InstructorCourseSerializer(serializers.ModelSerializer):
                   'end_date', 'max_students']
 
 
-
 class CourseSerializer(serializers.ModelSerializer):
     instructor = InstructorSerializer(read_only=True)
-    comments = CommentSerializer(many=True, read_only=True)
+    # comments = CommentSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
     goals = GoalSerializer(many=True, read_only=True)
     sessions = SessionSerializer(many=True, read_only=True)
@@ -145,7 +183,7 @@ class CourseSerializer(serializers.ModelSerializer):
                   'duration', 'title', 'image', 'description', 'start_date',
                   'end_date', 'price', 'rate', 'rate_no', 'link', 'min_students', 
                   'max_students', 'capacity', 'min_age', 'max_age',
-                  'tags', 'goals', 'sessions', 'comments')
+                  'tags', 'goals', 'sessions')
         read_only_fields = ('id', 'created_at', 'instructor', 'link', 
                             'rate', 'rate_no', 'capacity')
     
@@ -161,7 +199,6 @@ class CourseSerializer(serializers.ModelSerializer):
         validated_data['capacity'] = validated_data['max_students']
         return super().create(validated_data)
 
-
     def update(self, instance, validated_data):
         capacity = instance.capacity + \
             validated_data.get(
@@ -172,6 +209,13 @@ class CourseSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
+class CartCourseSerializer(serializers.ModelSerializer):
+    # Basic info for Cart item
+    instructor = CourseInstructorSerializer(read_only=True)
+    class Meta:
+        model = Course
+        fields = ['id', 'title', 'rate', 'image', 'instructor']
+
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -181,6 +225,21 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = ['id', 'title', 'courses']
 
+
+class OrderSerializer(serializers.ModelSerializer):
+    course = serializers.CharField(source='course.title', read_only=True)
+    student = serializers.CharField(source='student.user.username', read_only=True)
+    class Meta:
+        model = Order
+        fields = ['id', 'date', 'amount', 'course', 'student']
+        read_only_fields = ['id', 'date', 'amount']
+
+
+class CourseOrderSerializer(serializers.ModelSerializer):
+    orders = OrderSerializer(many=True, read_only=True)
+    class Meta:
+        model = Course
+        fields = ['title', 'orders']
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -196,11 +255,36 @@ class ReviewSerializer(serializers.ModelSerializer):
         )
 
 
-class SimpleCourseSerializer():
-    # Basic info for Cart item
+class SimpleUserSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+    username = serializers.SerializerMethodField()
+
+    def get_username(self,instructor:Instructor):
+        user=User.objects.get(id=instructor.id)
+        return user.username
+
+
+    def get_image(self,user:Instructor):
+        myImage=MyImage.objects.filter(user=user.id)
+        return myImage[0].image if myImage.exists() else None
+    class Meta:
+        model = User
+        fields = ['id', 'first_name','last_name','image','username']
+
+
+
+class SimpleCourseSerializer(serializers.ModelSerializer):
+    instructor = CourseInstructorSerializer(read_only=True)
+    is_favorite = serializers.SerializerMethodField()
+
+    def get_is_favorite(self,course:Course):
+        user = self.context.get("student")
+        if(user==None):
+            return False
+        return Favorite.objects.filter(course=course,student=user).exists()
     class Meta:
         model = Course
-        fields = ['id', 'title', 'price']
+        fields = ['id', 'title', 'instructor','rate','image','is_favorite']
 
 
 class CartItemSerializer(serializers.ModelSerializer):
@@ -226,3 +310,34 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShoppingCart
         fields = ['id', 'items', 'total_price']
+
+
+class DiscountSerializer(serializers.ModelSerializer):
+    default_error_messages = {'code_exists': 'Duplicate: The code already exists'}
+    code=serializers.CharField(max_length=255,required=False)
+    class Meta:
+        model = Discount
+        fields = ['discount','expiration_date','title','code','used_no','created_date','course','id']
+        read_only_fields=['used_no','created_date','id']
+
+
+    def create(self, validated_data):
+        request = self.context.get("request")
+        validated_data['owner'] = request.user.instructor
+        return super().create(validated_data)
+
+    def validate(self, attrs):
+        validated_attrs = super().validate(attrs)
+        errors = {}
+        Discount.code.field.run_validators(value=validated_attrs['code'])
+        is_code_exist=Discount.objects.filter(code=validated_attrs['code']).exists()
+
+        if (is_code_exist):
+            errors['code'] = self.error_messages['code_exists']
+
+        if errors:
+            raise ValidationError(errors)
+
+        return validated_attrs
+
+
