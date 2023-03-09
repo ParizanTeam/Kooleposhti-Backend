@@ -119,11 +119,11 @@ DATABASES = {
     # },
     'default': {  # kooleposhti
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'kooleposhtidb',
-        'USER': 'ubuntu',
+        'NAME': env.str('DB_NAME'),
+        'USER': env.str('DB_USER'),
         'PASSWORD': env.str('DB_PASSWORD'),
         'HOST': 'kooleposhti.ml',
-        # 'HOST': 'localhost',
+        'HOST':  env.str('DB_HOST'),
         'PORT': '5432',
     },
     'TEST': {
